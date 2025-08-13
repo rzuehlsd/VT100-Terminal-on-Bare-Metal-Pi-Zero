@@ -336,8 +336,9 @@ void RepeatKey( unsigned hnd, void* pParam, void *pContext )
 void KeyStatusHandlerRaw (unsigned char ucModifiers, const unsigned char RawKeys[6])  // key code or 0 in each byte
 {
     unsigned char ucKeyCode = 0;
+    int i;
 
-    for (int i = 5; i >= 0; i--)
+    for (i = 5; i >= 0; i--)
     {
         ucKeyCode = RawKeys[i];
         if (ucKeyCode != 0)

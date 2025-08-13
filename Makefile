@@ -3,7 +3,7 @@ RPI ?= 1
 
 ARMGNU ?= arm-none-eabi
 ifeq ($(strip $(RPI)),1)
-CFLAGS = -Wall -Wextra -O2 -g -nostdlib -nostartfiles -fno-stack-limit -ffreestanding -fsigned-char -march=armv6j -mtune=arm1176jzf-s -DRPI=1
+CFLAGS = -Wall -Wextra -O2 -nostdlib -nostartfiles -fno-stack-limit -ffreestanding -fsigned-char -march=armv6j -mtune=arm1176jzf-s -mfloat-abi=soft -DRPI=1
 else ifeq ($(strip $(RPI)),2)
 CFLAGS = -Wall -Wextra -O2 -g -nostdlib -nostartfiles -fno-stack-limit -ffreestanding -fsigned-char -march=armv7-a -mtune=cortex-a7 -DRPI=2
 else ifeq ($(strip $(RPI)),3)

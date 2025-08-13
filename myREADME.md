@@ -24,10 +24,26 @@ sendCRLF = 1                ; With this enabled, the enter key on the connected 
 
 ### Build
 
+**Important: Configuration for Pi Zero (RASPPI=1)**
+
+All makefiles must be configured for Pi Zero Gen 1 to avoid "undefined instruction error" crashes:
+
+- **Main Makefile**: `RPI ?= 1` (already correctly set - defaults to Pi Zero/Pi 1)
+- **uspi/Config.mk**: `RASPPI = 1` (must be explicitly set for Pi Zero)
+- **uspi/Rules.mk**: `RASPPI ?= 1` (already correctly set - defaults to Pi Zero)
+
+The architectural mismatch (building for Pi 3/4 instead of Pi Zero) was the main cause of boot crashes.
+
+**Build Process:**
+
 - uspi sources clonen
 ```
 git clone https://github.com/rsta2/uspi.git
 ````
+- **Ensure uspi/Config.mk is set correctly:**
+```
+echo "RASPPI = 1" > uspi/Config.mk
+```
 - Im Verzeichnis ./uspi/lib diefolgenden Befehle ausführen:
 ````
 make clean
@@ -37,10 +53,16 @@ Im Verzeichnis lib wird danach neben den Object Files auch die Library libuspi.a
 
 - Danach in das pigfx Verzeichnis wechseln und eine neue Version mit
 ````
-./makeall
+make clean
+make
 ````
 bauen und den Inhalt des kompletten bin Verzeichnisses auf die SD Karte kopieren. 
 
 - Pi startet mit neuem pigfx kernel und den aktuellen Konfigurationen im File pigfx.txt
+
+**Troubleshooting:**
+- If kernel crashes with "undefined instruction error": Check that all RASPPI/RPI settings are set to 1
+- Kernel size should be around 314-315KB for correct Pi Zero build
+- C99 syntax (like `for (int i = 0; ...)`) must be avoided - use C89/C90 standard
 
 
