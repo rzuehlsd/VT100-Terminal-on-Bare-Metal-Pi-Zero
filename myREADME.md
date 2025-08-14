@@ -65,4 +65,11 @@ bauen und den Inhalt des kompletten bin Verzeichnisses auf die SD Karte kopieren
 - Kernel size should be around 314-315KB for correct Pi Zero build
 - C99 syntax (like `for (int i = 0; ...)`) must be avoided - use C89/C90 standard
 
+**Debug Output Control:**
+- Edit `src/pigfx_config.h` and set `SYSTEM_DEBUG` to `ON` or `OFF`
+- `SYSTEM_DEBUG = ON`: Shows detailed initialization messages, color palette demo, system info
+- `SYSTEM_DEBUG = OFF`: Clean boot with minimal output (only errors and essential info)
+- Error messages (USB/PS2 failures) are always shown regardless of debug setting
+- Rebuild with `make clean && make` after changing debug settings
+
 

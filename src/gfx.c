@@ -384,6 +384,18 @@ void gfx_set_fg( GFX_COL col )
     	*(p++) = col;
 }
 
+/** Gets the current background color. */
+GFX_COL gfx_get_bg( void )
+{
+    return ctx.bg;
+}
+
+/** Gets the current foreground color. */
+GFX_COL gfx_get_fg( void )
+{
+    return ctx.fg;
+}
+
 /** Swaps the foreground and background colors. */
 void gfx_swap_fg_bg()
 {
@@ -1656,6 +1668,11 @@ void gfx_term_set_cursor_visibility( unsigned char visible )
     ctx.term.cursor_visible = visible;
 }
 
+unsigned char gfx_term_get_cursor_visibility( void )
+{
+    return ctx.term.cursor_visible;
+}
+
 void gfx_term_switch_cursor_vis( __attribute__((unused)) unsigned hnd,
                                       __attribute__((unused)) void* pParam,
                                       __attribute__((unused)) void *pContext )
@@ -2709,4 +2726,31 @@ void gfx_switch_framebuffer()
 
     // Copy all data of the now showing framebuffer part to the not showing framebuffer part
     dma_memcpy_32(showingFb, ctx.pfb, ctx.size);
+}
+
+// Screen buffer management functions
+void* gfx_get_screen_buffer(void)
+{
+    return ctx.pfb;
+}
+
+unsigned int gfx_get_screen_buffer_size(void)
+{
+    return ctx.W * ctx.H;  // Size in pixels (8-bit per pixel)
+}
+
+void gfx_save_screen_buffer(void* buffer)
+{
+    if (buffer != 0 && ctx.pfb != 0)
+    {
+        pigfx_memcpy(buffer, ctx.pfb, ctx.W * ctx.H);
+    }
+}
+
+void gfx_restore_screen_buffer(void* buffer)
+{
+    if (buffer != 0 && ctx.pfb != 0)
+    {
+        pigfx_memcpy(ctx.pfb, buffer, ctx.W * ctx.H);
+    }
 }

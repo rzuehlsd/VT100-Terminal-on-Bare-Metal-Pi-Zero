@@ -36,6 +36,28 @@
 
 #define UART_BUFFER_SIZE 16384 /* 16k */
 
+// Debug output macros - only output when SYSTEM_DEBUG is enabled
+#if ENABLED(SYSTEM_DEBUG)
+#define DEBUG_PRINTF(...) ee_printf(__VA_ARGS__)
+#define DEBUG_PUTSTRING(str) gfx_term_putstring(str)
+#define DEBUG_SET_BG(color) gfx_set_bg(color)
+#define DEBUG_SET_FG(color) gfx_set_fg(color)
+#else
+#define DEBUG_PRINTF(...) do {} while(0)
+#define DEBUG_PUTSTRING(str) do {} while(0)
+#define DEBUG_SET_BG(color) do {} while(0)
+#define DEBUG_SET_FG(color) do {} while(0)
+#endif
+
+// Error messages are always shown
+#define ERROR_PRINTF(...) do { gfx_set_fg(RED); ee_printf(__VA_ARGS__); gfx_set_fg(GRAY); } while(0)
+#define SUCCESS_PRINTF(...) do { gfx_set_fg(GREEN); ee_printf(__VA_ARGS__); gfx_set_fg(GRAY); } while(0)
+
+// Essential status messages - always shown regardless of debug setting
+#define INFO_PRINTF(...) ee_printf(__VA_ARGS__)
+#define INFO_SET_BG(color) gfx_set_bg(color)
+#define INFO_SET_FG(color) gfx_set_fg(color)
+
 
 unsigned int led_status = 0;
 unsigned char usbKeyboardFound = 0;
@@ -298,7 +320,7 @@ void video_line_test(int maxloops)
 
 void term_main_loop()
 {
-    ee_printf("Waiting for UART data (%d,8,N,1)\n",PiGfxConfig.uartBaudrate);
+    INFO_PRINTF("Waiting for UART data (%d baud).\n",PiGfxConfig.uartBaudrate);
 
     /**/
     while( uart_buffer_start == uart_buffer_end )
@@ -427,27 +449,27 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     // 0-15 are primary colors
     int color = 0;
     for (color = 0 ; color < 16 ; color++) {
-   		gfx_set_bg(color);
-   		ee_printf("%02x", color);
+   		DEBUG_SET_BG(color);
+   		DEBUG_PRINTF("%02x", color);
     }
-    ee_printf("\n");
+    DEBUG_PRINTF("\n");
 
     // 16-223 are gradients
     int count = 0;
 	for (  ; color <= 255-24 ; color++) {
-		gfx_set_bg(color);
-		ee_printf("%02x", color);
+		DEBUG_SET_BG(color);
+		DEBUG_PRINTF("%02x", color);
 		count = (count + 1) % 36;
 		if (count == 0)
-			ee_printf("\n");
+			DEBUG_PRINTF("\n");
 	}
 
 	// 224-255 are gray scales
     for (  ; color <= 255 ; color++) {
-		gfx_set_bg(color);
-		ee_printf("%02x", color);
+		DEBUG_SET_BG(color);
+		DEBUG_PRINTF("%02x", color);
 	}
-	ee_printf("\n");
+	DEBUG_PRINTF("\n");
 
     /* informations
     gfx_set_bg(0);
@@ -466,75 +488,78 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
 
     gfx_set_bg(BLACK);
     gfx_set_fg(GRAY);
-    ee_printf("\nBooting on Raspberry Pi ");
-    ee_printf(board_model(raspiBoard.model));
-    ee_printf(", ");
-    ee_printf(board_processor(raspiBoard.processor));
-    ee_printf(", %iMB ARM RAM\n", ArmRam.size, ArmRam.baseAddr);
+    DEBUG_PRINTF("\nBooting on Raspberry Pi ");
+    DEBUG_PRINTF(board_model(raspiBoard.model));
+    DEBUG_PRINTF(", ");
+    DEBUG_PRINTF(board_processor(raspiBoard.processor));
+    DEBUG_PRINTF(", %iMB ARM RAM\n", ArmRam.size, ArmRam.baseAddr);
 
     // Set default config
     setDefaultConfig();
 
-    gfx_set_bg(BLUE);
-    gfx_set_fg(YELLOW);
-    ee_printf("Initializing filesystem:\n");
-    gfx_set_bg(BLACK);
-    gfx_set_fg(GRAY);
+    DEBUG_SET_BG(BLUE);
+    DEBUG_SET_FG(YELLOW);
+    DEBUG_PRINTF("Initializing filesystem:\n");
+    DEBUG_SET_BG(BLACK);
+    DEBUG_SET_FG(GRAY);
 
     // Try to load a config file
     lookForConfigFile();
+    INFO_PRINTF("Filesystem initialized.\n");
 
     uart_init(PiGfxConfig.uartBaudrate);
     initialize_uart_irq();
 
-    gfx_set_bg(BLUE);
-    gfx_set_fg(YELLOW);
-    ee_printf("Initializing PS/2:\n");
-    gfx_set_bg(BLACK);
-    gfx_set_fg(GRAY);
+    DEBUG_SET_BG(BLUE);
+    DEBUG_SET_FG(YELLOW);
+    DEBUG_PRINTF("Initializing PS/2:\n");
+    DEBUG_SET_BG(BLACK);
+    DEBUG_SET_FG(GRAY);
     if (initPS2() == 0)
     {
         ps2KeyboardFound = 1;
         fInitKeyboard(PiGfxConfig.keyboardLayout);
+        SUCCESS_PRINTF("PS/2 keyboard found.\n");
+    }
+    else
+    {
+        INFO_PRINTF("PS/2: No keyboard detected.\n");
     }
 
 #if RPI<4
     if ((PiGfxConfig.useUsbKeyboard) && (ps2KeyboardFound == 0))
     {
-        gfx_set_bg(BLUE);
-        gfx_set_fg(YELLOW);
-        ee_printf("Initializing USB:\n");
-        gfx_set_bg(BLACK);
-        gfx_set_fg(GRAY);
+        DEBUG_SET_BG(BLUE);
+        DEBUG_SET_FG(YELLOW);
+        DEBUG_PRINTF("Initializing USB:\n");
+        DEBUG_SET_BG(BLACK);
+        DEBUG_SET_FG(GRAY);
 
         if( USPiInitialize() )
         {
-            ee_printf("Initialization OK!\n");
-            ee_printf("Checking for keyboards: ");
+            DEBUG_PRINTF("Initialization OK!\n");
+            DEBUG_PRINTF("Checking for keyboards: ");
 
             if ( USPiKeyboardAvailable () )
             {
                 fInitKeyboard(PiGfxConfig.keyboardLayout);
                 USPiKeyboardRegisterKeyStatusHandlerRaw(KeyStatusHandlerRaw);
-                gfx_set_fg(GREEN);
                 usbKeyboardFound = 1;
-                ee_printf("Keyboard found.");
-                gfx_set_fg(GRAY);
-                ee_printf("\n");
+                SUCCESS_PRINTF("USB keyboard found.\n");
             }
             else
             {
-                gfx_set_fg(RED);
-                ee_printf("No keyboard found.");
-                gfx_set_fg(GRAY);
-                ee_printf("\n");
+                INFO_PRINTF("USB: No keyboard detected.\n");
             }
         }
         else
         {
-            gfx_set_fg(RED);
-            ee_printf("USB initialization failed.\n");
+            ERROR_PRINTF("USB initialization failed.\n");
         }
+    }
+    else if (!PiGfxConfig.useUsbKeyboard)
+    {
+        INFO_PRINTF("USB keyboard disabled in config.\n");
     }
 #endif
 

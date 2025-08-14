@@ -13,8 +13,10 @@
 #include "config.h"
 #include "uart.h"
 #include "gfx.h"
+#include "ee_printf.h"
 #include "timer.h"
 #include "ps2.h"
+#include "setup.h"
 
 // order must match TSpecialKey beginning at KeySpace
 static const char *s_KeyStrings[KeyMaxCode-KeySpace] =
@@ -43,9 +45,9 @@ static const char *s_KeyStrings[KeyMaxCode-KeySpace] =
 	"\x1b[18~",		// KeyF7
 	"\x1b[19~",		// KeyF8
 	"\x1b[20~",		// KeyF9
-	0,			// KeyF10
-	0,			// KeyF11
-	0,			// KeyF12
+	"\x1b[21~",		// KeyF10
+	"\x1b[23~",		// KeyF11
+	"\x1b[24~",		// KeyF12
 	0,			// KeyApplication
 	0,			// KeyCapsLock
 	0,			// KeyPrintScreen
@@ -277,6 +279,19 @@ void KeyEvent(unsigned short ucKeyCode, unsigned char ucModifiers)
         break;
 
     default:
+        // Check for Print Screen key to enter setup mode
+        if (key == KeyPrintScreen)
+        {
+            setup_mode_enter();
+            break;
+        }
+        
+        // If we're in setup mode, handle setup-specific keys
+        if (setup_mode_is_active())
+        {
+            setup_mode_handle_key(key);
+            break;  // Don't process other keys in setup mode
+        }
         pKeyString = KeyToString (&actKeyMap, key, ucModifiers, buffer);
         if (pKeyString != 0)
         {
