@@ -23,10 +23,12 @@ static GFX_COL saved_fg_color = 0;
 static GFX_COL saved_bg_color = 0;
 
 // Setup menu state
-static unsigned int selected_item = 0;  // 0 = Baudrate, 1 = Keyboard
+static unsigned int selected_item = 0;  // 0 = Baudrate, 1 = Keyboard, 2 = Foreground, 3 = Background
 static unsigned int selected_baudrate_index = 0;
 static unsigned int selected_keyboard_index = 0;
-static const unsigned int num_setup_items = 2;  // Number of setup items
+static unsigned int selected_fg_color = 0;
+static unsigned int selected_bg_color = 0;
+static const unsigned int num_setup_items = 4;  // Number of setup items
 
 // Available baudrates
 static const unsigned int available_baudrates[] = {
@@ -39,6 +41,17 @@ static const char* available_keyboards[] = {
     "us", "uk", "it", "fr", "es", "de", "sg"
 };
 static const unsigned int num_keyboards = sizeof(available_keyboards) / sizeof(available_keyboards[0]);
+
+// Available colors for foreground/background
+static const GFX_COL available_colors[] = {
+    BLACK, DARKRED, DARKGREEN, DARKYELLOW, DARKBLUE, DARKMAGENTA, DARKCYAN, GRAY,
+    DARKGRAY, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
+};
+static const char* color_names[] = {
+    "Black", "DkRed", "DkGrn", "DkYel", "DkBlu", "DkMag", "DkCyn", "Gray",
+    "DkGry", "Red", "Green", "Yellow", "Blue", "Magent", "Cyan", "White"
+};
+static const unsigned int num_colors = sizeof(available_colors) / sizeof(available_colors[0]);
 
 // Helper function to draw text at specific position without affecting cursor
 static void draw_text_at(unsigned int row, unsigned int col, const char* text)
@@ -156,6 +169,36 @@ static unsigned int find_current_keyboard_index(void)
     return 0;
 }
 
+// Find current foreground color index in available_colors array
+static unsigned int find_current_fg_color_index(void)
+{
+    GFX_COL current_fg = gfx_get_fg();
+    for (unsigned int i = 0; i < num_colors; i++)
+    {
+        if (available_colors[i] == current_fg)
+        {
+            return i;
+        }
+    }
+    // Default to GRAY if current color not found
+    return 7; // GRAY index
+}
+
+// Find current background color index in available_colors array
+static unsigned int find_current_bg_color_index(void)
+{
+    GFX_COL current_bg = gfx_get_bg();
+    for (unsigned int i = 0; i < num_colors; i++)
+    {
+        if (available_colors[i] == current_bg)
+        {
+            return i;
+        }
+    }
+    // Default to BLACK if current color not found
+    return 0; // BLACK index
+}
+
 void setup_mode_enter(void)
 {
     if (!setup_mode_active)
@@ -172,6 +215,8 @@ void setup_mode_enter(void)
         selected_item = 0;  // Start with Baudrate selected
         selected_baudrate_index = find_current_baudrate_index();
         selected_keyboard_index = find_current_keyboard_index();
+        selected_fg_color = find_current_fg_color_index();
+        selected_bg_color = find_current_bg_color_index();
         
         // Hide cursor during setup mode
         gfx_term_set_cursor_visibility(0);
@@ -275,6 +320,22 @@ void setup_mode_handle_key(unsigned short key)
                     setup_mode_draw();  // Redraw to show new selection
                 }
             }
+            else if (selected_item == 2) // Foreground color selected
+            {
+                if (selected_fg_color > 0)
+                {
+                    selected_fg_color--;
+                    setup_mode_draw();  // Redraw to show new selection
+                }
+            }
+            else if (selected_item == 3) // Background color selected
+            {
+                if (selected_bg_color > 0)
+                {
+                    selected_bg_color--;
+                    setup_mode_draw();  // Redraw to show new selection
+                }
+            }
             break;
             
         case KeyRight:
@@ -294,6 +355,22 @@ void setup_mode_handle_key(unsigned short key)
                     setup_mode_draw();  // Redraw to show new selection
                 }
             }
+            else if (selected_item == 2) // Foreground color selected
+            {
+                if (selected_fg_color < num_colors - 1)
+                {
+                    selected_fg_color++;
+                    setup_mode_draw();  // Redraw to show new selection
+                }
+            }
+            else if (selected_item == 3) // Background color selected
+            {
+                if (selected_bg_color < num_colors - 1)
+                {
+                    selected_bg_color++;
+                    setup_mode_draw();  // Redraw to show new selection
+                }
+            }
             break;
             
         case KeyEscape:
@@ -308,6 +385,10 @@ void setup_mode_handle_key(unsigned short key)
             
             // Apply the new baudrate to UART immediately
             uart_init(PiGfxConfig.uartBaudrate);
+            
+            // Update the saved colors so they don't get overwritten on exit
+            saved_fg_color = available_colors[selected_fg_color];
+            saved_bg_color = available_colors[selected_bg_color];
             
             setup_mode_exit();
             break;
@@ -339,7 +420,7 @@ void setup_mode_draw(void)
     
     // Calculate setup box dimensions (centered)
     unsigned int box_width = 400;  // pixels
-    unsigned int box_height = 220; // pixels - increased for extra instruction line
+    unsigned int box_height = 260; // pixels - increased for color selection items
     unsigned int box_x = (screen_width - box_width) / 2;
     unsigned int box_y = (screen_height - box_height) / 2;
     
@@ -416,10 +497,58 @@ void setup_mode_draw(void)
         draw_text_at(content_row + 1, content_col + 10, available_keyboards[selected_keyboard_index]);
     }
     
+    // Draw foreground color label and value with selection highlighting
+    if (selected_item == 2)
+    {
+        // Selected item - black on white background
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 2, content_col, "FG Color: ", 10);
+        
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 2, content_col + 10, color_names[selected_fg_color], 8);
+    }
+    else
+    {
+        // Not selected - normal colors
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 2, content_col, "FG Color: ");
+        
+        gfx_set_fg(available_colors[selected_fg_color]); // Show color in its own color
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 2, content_col + 10, color_names[selected_fg_color]);
+    }
+    
+    // Draw background color label and value with selection highlighting
+    if (selected_item == 3)
+    {
+        // Selected item - black on white background
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 3, content_col, "BG Color: ", 10);
+        
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 3, content_col + 10, color_names[selected_bg_color], 8);
+    }
+    else
+    {
+        // Not selected - normal colors
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 3, content_col, "BG Color: ");
+        
+        gfx_set_fg(WHITE);
+        gfx_set_bg(available_colors[selected_bg_color]); // Show color as background
+        draw_text_at(content_row + 3, content_col + 10, color_names[selected_bg_color]);
+    }
+    
     // Draw instructions using direct character drawing
     gfx_set_fg(CYAN);
     gfx_set_bg(BLUE);
-    draw_text_at(content_row + 3, content_col, "Up/Down: select item");
-    draw_text_at(content_row + 4, content_col, "Left/Right: change value");
-    draw_text_at(content_row + 5, content_col, "ESC: save and exit");
+    draw_text_at(content_row + 5, content_col, "Up/Down: select item");
+    draw_text_at(content_row + 6, content_col, "Left/Right: change value");
+    draw_text_at(content_row + 7, content_col, "ESC: save and exit");
 }
