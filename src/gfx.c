@@ -237,6 +237,13 @@ extern unsigned char G_FONT8X8_GLYPHS;
 extern unsigned char G_FONT8X16_GLYPHS;
 extern unsigned char G_FONT8X24_GLYPHS;
 
+/** Spleen fonts */
+extern unsigned char G_SPLEEN6X12_GLYPHS;
+extern unsigned char G_SPLEEN8X16_GLYPHS;
+extern unsigned char G_SPLEEN12X24_GLYPHS;
+extern unsigned char G_SPLEEN16X32_GLYPHS;
+extern unsigned char G_SPLEEN32X64_GLYPHS;
+
 /** Font function for the default 8x8 font. */
 unsigned char* font_get_glyph_address_8x8(unsigned int c)
 {
@@ -256,6 +263,37 @@ unsigned char* font_get_glyph_address_8x16(unsigned int c)
 {
 	// offset of glyph is c * 128 bytes, which can be computed by c << 7
 	return ctx.term.FONT + ((unsigned int)c<<7);
+}
+
+/** Spleen font functions */
+unsigned char* font_get_glyph_address_spleen6x12(unsigned int c)
+{
+	// offset of glyph is c * 72 bytes (6 * 12)
+	return ctx.term.FONT + c * 72;
+}
+
+unsigned char* font_get_glyph_address_spleen8x16(unsigned int c)
+{
+	// offset of glyph is c * 128 bytes (8 * 16)
+	return ctx.term.FONT + c * 128;
+}
+
+unsigned char* font_get_glyph_address_spleen12x24(unsigned int c)
+{
+	// offset of glyph is c * 288 bytes (12 * 24)
+	return ctx.term.FONT + c * 288;
+}
+
+unsigned char* font_get_glyph_address_spleen16x32(unsigned int c)
+{
+	// offset of glyph is c * 512 bytes (16 * 32)
+	return ctx.term.FONT + c * 512;
+}
+
+unsigned char* font_get_glyph_address_spleen32x64(unsigned int c)
+{
+	// offset of glyph is c * 2048 bytes (32 * 64)
+	return ctx.term.FONT + c * 2048;
 }
 
 /** Generic Font function. */
@@ -384,24 +422,24 @@ void gfx_set_fg( GFX_COL col )
     	*(p++) = col;
 }
 
-/** Gets the current background color. */
-GFX_COL gfx_get_bg( void )
-{
-    return ctx.bg;
-}
-
-/** Gets the current foreground color. */
-GFX_COL gfx_get_fg( void )
-{
-    return ctx.fg;
-}
-
 /** Swaps the foreground and background colors. */
 void gfx_swap_fg_bg()
 {
     GFX_COL safe_fg = ctx.fg;
     gfx_set_fg(ctx.bg);
     gfx_set_bg(safe_fg);
+}
+
+/** Gets the current foreground color. */
+GFX_COL gfx_get_fg()
+{
+    return ctx.fg;
+}
+
+/** Gets the current background color. */
+GFX_COL gfx_get_bg()
+{
+    return ctx.bg;
 }
 
 /** Returns the character terminal size. */
@@ -1668,7 +1706,7 @@ void gfx_term_set_cursor_visibility( unsigned char visible )
     ctx.term.cursor_visible = visible;
 }
 
-unsigned char gfx_term_get_cursor_visibility( void )
+unsigned char gfx_term_get_cursor_visibility()
 {
     return ctx.term.cursor_visible;
 }
@@ -1821,9 +1859,97 @@ void gfx_term_set_font(int width, int height)
 			gfx_compute_font();
 			break;
 		}
-		//cout("ctx.term.FONTWIDTH: ");cout_d(ctx.term.FONTWIDTH);cout_endl();
-        //cout("ctx.term.FONTHEIGHT: ");cout_d(ctx.term.FONTHEIGHT);cout_endl();
 	}
+	else if (width == 6)
+	{
+		switch (height)
+		{
+		case 12:
+			ctx.term.FONT = &G_SPLEEN6X12_GLYPHS;
+			ctx.term.FONTWIDTH = 6;
+			ctx.term.FONTHEIGHT = 12;
+			ctx.term.font_getglyph = font_get_glyph_address_spleen6x12;
+			gfx_compute_font();
+			break;
+		}
+	}
+	else if (width == 12)
+	{
+		switch (height)
+		{
+		case 24:
+			ctx.term.FONT = &G_SPLEEN12X24_GLYPHS;
+			ctx.term.FONTWIDTH = 12;
+			ctx.term.FONTHEIGHT = 24;
+			ctx.term.font_getglyph = font_get_glyph_address_spleen12x24;
+			gfx_compute_font();
+			break;
+		}
+	}
+	else if (width == 16)
+	{
+		switch (height)
+		{
+		case 32:
+			ctx.term.FONT = &G_SPLEEN16X32_GLYPHS;
+			ctx.term.FONTWIDTH = 16;
+			ctx.term.FONTHEIGHT = 32;
+			ctx.term.font_getglyph = font_get_glyph_address_spleen16x32;
+			gfx_compute_font();
+			break;
+		}
+	}
+	else if (width == 32)
+	{
+		switch (height)
+		{
+		case 64:
+			ctx.term.FONT = &G_SPLEEN32X64_GLYPHS;
+			ctx.term.FONTWIDTH = 32;
+			ctx.term.FONTHEIGHT = 64;
+			ctx.term.font_getglyph = font_get_glyph_address_spleen32x64;
+			gfx_compute_font();
+			break;
+		}
+	}
+	// Also add Spleen 8x16 as an alternative to TRS 8x16
+	else if (width == -8) // Use negative width as flag for Spleen 8x16
+	{
+		ctx.term.FONT = &G_SPLEEN8X16_GLYPHS;
+		ctx.term.FONTWIDTH = 8;
+		ctx.term.FONTHEIGHT = 16;
+		ctx.term.font_getglyph = font_get_glyph_address_spleen8x16;
+		gfx_compute_font();
+	}
+	//cout("ctx.term.FONTWIDTH: ");cout_d(ctx.term.FONTWIDTH);cout_endl();
+    //cout("ctx.term.FONTHEIGHT: ");cout_d(ctx.term.FONTHEIGHT);cout_endl();
+}
+
+void gfx_term_get_font(int* width, int* height)
+{
+	if (width != 0)
+	{
+		*width = ctx.term.FONTWIDTH;
+	}
+	if (height != 0)
+	{
+		*height = ctx.term.FONTHEIGHT;
+	}
+}
+
+/** Get the current font type for setup mode detection. */
+int gfx_term_get_font_type(void)
+{
+	// Return a unique identifier for each font type
+	if (ctx.term.FONT == &G_FONT8X8_GLYPHS) return 0;          // 8x8
+	if (ctx.term.FONT == &G_FONT8X16_GLYPHS) return 1;         // 8x16
+	if (ctx.term.FONT == &G_FONT8X24_GLYPHS) return 2;         // 8x24
+	if (ctx.term.FONT == &G_SPLEEN6X12_GLYPHS) return 3;       // 6x12 Spleen
+	if (ctx.term.FONT == &G_SPLEEN12X24_GLYPHS) return 4;      // 12x24 Spleen
+	if (ctx.term.FONT == &G_SPLEEN16X32_GLYPHS) return 5;      // 16x32 Spleen
+	if (ctx.term.FONT == &G_SPLEEN32X64_GLYPHS) return 6;      // 32x64 Spleen
+	if (ctx.term.FONT == &G_SPLEEN8X16_GLYPHS) return 7;       // 8x16 Spleen
+	return 1; // Default to 8x16 if unknown
 }
 
 /** Sets the tabulation width. */
@@ -2728,29 +2854,54 @@ void gfx_switch_framebuffer()
     dma_memcpy_32(showingFb, ctx.pfb, ctx.size);
 }
 
-// Screen buffer management functions
-void* gfx_get_screen_buffer(void)
+/** Gets the size in bytes needed for a screen buffer. */
+unsigned int gfx_get_screen_buffer_size()
 {
-    return ctx.pfb;
+    return ctx.size;
 }
 
-unsigned int gfx_get_screen_buffer_size(void)
-{
-    return ctx.W * ctx.H;  // Size in pixels (8-bit per pixel)
-}
-
+/** Saves the current screen content to a buffer. */
 void gfx_save_screen_buffer(void* buffer)
 {
-    if (buffer != 0 && ctx.pfb != 0)
+    if (buffer != 0)
     {
-        pigfx_memcpy(buffer, ctx.pfb, ctx.W * ctx.H);
+        if (PiGfxConfig.disableGfxDMA)
+        {
+            // Simple memory copy
+            unsigned char* src = ctx.pfb;
+            unsigned char* dst = (unsigned char*)buffer;
+            for (unsigned int i = 0; i < ctx.size; i++)
+            {
+                *dst++ = *src++;
+            }
+        }
+        else
+        {
+            // Use DMA for faster copy
+            dma_memcpy_32(buffer, ctx.pfb, ctx.size);
+        }
     }
 }
 
+/** Restores screen content from a buffer. */
 void gfx_restore_screen_buffer(void* buffer)
 {
-    if (buffer != 0 && ctx.pfb != 0)
+    if (buffer != 0)
     {
-        pigfx_memcpy(ctx.pfb, buffer, ctx.W * ctx.H);
+        if (PiGfxConfig.disableGfxDMA)
+        {
+            // Simple memory copy
+            unsigned char* src = (unsigned char*)buffer;
+            unsigned char* dst = ctx.pfb;
+            for (unsigned int i = 0; i < ctx.size; i++)
+            {
+                *dst++ = *src++;
+            }
+        }
+        else
+        {
+            // Use DMA for faster copy
+            dma_memcpy_32(buffer, ctx.pfb, ctx.size);
+        }
     }
 }

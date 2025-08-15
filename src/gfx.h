@@ -18,8 +18,6 @@ extern void gfx_set_default_bg( GFX_COL col );
 extern void gfx_set_default_fg( GFX_COL col );
 extern void gfx_set_bg( GFX_COL col );
 extern void gfx_set_fg( GFX_COL col );
-extern GFX_COL gfx_get_bg( void );
-extern GFX_COL gfx_get_fg( void );
 extern void gfx_swap_fg_bg();
 extern void gfx_get_term_size( unsigned int* rows, unsigned int* cols );
 extern void gfx_get_gfx_size( unsigned int* width, unsigned int* height );
@@ -73,12 +71,10 @@ extern draw_putsprite_fun (*gfx_put_sprite);
  */
 extern void gfx_term_putstring( const char* str );
 extern void gfx_term_set_cursor_visibility( unsigned char visible );
-extern unsigned char gfx_term_get_cursor_visibility( void );
 extern void gfx_term_move_cursor( unsigned int row, unsigned int col );
 extern void gfx_term_move_cursor_d( int delta_row, int delta_col );
 extern void gfx_term_save_cursor();
 extern void gfx_term_restore_cursor();
-extern void gfx_term_render_cursor();
 extern void gfx_term_clear_till_end();
 extern void gfx_term_clear_till_cursor();
 extern void gfx_term_clear_line();
@@ -86,11 +82,14 @@ extern void gfx_term_clear_screen();
 extern void gfx_term_clear_screen_from_here();
 extern void gfx_term_clear_screen_to_here();
 extern void gfx_term_set_font(int width, int height);
+extern void gfx_term_get_font(int* width, int* height);
+extern int gfx_term_get_font_type(void);
 extern void gfx_term_set_tabulation(int width);
-
-// Screen buffer management
-extern void* gfx_get_screen_buffer(void);
-extern unsigned int gfx_get_screen_buffer_size(void);
+extern GFX_COL gfx_get_fg();
+extern GFX_COL gfx_get_bg();
+extern unsigned char gfx_term_get_cursor_visibility();
+extern void gfx_term_render_cursor();
+extern unsigned int gfx_get_screen_buffer_size();
 extern void gfx_save_screen_buffer(void* buffer);
 extern void gfx_restore_screen_buffer(void* buffer);
 

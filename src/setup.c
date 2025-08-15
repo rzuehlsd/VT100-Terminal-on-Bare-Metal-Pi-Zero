@@ -23,12 +23,13 @@ static GFX_COL saved_fg_color = 0;
 static GFX_COL saved_bg_color = 0;
 
 // Setup menu state
-static unsigned int selected_item = 0;  // 0 = Baudrate, 1 = Keyboard, 2 = Foreground, 3 = Background
+static unsigned int selected_item = 0;  // 0 = Baudrate, 1 = Keyboard, 2 = Foreground, 3 = Background, 4 = Font
 static unsigned int selected_baudrate_index = 0;
 static unsigned int selected_keyboard_index = 0;
 static unsigned int selected_fg_color = 0;
 static unsigned int selected_bg_color = 0;
-static const unsigned int num_setup_items = 4;  // Number of setup items
+static unsigned int selected_font_size = 0;
+static const unsigned int num_setup_items = 5;  // Number of setup items
 
 // Available baudrates
 static const unsigned int available_baudrates[] = {
@@ -52,6 +53,18 @@ static const char* color_names[] = {
     "DkGry", "Red", "Green", "Yellow", "Blue", "Magent", "Cyan", "White"
 };
 static const unsigned int num_colors = sizeof(available_colors) / sizeof(available_colors[0]);
+
+// Available font sizes
+static const char* available_fonts[] = {
+    "8x8", "8x16", "8x24", "6x12 Spleen", "12x24 Spleen", "16x32 Spleen", "32x64 Spleen", "8x16 Spleen"
+};
+static const int font_widths[] = {
+    8, 8, 8, 6, 12, 16, 32, -8  // -8 for Spleen 8x16 variant
+};
+static const int font_heights[] = {
+    8, 16, 24, 12, 24, 32, 64, 16
+};
+static const unsigned int num_fonts = sizeof(available_fonts) / sizeof(available_fonts[0]);
 
 // Helper function to draw text at specific position without affecting cursor
 static void draw_text_at(unsigned int row, unsigned int col, const char* text)
@@ -199,6 +212,22 @@ static unsigned int find_current_bg_color_index(void)
     return 0; // BLACK index
 }
 
+// Find current font size index in available fonts array  
+static unsigned int find_current_font_size_index(void)
+{
+    // Use the new font type detection function for precise identification
+    int current_font_type = gfx_term_get_font_type();
+    
+    // The font type directly corresponds to our font array indices
+    if (current_font_type >= 0 && current_font_type < (int)num_fonts)
+    {
+        return (unsigned int)current_font_type;
+    }
+    
+    // Default to 8x16 if current font not found
+    return 1; // 8x16 index
+}
+
 void setup_mode_enter(void)
 {
     if (!setup_mode_active)
@@ -217,6 +246,7 @@ void setup_mode_enter(void)
         selected_keyboard_index = find_current_keyboard_index();
         selected_fg_color = find_current_fg_color_index();
         selected_bg_color = find_current_bg_color_index();
+        selected_font_size = find_current_font_size_index();
         
         // Hide cursor during setup mode
         gfx_term_set_cursor_visibility(0);
@@ -336,6 +366,14 @@ void setup_mode_handle_key(unsigned short key)
                     setup_mode_draw();  // Redraw to show new selection
                 }
             }
+            else if (selected_item == 4) // Font size selected
+            {
+                if (selected_font_size > 0)
+                {
+                    selected_font_size--;
+                    setup_mode_draw();  // Redraw to show new selection
+                }
+            }
             break;
             
         case KeyRight:
@@ -371,6 +409,14 @@ void setup_mode_handle_key(unsigned short key)
                     setup_mode_draw();  // Redraw to show new selection
                 }
             }
+            else if (selected_item == 4) // Font size selected
+            {
+                if (selected_font_size < num_fonts - 1)
+                {
+                    selected_font_size++;
+                    setup_mode_draw();  // Redraw to show new selection
+                }
+            }
             break;
             
         case KeyEscape:
@@ -380,17 +426,17 @@ void setup_mode_handle_key(unsigned short key)
             PiGfxConfig.keyboardLayout[1] = available_keyboards[selected_keyboard_index][1];
             PiGfxConfig.keyboardLayout[2] = '\0'; // Null terminate
             
-            // Apply the new keyboard layout immediately
-            fInitKeyboard(PiGfxConfig.keyboardLayout);
-            
-            // Apply the new baudrate to UART immediately
-            uart_init(PiGfxConfig.uartBaudrate);
-            
             // Update the saved colors so they don't get overwritten on exit
             saved_fg_color = available_colors[selected_fg_color];
             saved_bg_color = available_colors[selected_bg_color];
             
+            // Exit setup mode first to ensure clean state
             setup_mode_exit();
+            
+            // Apply settings after setup mode has exited to avoid interference
+            fInitKeyboard(PiGfxConfig.keyboardLayout);
+            uart_init(PiGfxConfig.uartBaudrate);
+            gfx_term_set_font(font_widths[selected_font_size], font_heights[selected_font_size]);
             break;
             
         default:
@@ -419,8 +465,8 @@ void setup_mode_draw(void)
     gfx_set_bg(current_bg);
     
     // Calculate setup box dimensions (centered)
-    unsigned int box_width = 400;  // pixels
-    unsigned int box_height = 260; // pixels - increased for color selection items
+    unsigned int box_width = 450;  // pixels - increased to accommodate longer font names
+    unsigned int box_height = 280; // pixels - increased for font selection item
     unsigned int box_x = (screen_width - box_width) / 2;
     unsigned int box_y = (screen_height - box_height) / 2;
     
@@ -545,10 +591,34 @@ void setup_mode_draw(void)
         draw_text_at(content_row + 3, content_col + 10, color_names[selected_bg_color]);
     }
     
+    // Draw font size label and value with selection highlighting
+    if (selected_item == 4)
+    {
+        // Selected item - black on white background
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 4, content_col, "Font:     ", 10);
+        
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 4, content_col + 10, available_fonts[selected_font_size], 12);
+    }
+    else
+    {
+        // Not selected - normal colors
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 4, content_col, "Font:     ");
+        
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 4, content_col + 10, available_fonts[selected_font_size]);
+    }
+    
     // Draw instructions using direct character drawing
     gfx_set_fg(CYAN);
     gfx_set_bg(BLUE);
-    draw_text_at(content_row + 5, content_col, "Up/Down: select item");
-    draw_text_at(content_row + 6, content_col, "Left/Right: change value");
-    draw_text_at(content_row + 7, content_col, "ESC: save and exit");
+    draw_text_at(content_row + 6, content_col, "Up/Down: select item");
+    draw_text_at(content_row + 7, content_col, "Left/Right: change value");
+    draw_text_at(content_row + 8, content_col, "ESC: save and exit");
 }
