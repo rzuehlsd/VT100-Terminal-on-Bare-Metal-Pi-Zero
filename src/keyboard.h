@@ -165,5 +165,7 @@ void KeyStatusHandlerRaw (unsigned char ucModifiers, const unsigned char RawKeys
 void fInitKeyboard(char* layout);
 void fUpdateKeyboardLeds(unsigned char useUSB);
 void KeyEvent(unsigned short ucKeyCode, unsigned char ucModifiers);
+void keyboard_disable_autorepeat(void);
+void keyboard_enable_autorepeat(void);
 
 #endif

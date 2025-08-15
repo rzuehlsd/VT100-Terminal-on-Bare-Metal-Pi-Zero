@@ -251,13 +251,6 @@ unsigned char* font_get_glyph_address_8x8(unsigned int c)
 	return ctx.term.FONT + ((unsigned int)c<<6);
 }
 /** Font function for the 8x24 font. */
-unsigned char* font_get_glyph_address_8x24(unsigned int c)
-{
-	// offset of glyph is c * 192 bytes, which is c << 7 + c << 6
-	//unsigned int c64 = (unsigned int)(c<<6);
-	//return (unsigned int*)( ctx.term.FONT + c64 + (c64 << 1));
-	return ctx.term.FONT + c * 192;
-}
 /** Font function for the 8x16 font. */
 unsigned char* font_get_glyph_address_8x16(unsigned int c)
 {
@@ -1837,25 +1830,11 @@ void gfx_term_set_font(int width, int height)
 	{
 		switch (height)
 		{
-		case 8:
-			ctx.term.FONT = &G_FONT8X8_GLYPHS;
-			ctx.term.FONTWIDTH = 8;
-			ctx.term.FONTHEIGHT = 8;
-			ctx.term.font_getglyph = font_get_glyph_address_8x8;
-			gfx_compute_font();
-			break;
 		case 16:
 			ctx.term.FONT = &G_FONT8X16_GLYPHS;
 			ctx.term.FONTWIDTH = 8;
 			ctx.term.FONTHEIGHT = 16;
 			ctx.term.font_getglyph = font_get_glyph_address_8x16;
-			gfx_compute_font();
-			break;
-		case 24:
-			ctx.term.FONT = &G_FONT8X24_GLYPHS;
-			ctx.term.FONTWIDTH = 8;
-			ctx.term.FONTHEIGHT = 24;
-			ctx.term.font_getglyph = font_get_glyph_address_8x24;
 			gfx_compute_font();
 			break;
 		}
@@ -1925,6 +1904,63 @@ void gfx_term_set_font(int width, int height)
     //cout("ctx.term.FONTHEIGHT: ");cout_d(ctx.term.FONTHEIGHT);cout_endl();
 }
 
+/** Sets font by type index (avoids dimension conflicts) */
+void gfx_term_set_font_by_type(int font_type)
+{
+	switch (font_type)
+	{
+	case 1: // 8x16 original
+		ctx.term.FONT = &G_FONT8X16_GLYPHS;
+		ctx.term.FONTWIDTH = 8;
+		ctx.term.FONTHEIGHT = 16;
+		ctx.term.font_getglyph = font_get_glyph_address_8x16;
+		gfx_compute_font();
+		break;
+	case 3: // 6x12 Spleen
+		ctx.term.FONT = &G_SPLEEN6X12_GLYPHS;
+		ctx.term.FONTWIDTH = 6;
+		ctx.term.FONTHEIGHT = 12;
+		ctx.term.font_getglyph = font_get_glyph_address_spleen6x12;
+		gfx_compute_font();
+		break;
+	case 4: // 12x24 Spleen
+		ctx.term.FONT = &G_SPLEEN12X24_GLYPHS;
+		ctx.term.FONTWIDTH = 12;
+		ctx.term.FONTHEIGHT = 24;
+		ctx.term.font_getglyph = font_get_glyph_address_spleen12x24;
+		gfx_compute_font();
+		break;
+	case 5: // 16x32 Spleen
+		ctx.term.FONT = &G_SPLEEN16X32_GLYPHS;
+		ctx.term.FONTWIDTH = 16;
+		ctx.term.FONTHEIGHT = 32;
+		ctx.term.font_getglyph = font_get_glyph_address_spleen16x32;
+		gfx_compute_font();
+		break;
+	case 6: // 32x64 Spleen
+		ctx.term.FONT = &G_SPLEEN32X64_GLYPHS;
+		ctx.term.FONTWIDTH = 32;
+		ctx.term.FONTHEIGHT = 64;
+		ctx.term.font_getglyph = font_get_glyph_address_spleen32x64;
+		gfx_compute_font();
+		break;
+	case 7: // 8x16 Spleen
+		ctx.term.FONT = &G_SPLEEN8X16_GLYPHS;
+		ctx.term.FONTWIDTH = 8;
+		ctx.term.FONTHEIGHT = 16;
+		ctx.term.font_getglyph = font_get_glyph_address_spleen8x16;
+		gfx_compute_font();
+		break;
+	default: // Fallback to 8x16 original
+		ctx.term.FONT = &G_FONT8X16_GLYPHS;
+		ctx.term.FONTWIDTH = 8;
+		ctx.term.FONTHEIGHT = 16;
+		ctx.term.font_getglyph = font_get_glyph_address_8x16;
+		gfx_compute_font();
+		break;
+	}
+}
+
 void gfx_term_get_font(int* width, int* height)
 {
 	if (width != 0)
@@ -1941,9 +1977,7 @@ void gfx_term_get_font(int* width, int* height)
 int gfx_term_get_font_type(void)
 {
 	// Return a unique identifier for each font type
-	if (ctx.term.FONT == &G_FONT8X8_GLYPHS) return 0;          // 8x8
 	if (ctx.term.FONT == &G_FONT8X16_GLYPHS) return 1;         // 8x16
-	if (ctx.term.FONT == &G_FONT8X24_GLYPHS) return 2;         // 8x24
 	if (ctx.term.FONT == &G_SPLEEN6X12_GLYPHS) return 3;       // 6x12 Spleen
 	if (ctx.term.FONT == &G_SPLEEN12X24_GLYPHS) return 4;      // 12x24 Spleen
 	if (ctx.term.FONT == &G_SPLEEN16X32_GLYPHS) return 5;      // 16x32 Spleen

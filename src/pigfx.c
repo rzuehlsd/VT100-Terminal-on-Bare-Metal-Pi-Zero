@@ -19,6 +19,7 @@
 #include "irq.h"
 #include "dma.h"
 #include "nmalloc.h"
+#include "font_registry.h"
 #include "ee_printf.h"
 #include "prop.h"
 #include "board.h"
@@ -571,6 +572,13 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
 
     gfx_set_drawing_mode(drawingNORMAL);
     gfx_set_fg(GRAY);
+
+    // Initialize font registry system
+    font_registry_init();
+    font_registry_register_builtin_fonts();
+    
+    // Set system default font to 8x16 Original (index 0 in registry)
+    font_registry_set_by_index(0);
 
     term_main_loop();
 }

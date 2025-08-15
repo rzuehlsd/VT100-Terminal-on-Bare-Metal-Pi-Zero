@@ -87,7 +87,7 @@ void writePiGFXFont(const std::vector<Character>& chars, const std::string& outp
     
     // Initialize all characters with empty data (all pixels off)
     for (int i = 0; i < 256; i++) {
-        charData[i].resize(fontHeight * ((fontWidth + 7) / 8) * 8, 0x00);
+        charData[i].resize(fontWidth * fontHeight, 0x00);
     }
     
     // Fill in the characters we have

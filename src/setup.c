@@ -15,12 +15,18 @@
 #include "nmalloc.h"
 #include "keyboard.h"
 #include "uart.h"
+#include "font_registry.h"
+#include <stddef.h>
 
 static unsigned char setup_mode_active = 0;
 static void* saved_screen_buffer = 0;
 static unsigned char saved_cursor_visibility = 0;
 static GFX_COL saved_fg_color = 0;
 static GFX_COL saved_bg_color = 0;
+static int saved_font_type = 0;  // Use font type instead of width/height
+static unsigned char needs_redraw = 1;  // Flag to control when to redraw
+static unsigned char settings_changed = 0;  // Flag to track if user made any changes
+static unsigned int original_font_index = 0;  // Track original font when entering setup
 
 // Setup menu state
 static unsigned int selected_item = 0;  // 0 = Baudrate, 1 = Keyboard, 2 = Foreground, 3 = Background, 4 = Font
@@ -54,17 +60,11 @@ static const char* color_names[] = {
 };
 static const unsigned int num_colors = sizeof(available_colors) / sizeof(available_colors[0]);
 
-// Available font sizes
-static const char* available_fonts[] = {
-    "8x8", "8x16", "8x24", "6x12 Spleen", "12x24 Spleen", "16x32 Spleen", "32x64 Spleen", "8x16 Spleen"
-};
-static const int font_widths[] = {
-    8, 8, 8, 6, 12, 16, 32, -8  // -8 for Spleen 8x16 variant
-};
-static const int font_heights[] = {
-    8, 16, 24, 12, 24, 32, 64, 16
-};
-static const unsigned int num_fonts = sizeof(available_fonts) / sizeof(available_fonts[0]);
+// Font switching function that uses font registry
+static void switch_to_font_by_index(int font_index)
+{
+    font_registry_set_by_index(font_index);
+}
 
 // Helper function to draw text at specific position without affecting cursor
 static void draw_text_at(unsigned int row, unsigned int col, const char* text)
@@ -215,17 +215,17 @@ static unsigned int find_current_bg_color_index(void)
 // Find current font size index in available fonts array  
 static unsigned int find_current_font_size_index(void)
 {
-    // Use the new font type detection function for precise identification
-    int current_font_type = gfx_term_get_font_type();
+    // Get the current font index directly from the font registry
+    int current_index = font_registry_get_current_index();
     
-    // The font type directly corresponds to our font array indices
-    if (current_font_type >= 0 && current_font_type < (int)num_fonts)
+    // Validate the index
+    if (current_index >= 0 && current_index < (int)font_registry_get_count())
     {
-        return (unsigned int)current_font_type;
+        return (unsigned int)current_index;
     }
     
-    // Default to 8x16 if current font not found
-    return 1; // 8x16 index
+    // Default to first font if invalid
+    return 0;
 }
 
 void setup_mode_enter(void)
@@ -240,28 +240,42 @@ void setup_mode_enter(void)
         saved_fg_color = gfx_get_fg();
         saved_bg_color = gfx_get_bg();
         
-        // Initialize setup menu state
+        // Save current font index from the font registry (before switching fonts)
+        original_font_index = font_registry_get_current_index();
+        saved_font_type = original_font_index;  // Use registry index for restoration
+        
+        // Disable keyboard autorepeat during setup mode to prevent key repeat issues
+        keyboard_disable_autorepeat();
+        
+        // Initialize setup menu state (before switching dialog font)
         selected_item = 0;  // Start with Baudrate selected
         selected_baudrate_index = find_current_baudrate_index();
         selected_keyboard_index = find_current_keyboard_index();
         selected_fg_color = find_current_fg_color_index();
         selected_bg_color = find_current_bg_color_index();
-        selected_font_size = find_current_font_size_index();
+        selected_font_size = original_font_index;  // Use the saved original index
+        
+        // Reset the settings changed flag
+        settings_changed = 0;
         
         // Hide cursor during setup mode
         gfx_term_set_cursor_visibility(0);
         
-        // Allocate buffer for screen content
+        // Allocate buffer for screen content and save BEFORE switching fonts
         unsigned int buffer_size = gfx_get_screen_buffer_size();
         saved_screen_buffer = nmalloc_malloc(buffer_size);
         
         if (saved_screen_buffer != 0)
         {
-            // Save current screen content
+            // Save current screen content with original font
             gfx_save_screen_buffer(saved_screen_buffer);
         }
         
+        // Switch to system default font (8x16 System Font at index 0) for dialog display
+        switch_to_font_by_index(0);
+        
         setup_mode_active = 1;
+        needs_redraw = 1;
         setup_mode_draw();
     }
 }
@@ -272,10 +286,18 @@ void setup_mode_exit(void)
     {
         setup_mode_active = 0;
         
+        // First restore the original font before any screen operations
+        switch_to_font_by_index(saved_font_type);
+        
+        // Restore original colors
+        gfx_set_fg(saved_fg_color);
+        gfx_set_bg(saved_bg_color);
+        
         // Make sure cursor is hidden and clear any cursor artifacts
         gfx_term_set_cursor_visibility(0);
         
-        // Restore screen content if buffer exists
+       
+        // Try to restore screen content if buffer exists, otherwise just clear
         if (saved_screen_buffer != 0)
         {
             gfx_restore_screen_buffer(saved_screen_buffer);
@@ -292,9 +314,8 @@ void setup_mode_exit(void)
         gfx_term_restore_cursor();
         gfx_term_set_cursor_visibility(saved_cursor_visibility);
         
-        // Restore original colors
-        gfx_set_fg(saved_fg_color);
-        gfx_set_bg(saved_bg_color);
+        // Re-enable keyboard autorepeat after setup mode
+        keyboard_enable_autorepeat();
         
         // Force cursor rendering if cursor should be visible
         if (saved_cursor_visibility)
@@ -320,7 +341,7 @@ void setup_mode_handle_key(unsigned short key)
             if (selected_item > 0)
             {
                 selected_item--;
-                setup_mode_draw();  // Redraw to show new selection
+                needs_redraw = 1;
             }
             break;
             
@@ -329,7 +350,7 @@ void setup_mode_handle_key(unsigned short key)
             if (selected_item < num_setup_items - 1)
             {
                 selected_item++;
-                setup_mode_draw();  // Redraw to show new selection
+                needs_redraw = 1;
             }
             break;
             
@@ -339,7 +360,8 @@ void setup_mode_handle_key(unsigned short key)
                 if (selected_baudrate_index > 0)
                 {
                     selected_baudrate_index--;
-                    setup_mode_draw();  // Redraw to show new selection
+                    settings_changed = 1;
+                    needs_redraw = 1;
                 }
             }
             else if (selected_item == 1) // Keyboard layout selected
@@ -347,7 +369,8 @@ void setup_mode_handle_key(unsigned short key)
                 if (selected_keyboard_index > 0)
                 {
                     selected_keyboard_index--;
-                    setup_mode_draw();  // Redraw to show new selection
+                    settings_changed = 1;
+                    needs_redraw = 1;
                 }
             }
             else if (selected_item == 2) // Foreground color selected
@@ -355,7 +378,8 @@ void setup_mode_handle_key(unsigned short key)
                 if (selected_fg_color > 0)
                 {
                     selected_fg_color--;
-                    setup_mode_draw();  // Redraw to show new selection
+                    settings_changed = 1;
+                    needs_redraw = 1;
                 }
             }
             else if (selected_item == 3) // Background color selected
@@ -363,7 +387,8 @@ void setup_mode_handle_key(unsigned short key)
                 if (selected_bg_color > 0)
                 {
                     selected_bg_color--;
-                    setup_mode_draw();  // Redraw to show new selection
+                    settings_changed = 1;
+                    needs_redraw = 1;
                 }
             }
             else if (selected_item == 4) // Font size selected
@@ -371,7 +396,8 @@ void setup_mode_handle_key(unsigned short key)
                 if (selected_font_size > 0)
                 {
                     selected_font_size--;
-                    setup_mode_draw();  // Redraw to show new selection
+                    settings_changed = 1;
+                    needs_redraw = 1;
                 }
             }
             break;
@@ -382,7 +408,8 @@ void setup_mode_handle_key(unsigned short key)
                 if (selected_baudrate_index < num_baudrates - 1)
                 {
                     selected_baudrate_index++;
-                    setup_mode_draw();  // Redraw to show new selection
+                    settings_changed = 1;
+                    needs_redraw = 1;
                 }
             }
             else if (selected_item == 1) // Keyboard layout selected
@@ -390,7 +417,8 @@ void setup_mode_handle_key(unsigned short key)
                 if (selected_keyboard_index < num_keyboards - 1)
                 {
                     selected_keyboard_index++;
-                    setup_mode_draw();  // Redraw to show new selection
+                    settings_changed = 1;
+                    needs_redraw = 1;
                 }
             }
             else if (selected_item == 2) // Foreground color selected
@@ -398,7 +426,8 @@ void setup_mode_handle_key(unsigned short key)
                 if (selected_fg_color < num_colors - 1)
                 {
                     selected_fg_color++;
-                    setup_mode_draw();  // Redraw to show new selection
+                    settings_changed = 1;
+                    needs_redraw = 1;
                 }
             }
             else if (selected_item == 3) // Background color selected
@@ -406,42 +435,111 @@ void setup_mode_handle_key(unsigned short key)
                 if (selected_bg_color < num_colors - 1)
                 {
                     selected_bg_color++;
-                    setup_mode_draw();  // Redraw to show new selection
+                    settings_changed = 1;
+                    needs_redraw = 1;
                 }
             }
             else if (selected_item == 4) // Font size selected
             {
-                if (selected_font_size < num_fonts - 1)
+                unsigned int font_count = font_registry_get_count();
+                if (selected_font_size < font_count - 1)
                 {
                     selected_font_size++;
-                    setup_mode_draw();  // Redraw to show new selection
+                    settings_changed = 1;
+                    needs_redraw = 1;
                 }
             }
             break;
             
         case KeyEscape:
-            // Save the selected settings to config before exiting
-            PiGfxConfig.uartBaudrate = available_baudrates[selected_baudrate_index];
-            PiGfxConfig.keyboardLayout[0] = available_keyboards[selected_keyboard_index][0];
-            PiGfxConfig.keyboardLayout[1] = available_keyboards[selected_keyboard_index][1];
-            PiGfxConfig.keyboardLayout[2] = '\0'; // Null terminate
+        case KeyReturn:
+            // Only save and apply settings if user made changes
+            if (settings_changed)
+            {
+                // Check if font was changed for special handling
+                unsigned char font_was_changed = (selected_font_size != original_font_index);
+                
+                // Save the selected settings to config before exiting
+                PiGfxConfig.uartBaudrate = available_baudrates[selected_baudrate_index];
+                PiGfxConfig.keyboardLayout[0] = available_keyboards[selected_keyboard_index][0];
+                PiGfxConfig.keyboardLayout[1] = available_keyboards[selected_keyboard_index][1];
+                PiGfxConfig.keyboardLayout[2] = '\0'; // Null terminate
+                
+                // Update the saved colors so they don't get overwritten on exit
+                saved_fg_color = available_colors[selected_fg_color];
+                saved_bg_color = available_colors[selected_bg_color];
+                
+                // Update the saved font type to the selected font so exit doesn't restore the old one
+                saved_font_type = selected_font_size;
+                
+                // Apply settings after setup mode has exited to avoid interference
+                setup_mode_exit();
+                fInitKeyboard(PiGfxConfig.keyboardLayout);
+                uart_init(PiGfxConfig.uartBaudrate);
+                
+                // Only clear screen and reset cursor if font was changed
+                if (font_was_changed)
+                {
+                    gfx_term_clear_screen();
+                    gfx_term_move_cursor(1, 1); // Move to row 1, column 1 (top-left)
+                }
+                // For color changes only, cursor stays at current position with new colors
+            }
+            else
+            {
+                // HACK: If no changes were made, simulate an arrow key press to initialize
+                // the dialog state properly before exiting. This fixes exit behavior when
+                // user immediately presses ESC/Enter without navigating first.
+                if (selected_item < num_setup_items - 1)
+                {
+                    selected_item++;
+                    needs_redraw = 1;
+                    // Force redraw to initialize dialog state
+                    needs_redraw = 0;
+                    setup_mode_draw();
+                    selected_item--; // Restore original position
+                }
+                
+                // No changes made - exit with original saved state intact
+                // Don't modify saved_fg_color, saved_bg_color, or saved_font_type
+                // as they already contain the original values from setup_mode_enter()
+                setup_mode_exit();
+            }
+            break;
             
-            // Update the saved colors so they don't get overwritten on exit
-            saved_fg_color = available_colors[selected_fg_color];
-            saved_bg_color = available_colors[selected_bg_color];
+        case 'q':
+        case 'Q':
+            // HACK: Simulate an arrow key press to initialize dialog state before exit
+            // This fixes exit behavior when user immediately presses Q without navigating first.
+            if (!settings_changed)
+            {
+                if (selected_item < num_setup_items - 1)
+                {
+                    selected_item++;
+                    needs_redraw = 1;
+                    // Force redraw to initialize dialog state
+                    needs_redraw = 0;
+                    setup_mode_draw();
+                    selected_item--; // Restore original position
+                }
+            }
             
-            // Exit setup mode first to ensure clean state
+            // Cancel without saving any changes - exit with original saved state intact
+            // Don't modify saved_fg_color, saved_bg_color, or saved_font_type
+            // as they already contain the original values from setup_mode_enter()
             setup_mode_exit();
-            
-            // Apply settings after setup mode has exited to avoid interference
-            fInitKeyboard(PiGfxConfig.keyboardLayout);
-            uart_init(PiGfxConfig.uartBaudrate);
-            gfx_term_set_font(font_widths[selected_font_size], font_heights[selected_font_size]);
             break;
             
         default:
             // Ignore other keys in setup mode
             break;
+    }
+    
+    // Only redraw if something changed
+    if (needs_redraw)
+    {
+        needs_redraw = 0;
+        setup_mode_draw();
     }
 }
 
@@ -466,7 +564,7 @@ void setup_mode_draw(void)
     
     // Calculate setup box dimensions (centered)
     unsigned int box_width = 450;  // pixels - increased to accommodate longer font names
-    unsigned int box_height = 280; // pixels - increased for font selection item
+    unsigned int box_height = 300; // pixels - increased for additional instruction line
     unsigned int box_x = (screen_width - box_width) / 2;
     unsigned int box_y = (screen_height - box_height) / 2;
     
@@ -601,7 +699,17 @@ void setup_mode_draw(void)
         
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 4, content_col + 10, available_fonts[selected_font_size], 12);
+        
+        // Get font info from registry
+        const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
+        if (font_info != NULL && font_info->name != NULL)
+        {
+            draw_text_at_with_bg(content_row + 4, content_col + 10, font_info->name, 12);
+        }
+        else
+        {
+            draw_text_at_with_bg(content_row + 4, content_col + 10, "Unknown", 12);
+        }
     }
     else
     {
@@ -612,7 +720,17 @@ void setup_mode_draw(void)
         
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 4, content_col + 10, available_fonts[selected_font_size]);
+        
+        // Get font info from registry
+        const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
+        if (font_info != NULL && font_info->name != NULL)
+        {
+            draw_text_at(content_row + 4, content_col + 10, font_info->name);
+        }
+        else
+        {
+            draw_text_at(content_row + 4, content_col + 10, "Unknown");
+        }
     }
     
     // Draw instructions using direct character drawing
@@ -620,5 +738,6 @@ void setup_mode_draw(void)
     gfx_set_bg(BLUE);
     draw_text_at(content_row + 6, content_col, "Up/Down: select item");
     draw_text_at(content_row + 7, content_col, "Left/Right: change value");
-    draw_text_at(content_row + 8, content_col, "ESC: save and exit");
+    draw_text_at(content_row + 8, content_col, "ESC/Enter: save and exit");
+    draw_text_at(content_row + 9, content_col, "Q: cancel without saving");
 }

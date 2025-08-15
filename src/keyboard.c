@@ -75,6 +75,9 @@ static const char *s_KeyStrings[KeyMaxCode-KeySpace] =
 };
 
 TKeyMap actKeyMap;
+
+// Global flag to disable autorepeat completely
+static unsigned char autorepeat_disabled = 1;  // Completely disable autorepeat
 unsigned int backspace_n_skip;
 unsigned int last_backspace_t;
 
@@ -376,9 +379,12 @@ void KeyStatusHandlerRaw (unsigned char ucModifiers, const unsigned char RawKeys
     {
         KeyEvent(ucKeyCode, ucModifiers);
 
-        if (actKeyMap.repeatTimerHnd) remove_timer(actKeyMap.repeatTimerHnd);
-
-        actKeyMap.repeatTimerHnd = attach_timer_handler(1, RepeatKey, (void*)&actKeyMap, 0);       // 1 until repeat starts
+        // Only setup autorepeat if not disabled
+        if (!autorepeat_disabled)
+        {
+            if (actKeyMap.repeatTimerHnd) remove_timer(actKeyMap.repeatTimerHnd);
+            actKeyMap.repeatTimerHnd = attach_timer_handler(1, RepeatKey, (void*)&actKeyMap, 0);       // 1 until repeat starts
+        }
     }
     else
     {
@@ -388,5 +394,32 @@ void KeyStatusHandlerRaw (unsigned char ucModifiers, const unsigned char RawKeys
         }
     }
 
+}
+
+// Disable keyboard autorepeat (for setup mode) - autorepeat is permanently disabled
+void keyboard_disable_autorepeat(void)
+{
+    // Clean up any existing timers just in case
+    if (actKeyMap.repeatTimerHnd) {
+        remove_timer(actKeyMap.repeatTimerHnd);
+        actKeyMap.repeatTimerHnd = 0;
+    }
+    
+    // Clear last key code to prevent any issues
+    actKeyMap.ucLastPhyCode = 0;
+    
+    // Clear modifiers to ensure clean state
+    actKeyMap.ucModifiers = 0;
+}
+
+// Enable keyboard autorepeat (after setup mode) - autorepeat is permanently disabled
+void keyboard_enable_autorepeat(void)
+{
+    // Autorepeat is permanently disabled, so this function does nothing
+    // Just ensure any existing timer is cleared
+    if (actKeyMap.repeatTimerHnd) {
+        remove_timer(actKeyMap.repeatTimerHnd);
+        actKeyMap.repeatTimerHnd = 0;
+    }
 }
 

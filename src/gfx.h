@@ -82,6 +82,7 @@ extern void gfx_term_clear_screen();
 extern void gfx_term_clear_screen_from_here();
 extern void gfx_term_clear_screen_to_here();
 extern void gfx_term_set_font(int width, int height);
+extern void gfx_term_set_font_by_type(int font_type);
 extern void gfx_term_get_font(int* width, int* height);
 extern int gfx_term_get_font_type(void);
 extern void gfx_term_set_tabulation(int width);
