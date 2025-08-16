@@ -620,9 +620,22 @@ void LogWrite (const char *pSource,
        	       unsigned	   Severity,	
 	       const char *fmt, ...)
 {
+  // Convert old USPI severity values to new bitmap format for backward compatibility
+  unsigned bitmap_severity;
+  switch(Severity) {
+      case 1: bitmap_severity = LOG_ERROR_BIT; break;    // LOG_ERROR
+      case 2: bitmap_severity = LOG_WARNING_BIT; break;  // LOG_WARNING  
+      case 3: bitmap_severity = LOG_NOTICE_BIT; break;   // LOG_NOTICE
+      case 4: bitmap_severity = LOG_DEBUG_BIT; break;    // LOG_DEBUG
+      default: 
+          // Already a bitmap value or unknown - use as-is
+          bitmap_severity = Severity; 
+          break;
+  }
+
   // Check if this severity level should be output using bitmap
-  if (!SHOULD_LOG(Severity)) {
-      return;  // Filter based on DEBUG_SEVERITY configuration
+  if (!SHOULD_LOG(bitmap_severity)) {
+      return;  // Filter based on g_debug_severity variable
   }
 
   char buf[15*80];
@@ -633,7 +646,7 @@ void LogWrite (const char *pSource,
   va_end(args);
 
   DO_LOG_STRING( "[" );
-  switch( Severity )
+  switch( bitmap_severity )
   {
       case LOG_ERROR_BIT:
           DO_LOG_STRING(" ERROR ");

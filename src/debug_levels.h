@@ -7,6 +7,10 @@
 #define LOG_NOTICE_BIT   0x04
 #define LOG_DEBUG_BIT    0x08
 
+// Legacy compatibility defines for USPI and other code
+// USPI uses: LOG_ERROR=1, LOG_WARNING=2, LOG_NOTICE=3, LOG_DEBUG=4
+// Our LogWrite() function automatically converts these to bitmap values
+
 // Global debug severity variable (can be changed at runtime)
 extern unsigned g_debug_severity;
 

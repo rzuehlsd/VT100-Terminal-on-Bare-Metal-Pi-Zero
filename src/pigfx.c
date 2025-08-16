@@ -21,6 +21,7 @@
 #include "nmalloc.h"
 #include "font_registry.h"
 #include "ee_printf.h"
+#include "debug_levels.h"
 #include "prop.h"
 #include "board.h"
 #include "mbox.h"
@@ -37,25 +38,56 @@
 
 #define UART_BUFFER_SIZE 16384 /* 16k */
 
-// Debug output macros - only output when SYSTEM_DEBUG is enabled
-#if ENABLED(SYSTEM_DEBUG)
-#define DEBUG_PRINTF(...) ee_printf(__VA_ARGS__)
-#define DEBUG_PUTSTRING(str) gfx_term_putstring(str)
+// Enhanced logging macros using our new bitmap-based debug system
+// These provide consistent formatting, runtime control, and automatic color management
+
+// Debug messages - controlled by runtime debug severity setting
+#define DEBUG_LOG(msg, ...) LogDebug("pigfx", msg, ##__VA_ARGS__)
+
+// Error messages - always shown with red color and file/line info
+#define ERROR_LOG(msg, ...) \
+    do { \
+        unsigned saved = GetDebugSeverity(); \
+        SetDebugSeverity(LOG_ERROR_BIT); \
+        gfx_set_fg(RED); \
+        LogError("pigfx", msg, ##__VA_ARGS__); \
+        gfx_set_fg(GRAY); \
+        SetDebugSeverity(saved); \
+    } while(0)
+
+// Success messages - always shown with green color
+#define SUCCESS_LOG(msg, ...) \
+    do { \
+        unsigned saved = GetDebugSeverity(); \
+        SetDebugSeverity(LOG_NOTICE_BIT); \
+        gfx_set_fg(GREEN); \
+        LogNotice("pigfx", msg, ##__VA_ARGS__); \
+        gfx_set_fg(GRAY); \
+        SetDebugSeverity(saved); \
+    } while(0)
+
+// Info messages - always shown, normal color
+#define INFO_LOG(msg, ...) \
+    do { \
+        unsigned saved = GetDebugSeverity(); \
+        SetDebugSeverity(LOG_NOTICE_BIT); \
+        LogNotice("pigfx", msg, ##__VA_ARGS__); \
+        SetDebugSeverity(saved); \
+    } while(0)
+
+// Warning messages - controlled by runtime debug severity setting
+#define WARNING_LOG(msg, ...) LogWarning("pigfx", msg, ##__VA_ARGS__)
+
+// Legacy macros for backward compatibility - map to new system
+#define DEBUG_PRINTF(...) do { LogDebug("pigfx", __VA_ARGS__); } while(0)
+#define ERROR_PRINTF(...) do { ERROR_LOG(__VA_ARGS__); } while(0)
+#define SUCCESS_PRINTF(...) do { SUCCESS_LOG(__VA_ARGS__); } while(0)  
+#define INFO_PRINTF(...) do { INFO_LOG(__VA_ARGS__); } while(0)
+
+// Legacy color and string macros
+#define DEBUG_PUTSTRING(str) do { LogDebug("pigfx", "%s", str); } while(0)
 #define DEBUG_SET_BG(color) gfx_set_bg(color)
 #define DEBUG_SET_FG(color) gfx_set_fg(color)
-#else
-#define DEBUG_PRINTF(...) do {} while(0)
-#define DEBUG_PUTSTRING(str) do {} while(0)
-#define DEBUG_SET_BG(color) do {} while(0)
-#define DEBUG_SET_FG(color) do {} while(0)
-#endif
-
-// Error messages are always shown
-#define ERROR_PRINTF(...) do { gfx_set_fg(RED); ee_printf(__VA_ARGS__); gfx_set_fg(GRAY); } while(0)
-#define SUCCESS_PRINTF(...) do { gfx_set_fg(GREEN); ee_printf(__VA_ARGS__); gfx_set_fg(GRAY); } while(0)
-
-// Essential status messages - always shown regardless of debug setting
-#define INFO_PRINTF(...) ee_printf(__VA_ARGS__)
 #define INFO_SET_BG(color) gfx_set_bg(color)
 #define INFO_SET_FG(color) gfx_set_fg(color)
 
@@ -421,6 +453,14 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     // UART buffer allocation
     uart_buffer = (volatile char*)nmalloc_malloc( UART_BUFFER_SIZE );
     uart_init(9600);
+    
+    // Initialize debug system - enable INFO and ERROR by default
+    // DEBUG can be enabled later with SetDebugSeverity() if needed
+#if ENABLED(SYSTEM_DEBUG)
+    SetDebugSeverity(LOG_ERROR_BIT | LOG_NOTICE_BIT | LOG_DEBUG_BIT);
+#else
+    SetDebugSeverity(LOG_ERROR_BIT | LOG_NOTICE_BIT);
+#endif
 
     // Init Pagetable
     CreatePageTable(ARM_MEMSIZE);
