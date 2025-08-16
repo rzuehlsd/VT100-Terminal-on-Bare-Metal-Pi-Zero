@@ -223,32 +223,78 @@ A collision is reported as a keyboard input with this syntax: \ESC[#-idx1-;-idx2
 
 ## Compiling on Mac / Linux
 
-To compile you will need to install a GNU ARM cross compiler toolchain and
-ensure that  ```arm-none-eabi-gcc```, ```arm-none-eabi-as```
-```arm-none-eabi-ld``` and ```arm-none-eabi-objcopy``` are in your PATH.
+### Unified Build System (Enhanced Edition)
 
-At this point, just run:
+PiGFX Enhanced Edition features a unified build system that automatically selects the correct toolchain and configuration for each Raspberry Pi model:
 
+**Required Toolchains:**
+
+- For Pi 1-3: ```arm-none-eabi-gcc``` toolchain
+- For Pi 4: ```aarch64-linux-gnu-gcc``` toolchain
+
+**Building for specific Pi models:**
+
+```bash
+# Build for Raspberry Pi 1 (default)
+make RPI=1
+
+# Build for Raspberry Pi 2  
+make RPI=2
+
+# Build for Raspberry Pi 3
+make RPI=3
+
+# Build for Raspberry Pi 4
+make RPI=4
 ```
-$ ./makeall
+
+The build system automatically:
+
+- Selects the correct cross-compiler toolchain
+- Configures the uspi USB library (Pi 1-3 only)
+- Sets appropriate compiler flags for each Pi model
+- Generates the correct kernel image name
+
+**Traditional build (deprecated):**
+
+```bash
+./makeall
 ```
 
-in the PiGFX root directory. The project should compile with the 2019 version
-of the toolchain.
+The project should compile with recent versions of the ARM toolchain (tested with 2019+ versions).
 
 
 ## Compiling on Windows
 
-To compile you will need to install a [GNU ARM cross compiler toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads) and
-ensure that  ```arm-none-eabi-gcc```, ```arm-none-eabi-as```
-```arm-none-eabi-ld``` and ```arm-none-eabi-objcopy``` are in your PATH.
+### Windows Build Setup
 
-You'll also need the [git executable git.exe](https://git-scm.com/download/win) in your PATH.
+You will need to install the appropriate GNU ARM cross compiler toolchains:
 
-At this point, just run:
+- [ARM GNU Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads) for Pi 1-3
+- [AArch64 GNU Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-a/downloads) for Pi 4
 
+Ensure that the toolchain binaries are in your PATH along with [git.exe](https://git-scm.com/download/win).
+
+**Building for specific Pi models:**
+
+```cmd
+REM Build for Raspberry Pi 1 (default)
+make RPI=1
+
+REM Build for Raspberry Pi 2
+make RPI=2
+
+REM Build for Raspberry Pi 3
+make RPI=3
+
+REM Build for Raspberry Pi 4
+make RPI=4
 ```
-> makeall
+
+**Traditional build (deprecated):**
+
+```cmd
+makeall
 ```
 
 ## License

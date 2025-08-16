@@ -1,15 +1,6 @@
 #!/bin/sh 
 mkdir ./build
-for i in 1 2 3
-do
-    cd uspi
-    echo "RASPPI = $i" > Config.mk
-    ./makeall clean
-    ./makeall
-    cd ..
-    make clean
-    make RPI=$i
-done
-
+# Build for Raspberry Pi 1 with unified build system
+echo "Building PiGFX with unified build system for Raspberry Pi 1"
 make clean
-make RPI=4
+make RPI=1

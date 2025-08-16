@@ -2,6 +2,70 @@
 
 Versions and modifications.
 
+## Version 2.0.0 - Enhanced Edition - 2025 August 16th
+
+### Major Features: Two-Stage Configuration & Unified Build System
+
+**Two-Stage Configuration System:**
+* Safe boot configuration applied before "Waiting for UART.." message
+* User configuration applied after UART initialization for proper timing
+* Fixes font and color configuration persistence issues
+* Ensures correct display settings from system startup
+
+**Dynamic Resolution Switching:**
+* Added support for dynamic switching between 640x480 and 1024x768
+* Automatic framebuffer re-initialization without reboot
+* Configurable via pigfx.txt and runtime commands
+* Seamless resolution changes during operation
+
+**Enhanced Configuration Documentation:**
+* Complete color palette documentation (0-255 index mapping)
+* Comprehensive font selection guide with all available indices
+* Detailed configuration examples in pigfx.txt
+* Clear explanations for all configuration parameters
+
+**Advanced Setup Dialog:**
+* Enhanced setup dialog with 6 configuration options
+* Interactive font and color selection
+* Resolution switching capabilities
+* Improved user experience for configuration changes
+
+**Unified Build System:**
+* Single RPI variable controls entire build process (RPI=1,2,3,4)
+* Automatic toolchain selection based on Pi version:
+  - Pi 1-3: arm-none-eabi- toolchain
+  - Pi 4: aarch64-linux-gnu- toolchain
+* Intelligent uspi library management:
+  - Automatic building for Pi 1-3
+  - Skipped for Pi 4 (not required)
+  - Auto-regeneration of Config.mk when switching Pi versions
+* Simplified development workflow - no manual toolchain configuration
+* Clear build information display showing Pi model, toolchain, and status
+
+**Build System Improvements:**
+* Removed multi-Pi kernel builds (kernel7, kernel8-32, recovery7)
+* Unified makeall script for streamlined building
+* Automatic cross-compilation setup
+* Proper architecture-specific compiler flags
+* Enhanced build validation and error handling
+
+**Technical Improvements:**
+* Fixed font registry error handling (proper return value checking)
+* Improved configuration timing and persistence
+* Enhanced framebuffer management
+* Better error recovery and system stability
+* Optimized configuration loading sequence
+
+### Breaking Changes:
+* Removed separate kernel builds - use RPI variable instead
+* Deprecated traditional ./makeall in favor of make RPI=X
+* Configuration timing changed - some settings applied later in boot sequence
+
+### Migration Guide:
+* Replace `./makeall` with `make RPI=1` (or appropriate Pi version)
+* Update build scripts to use new RPI variable
+* Review pigfx.txt configuration with new documentation
+
 ## Version 1.5.0 - 2020 June 9th
 
 * PS/2 keyboard support

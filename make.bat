@@ -66,11 +66,8 @@ arm-none-eabi-ld %OBJS% "%LIBGCC%" %LIBUSPI% -T memmap -o pigfx.elf
 :: generate .img
 arm-none-eabi-objcopy pigfx.elf -O binary pigfx.img
 
-:: Copy img file
-if "%RPI%"=="1" copy pigfx.img bin\kernel.img
-if "%RPI%"=="2" copy pigfx.img bin\kernel7.img
-if "%RPI%"=="3" copy pigfx.img bin\kernel8-32.img
-if "%RPI%"=="4" copy pigfx.img bin\recovery7l.img
+:: Copy img file (only for Pi 1)
+copy pigfx.img bin\kernel.img
 
 goto end
 

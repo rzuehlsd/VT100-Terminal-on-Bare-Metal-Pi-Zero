@@ -1,5 +1,64 @@
-# PiGFX
-## Version 1.1.1 
+# PiGFX Enhanced Edition
+## Recent Updates and Features
+
+### Enhanced Configuration System (2025)
+
+PiGFX Enhanced Edition now features a comprehensive two-stage configuration system with advanced display management:
+
+**Two-Stage Configuration:**
+- **Stage 1**: Safe boot configuration applied early (before "Waiting for UART" message)
+- **Stage 2**: User configuration applied after UART initialization for proper timing
+- Prevents initialization timing issues while maintaining configurability
+
+**Enhanced pigfx.txt Configuration:**
+- Complete color palette documentation with index mapping (0-255)
+- Font selection guide with all available font indices
+- Resolution switching support (640x480 ↔ 1024x768)
+- Comprehensive configuration examples and explanations
+
+**Advanced Display Features:**
+- Dynamic resolution switching without reboot
+- Automatic framebuffer re-initialization
+- Improved font registry with better error handling
+- Enhanced setup dialog with 6 configuration options
+
+**Configuration File Documentation:**
+The pigfx.txt file now includes detailed documentation for:
+- Color index mapping (0-255 palette reference)
+- Available fonts and their indices
+- Display resolution options
+- All configuration parameters with examples
+
+### Unified Build System (2025)
+
+PiGFX Enhanced Edition features a completely redesigned build system:
+
+**Single RPI Variable Control:**
+- Use `make RPI=1` for Raspberry Pi 1
+- Use `make RPI=2` for Raspberry Pi 2  
+- Use `make RPI=3` for Raspberry Pi 3
+- Use `make RPI=4` for Raspberry Pi 4
+
+**Automatic Toolchain Selection:**
+- Pi 1-3: Automatically uses `arm-none-eabi-` toolchain
+- Pi 4: Automatically uses `aarch64-linux-gnu-` toolchain
+- No manual toolchain configuration required
+
+**Intelligent USB Library Management:**
+- Automatically builds uspi library for Pi 1-3
+- Skips uspi for Pi 4 (not required)
+- Automatic Config.mk regeneration when switching Pi versions
+- Proper cross-compilation with correct architectures
+
+**Build Information Display:**
+- Shows selected Pi model and target kernel
+- Displays active toolchain
+- Indicates uspi library status
+- Clear build completion summary
+
+---
+
+## Version 1.1.1 Features
 
 *Modifications by Francis Piérot*
 

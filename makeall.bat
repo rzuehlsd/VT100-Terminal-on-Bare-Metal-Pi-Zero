@@ -1,5 +1,3 @@
 @echo off
+REM Build only for Raspberry Pi 1
 call make 1
-call make 2
-call make 3
-call make 4
