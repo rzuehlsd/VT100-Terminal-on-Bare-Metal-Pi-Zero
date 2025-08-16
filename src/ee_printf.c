@@ -604,6 +604,12 @@ void LogWrite (const char *pSource,
        	       unsigned	   Severity,	
 	       const char *fmt, ...)
 {
+  // Only output NOTICE level messages to reduce uspi debug spam
+  // LOG_ERROR=1, LOG_WARNING=2, LOG_NOTICE=3, LOG_DEBUG=4
+  if (Severity != 3) {  // 3 = LOG_NOTICE
+      return;  // Filter out all messages except NOTICE level
+  }
+
   char buf[15*80];
   va_list args;
 

@@ -69,7 +69,14 @@ endif
 # Configure and build uspi library for the specified RPI version
 uspi: uspi/lib/libuspi.a
 
-uspi/lib/libuspi.a: uspi/Config.mk
+# Auto-clone uspi repository if directory doesn't exist or is empty
+uspi/.git:
+	@echo "USPI directory not found or empty - cloning from repository..."
+	@if [ -d "uspi" ]; then rm -rf uspi; fi
+	@git clone https://github.com/rsta2/uspi.git uspi
+	@echo "USPI repository cloned successfully"
+
+uspi/lib/libuspi.a: uspi/.git uspi/Config.mk
 ifeq ($(strip $(RPI)),4)
 	@echo "Skipping USPI build for Raspberry Pi 4"
 else
@@ -147,6 +154,35 @@ pigfx.elf : $(SRC_DIR)/pigfx_config.h $(OBJS) $(LIBUSPI)
 ifeq ($(strip $(RPI)),4)
 	@echo "Skipping USPI clean for Raspberry Pi 4"
 else
-	@echo "Cleaning USPI"
-	@cd uspi && ./makeall clean
+	@if [ -d "uspi" ]; then echo "Cleaning USPI" && cd uspi && ./makeall clean; fi
 endif
+
+# Clean everything including uspi directory
+cleanall: clean
+	@echo "Removing USPI directory..."
+	@rm -rf uspi
+	@echo "Complete clean finished - USPI will be re-cloned on next build"
+
+# Help target to show available commands
+help:
+	@echo "PiGFX Enhanced Edition - Available Make Targets:"
+	@echo ""
+	@echo "Building:"
+	@echo "  make RPI=1    - Build for Raspberry Pi 1 (default)"
+	@echo "  make RPI=2    - Build for Raspberry Pi 2"
+	@echo "  make RPI=3    - Build for Raspberry Pi 3"
+	@echo "  make RPI=4    - Build for Raspberry Pi 4"
+	@echo ""
+	@echo "Cleaning:"
+	@echo "  make clean    - Clean build artifacts (keeps uspi)"
+	@echo "  make cleanall - Clean everything including uspi directory"
+	@echo ""
+	@echo "Development:"
+	@echo "  make run      - Run in QEMU emulator"
+	@echo "  make debug    - Start GDB debugging session"
+	@echo "  make dump     - Create disassembly dump"
+	@echo ""
+	@echo "Notes:"
+	@echo "- USPI library is automatically cloned if missing"
+	@echo "- Toolchain selection is automatic based on Pi version"
+	@echo "- Use 'make cleanall' to force fresh uspi clone"
