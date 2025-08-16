@@ -76,8 +76,9 @@ static const char *s_KeyStrings[KeyMaxCode-KeySpace] =
 
 TKeyMap actKeyMap;
 
-// Global flag to disable autorepeat completely
-static unsigned char autorepeat_disabled = 1;  // Completely disable autorepeat
+// Global flag to disable autorepeat temporarily (for setup mode)
+static unsigned char autorepeat_disabled = 0;  // Enable autorepeat by default (can be overridden by config)
+static unsigned char autorepeat_globally_enabled = 1;  // Global autorepeat setting from config
 unsigned int backspace_n_skip;
 unsigned int last_backspace_t;
 
@@ -112,6 +113,9 @@ void fInitKeyboard(char* layout)
     actKeyMap.ucLastPhyCode = 0;
     actKeyMap.ucModifiers = 0;
     actKeyMap.repeatTimerHnd = 0;
+
+    // Set global autorepeat setting from config
+    autorepeat_globally_enabled = PiGfxConfig.keyboardAutorepeat;
 
     if      ((layout[0] == 'u') && (layout[1] == 'k')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_uk, sizeof(actKeyMap.m_KeyMap));
     else if ((layout[0] == 'i') && (layout[1] == 't')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_it, sizeof(actKeyMap.m_KeyMap));
@@ -379,8 +383,8 @@ void KeyStatusHandlerRaw (unsigned char ucModifiers, const unsigned char RawKeys
     {
         KeyEvent(ucKeyCode, ucModifiers);
 
-        // Only setup autorepeat if not disabled
-        if (!autorepeat_disabled)
+        // Only setup autorepeat if not disabled and globally enabled
+        if (!autorepeat_disabled && autorepeat_globally_enabled)
         {
             if (actKeyMap.repeatTimerHnd) remove_timer(actKeyMap.repeatTimerHnd);
             actKeyMap.repeatTimerHnd = attach_timer_handler(1, RepeatKey, (void*)&actKeyMap, 0);       // 1 until repeat starts
@@ -396,10 +400,12 @@ void KeyStatusHandlerRaw (unsigned char ucModifiers, const unsigned char RawKeys
 
 }
 
-// Disable keyboard autorepeat (for setup mode) - autorepeat is permanently disabled
+// Disable keyboard autorepeat (for setup mode)
 void keyboard_disable_autorepeat(void)
 {
-    // Clean up any existing timers just in case
+    autorepeat_disabled = 1;
+    
+    // Clean up any existing timers
     if (actKeyMap.repeatTimerHnd) {
         remove_timer(actKeyMap.repeatTimerHnd);
         actKeyMap.repeatTimerHnd = 0;
@@ -412,14 +418,9 @@ void keyboard_disable_autorepeat(void)
     actKeyMap.ucModifiers = 0;
 }
 
-// Enable keyboard autorepeat (after setup mode) - autorepeat is permanently disabled
+// Enable keyboard autorepeat (after setup mode)
 void keyboard_enable_autorepeat(void)
 {
-    // Autorepeat is permanently disabled, so this function does nothing
-    // Just ensure any existing timer is cleared
-    if (actKeyMap.repeatTimerHnd) {
-        remove_timer(actKeyMap.repeatTimerHnd);
-        actKeyMap.repeatTimerHnd = 0;
-    }
+    autorepeat_disabled = 0;
 }
 

@@ -32,6 +32,12 @@ typedef struct
     unsigned int backspaceEcho;         // Auto-echo the backspace char
     unsigned int skipBackspaceEcho;     // Skip the next incoming character after a backspace from keyboard
     unsigned int swapDelWithBackspace;  // Substitute DEL (0x7F) with BACKSPACE (0x08)
+    unsigned int keyboardAutorepeat;    // Enable keyboard autorepeat (1 = enabled, 0 = disabled)
+    unsigned int foregroundColor;       // Default foreground color (0-255)
+    unsigned int backgroundColor;       // Default background color (0-255)
+    unsigned int fontSelection;         // Default font selection (font registry index)
+    unsigned int displayWidth;          // Display width (640 or 1024)
+    unsigned int displayHeight;         // Display height (480 or 768)
     unsigned int showRC2014Logo;        // Show the RC2014 logo at startup
     unsigned int disableGfxDMA;         // Disable DMA for Gfx if 1
     unsigned int disableCollision;      // Disable collision detection if 1
@@ -41,7 +47,9 @@ typedef struct
 extern tPiGfxConfig PiGfxConfig;
 
 
+void setSafeConfig();
 void setDefaultConfig();
 unsigned char lookForConfigFile();
+void applyDisplayConfig();
 
 #endif

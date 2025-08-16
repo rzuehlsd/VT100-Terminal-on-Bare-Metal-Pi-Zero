@@ -323,6 +323,10 @@ void term_main_loop()
 {
     INFO_PRINTF("Waiting for UART data (%d baud).\n",PiGfxConfig.uartBaudrate);
 
+    // NOW apply user configuration (colors, fonts) after "Waiting for UART" message
+    INFO_PRINTF("Applying user display configuration...\n");
+    applyDisplayConfig();
+
     /**/
     while( uart_buffer_start == uart_buffer_end )
     {
@@ -434,7 +438,18 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     timers_init();
     attach_timer_handler( HEARTBEAT_FREQUENCY, _heartbeat_timer_handler, 0, 0 );
 
-    initialize_framebuffer(1024, 768, 8);
+    // Stage 1: Apply safe configuration for system initialization
+    setSafeConfig();
+    
+    // Initialize framebuffer with safe resolution (640x480)
+    initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);
+    
+    // Initialize font registry system BEFORE applying any display configuration
+    font_registry_init();
+    font_registry_register_builtin_fonts();
+    
+    // Now we can safely apply safe display settings (white on black, system font)
+    applyDisplayConfig();
 
     gfx_term_putstring( "\x1B[2J" ); // Clear screen
     gfx_set_bg(BLUE);
@@ -495,7 +510,8 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     DEBUG_PRINTF(board_processor(raspiBoard.processor));
     DEBUG_PRINTF(", %iMB ARM RAM\n", ArmRam.size, ArmRam.baseAddr);
 
-    // Set default config
+    // Stage 2: Load user configuration from pigfx.txt
+    // Set fallback default configuration first
     setDefaultConfig();
 
     DEBUG_SET_BG(BLUE);
@@ -504,9 +520,26 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     DEBUG_SET_BG(BLACK);
     DEBUG_SET_FG(GRAY);
 
-    // Try to load a config file
+    // Try to load user config file
     lookForConfigFile();
     INFO_PRINTF("Filesystem initialized.\n");
+    
+    // Check if resolution changed and reinitialize framebuffer if needed
+    unsigned int currentWidth, currentHeight;
+    gfx_get_gfx_size(&currentWidth, &currentHeight);
+    if (currentWidth != PiGfxConfig.displayWidth || currentHeight != PiGfxConfig.displayHeight) {
+        INFO_PRINTF("Switching resolution to %dx%d\n", PiGfxConfig.displayWidth, PiGfxConfig.displayHeight);
+        initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);
+        // Re-initialize font registry after framebuffer change
+        font_registry_init();
+        font_registry_register_builtin_fonts();
+        // Apply safe colors again after resolution change
+        gfx_set_fg(15);  // White
+        gfx_set_bg(0);   // Black
+        font_registry_set_by_index(0);  // Safe system font
+    }
+    
+    // Note: User display configuration (colors, fonts) will be applied after "Waiting for UART" message
 
     uart_init(PiGfxConfig.uartBaudrate);
     initialize_uart_irq();
@@ -572,13 +605,6 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
 
     gfx_set_drawing_mode(drawingNORMAL);
     gfx_set_fg(GRAY);
-
-    // Initialize font registry system
-    font_registry_init();
-    font_registry_register_builtin_fonts();
-    
-    // Set system default font to 8x16 Original (index 0 in registry)
-    font_registry_set_by_index(0);
 
     term_main_loop();
 }

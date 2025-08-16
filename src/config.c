@@ -16,6 +16,9 @@
 #include "nmalloc.h"
 #include "c_utils.h"
 #include "ini.h"
+#include "gfx.h"
+#include "font_registry.h"
+#include "framebuffer.h"
 
 int inihandler(void* user, const char* section, const char* name, const char* value)
 {
@@ -59,6 +62,36 @@ int inihandler(void* user, const char* section, const char* name, const char* va
         tmpValue = atoi(value);
         if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.swapDelWithBackspace = tmpValue;
     }
+    else if (pigfx_strcmp(name, "keyboardAutorepeat") == 0)
+    {
+        tmpValue = atoi(value);
+        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.keyboardAutorepeat = tmpValue;
+    }
+    else if (pigfx_strcmp(name, "foregroundColor") == 0)
+    {
+        tmpValue = atoi(value);
+        if ((tmpValue >= 0) && (tmpValue <= 255)) PiGfxConfig.foregroundColor = tmpValue;
+    }
+    else if (pigfx_strcmp(name, "backgroundColor") == 0)
+    {
+        tmpValue = atoi(value);
+        if ((tmpValue >= 0) && (tmpValue <= 255)) PiGfxConfig.backgroundColor = tmpValue;
+    }
+    else if (pigfx_strcmp(name, "fontSelection") == 0)
+    {
+        tmpValue = atoi(value);
+        if (tmpValue >= 0) PiGfxConfig.fontSelection = tmpValue;  // Let font registry validate the range
+    }
+    else if (pigfx_strcmp(name, "displayWidth") == 0)
+    {
+        tmpValue = atoi(value);
+        if ((tmpValue == 640) || (tmpValue == 1024)) PiGfxConfig.displayWidth = tmpValue;
+    }
+    else if (pigfx_strcmp(name, "displayHeight") == 0)
+    {
+        tmpValue = atoi(value);
+        if ((tmpValue == 480) || (tmpValue == 768)) PiGfxConfig.displayHeight = tmpValue;
+    }
     else if (pigfx_strcmp(name, "showRC2014Logo") == 0)
     {
         tmpValue = atoi(value);
@@ -81,8 +114,9 @@ int inihandler(void* user, const char* section, const char* name, const char* va
     return 0;
 }
 
-void setDefaultConfig()
+void setSafeConfig()
 {
+    // Set safe/fool-proof configuration for system initialization
     pigfx_memset(&PiGfxConfig, 0, sizeof(PiGfxConfig));
 
     PiGfxConfig.uartBaudrate = 115200;
@@ -92,6 +126,36 @@ void setDefaultConfig()
     PiGfxConfig.backspaceEcho = 0;
     PiGfxConfig.skipBackspaceEcho = 0;
     PiGfxConfig.swapDelWithBackspace = 1;
+    PiGfxConfig.keyboardAutorepeat = 1;
+    PiGfxConfig.foregroundColor = 15;    // WHITE (safe foreground)
+    PiGfxConfig.backgroundColor = 0;     // BLACK (safe background)
+    PiGfxConfig.fontSelection = 0;       // 8x16 System Font (safe font)
+    PiGfxConfig.displayWidth = 640;      // Safe resolution: 640x480
+    PiGfxConfig.displayHeight = 480;     // Safe resolution: 640x480
+    PiGfxConfig.showRC2014Logo = 0;
+    PiGfxConfig.disableGfxDMA = 1;
+    PiGfxConfig.disableCollision = 0;
+    pigfx_strcpy(PiGfxConfig.keyboardLayout, "us");
+}
+
+void setDefaultConfig()
+{
+    // Set default configuration values (fallback if no config file)
+    pigfx_memset(&PiGfxConfig, 0, sizeof(PiGfxConfig));
+
+    PiGfxConfig.uartBaudrate = 115200;
+    PiGfxConfig.useUsbKeyboard = 1;
+    PiGfxConfig.sendCRLF = 0;
+    PiGfxConfig.replaceLFwithCR = 0;
+    PiGfxConfig.backspaceEcho = 0;
+    PiGfxConfig.skipBackspaceEcho = 0;
+    PiGfxConfig.swapDelWithBackspace = 1;
+    PiGfxConfig.keyboardAutorepeat = 1;  // Enable autorepeat by default
+    PiGfxConfig.foregroundColor = 7;     // GRAY (default foreground)
+    PiGfxConfig.backgroundColor = 0;     // BLACK (default background)
+    PiGfxConfig.fontSelection = 0;       // First font in registry (8x16 System Font)
+    PiGfxConfig.displayWidth = 1024;     // Default display width
+    PiGfxConfig.displayHeight = 768;     // Default display height
     PiGfxConfig.showRC2014Logo = 0;
     PiGfxConfig.disableGfxDMA = 1;
     PiGfxConfig.disableCollision = 0;
@@ -179,4 +243,20 @@ unsigned char lookForConfigFile()
 
     nmalloc_free(cfgfiledata);
     return errOK;
+}
+
+void applyDisplayConfig()
+{
+    // Apply current configuration to display system
+    // Set colors
+    gfx_set_fg(PiGfxConfig.foregroundColor);
+    gfx_set_bg(PiGfxConfig.backgroundColor);
+    
+    // Set font through font registry
+    if (font_registry_set_by_index(PiGfxConfig.fontSelection) == 0) {
+        // If font index is invalid (returns 0), fall back to default (index 0)
+        ee_printf("Warning: Invalid font index %d, using default font\n", PiGfxConfig.fontSelection);
+        font_registry_set_by_index(0);
+        PiGfxConfig.fontSelection = 0;
+    }
 }
