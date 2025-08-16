@@ -43,6 +43,22 @@ This code is based on a file that contains the following:
 #include "utils.h"
 #include <stdarg.h>
 #include "gfx.h"
+#include "debug_levels.h"
+
+// Global debug severity level - can be changed at runtime
+unsigned g_debug_severity = LOG_NOTICE_BIT;  // Default: only notices (preserves current behavior)
+
+// Function to set debug severity level
+void SetDebugSeverity(unsigned severity)
+{
+    g_debug_severity = severity;
+}
+
+// Function to get current debug severity level
+unsigned GetDebugSeverity(void)
+{
+    return g_debug_severity;
+}
 
 #define size_t unsigned int
 
@@ -604,10 +620,9 @@ void LogWrite (const char *pSource,
        	       unsigned	   Severity,	
 	       const char *fmt, ...)
 {
-  // Only output NOTICE level messages to reduce uspi debug spam
-  // LOG_ERROR=1, LOG_WARNING=2, LOG_NOTICE=3, LOG_DEBUG=4
-  if (Severity != 3) {  // 3 = LOG_NOTICE
-      return;  // Filter out all messages except NOTICE level
+  // Check if this severity level should be output using bitmap
+  if (!SHOULD_LOG(Severity)) {
+      return;  // Filter based on DEBUG_SEVERITY configuration
   }
 
   char buf[15*80];
@@ -620,16 +635,16 @@ void LogWrite (const char *pSource,
   DO_LOG_STRING( "[" );
   switch( Severity )
   {
-      case 1:
+      case LOG_ERROR_BIT:
           DO_LOG_STRING(" ERROR ");
           break;
-      case 2:
+      case LOG_WARNING_BIT:
           DO_LOG_STRING("WARNING");
           break;
-      case 3:
+      case LOG_NOTICE_BIT:
           DO_LOG_STRING("NOTICE ");
           break;
-      case 4:
+      case LOG_DEBUG_BIT:
           DO_LOG_STRING(" DEBUG ");
           break;
       default:
@@ -638,6 +653,81 @@ void LogWrite (const char *pSource,
 
   DO_LOG_STRING( "] " );
   DO_LOG_STRING( pSource );
+  DO_LOG_STRING( ": " );
+  DO_LOG_STRING( buf );
+  DO_LOG_STRING( "\n" );
+}
+
+void LogWriteInternal (const char *pSource,
+                       unsigned Severity,
+                       const char *pFile,
+                       int nLine,
+                       const char *fmt, ...)
+{
+  // Check if this severity level should be output using bitmap
+  if (!SHOULD_LOG(Severity)) {
+      return;  // Filter based on g_debug_severity variable
+  }
+
+  char buf[15*80];
+  va_list args;
+
+  va_start(args, fmt);
+  ee_vsprintf(buf, fmt, args);
+  va_end(args);
+
+  DO_LOG_STRING( "[" );
+  switch( Severity )
+  {
+      case LOG_ERROR_BIT:
+          DO_LOG_STRING(" ERROR ");
+          break;
+      case LOG_WARNING_BIT:
+          DO_LOG_STRING("WARNING");
+          break;
+      case LOG_NOTICE_BIT:
+          DO_LOG_STRING("NOTICE ");
+          break;
+      case LOG_DEBUG_BIT:
+          DO_LOG_STRING(" DEBUG ");
+          break;
+      default:
+          DO_LOG_STRING("  ??   ");
+  }
+
+  DO_LOG_STRING( "] " );
+  DO_LOG_STRING( pSource );
+  
+  // Add file and line information if provided (for ERROR and DEBUG levels)
+  if (pFile != NULL && (Severity == LOG_ERROR_BIT || Severity == LOG_DEBUG_BIT)) {
+      // Extract just the filename from full path for cleaner output
+      const char *filename = pFile;
+      const char *last_slash = pFile;
+      while (*last_slash) {
+          if (*last_slash == '/' || *last_slash == '\\') {
+              filename = last_slash + 1;
+          }
+          last_slash++;
+      }
+      
+      // Simple approach: build the string manually
+      DO_LOG_STRING( " (" );
+      DO_LOG_STRING( filename );
+      DO_LOG_STRING( ":" );
+      
+      // Convert line number to string in a simple way
+      if (nLine == 0) {
+          DO_LOG_STRING( "0" );
+      } else if (nLine < 10) {
+          char single_digit[2] = {'0' + nLine, '\0'};
+          DO_LOG_STRING( single_digit );
+      } else {
+          // For larger numbers, just output "???" to keep it simple
+          DO_LOG_STRING( "???" );
+      }
+      DO_LOG_STRING( ")" );
+  }
+  
   DO_LOG_STRING( ": " );
   DO_LOG_STRING( buf );
   DO_LOG_STRING( "\n" );
