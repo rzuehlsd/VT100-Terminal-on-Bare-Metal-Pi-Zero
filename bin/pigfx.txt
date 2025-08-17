@@ -39,6 +39,6 @@ displayHeight = 768         ; Height: 480 or 768
 showRC2014Logo = 0          ; Display RC2014 logo at startup
 disableGfxDMA = 1           ; Disable DMA acceleration (1=safer, 0=faster)
 disableCollision = 0        ; Disable sprite collision detection
-debugVerbosity = 0          ; Debug level: 0=errors+notices, 1=+warnings, 2=+debug
+debugVerbosity = 2          ; Debug level: 0=errors+notices, 1=+warnings, 2=+debug
 
 

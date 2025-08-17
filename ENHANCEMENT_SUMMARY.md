@@ -8,8 +8,6 @@ This document provides a comprehensive summary of all enhancements and improveme
 ## 🎯 Major Achievements
 
 ### 1. **Complete Logging System Transformation**
-- **Before**: Basic printf-style logging with no verbosity control or structured output
-- **After**: Enterprise-grade bitmap-based debug system with runtime verbosity control
 
 **Key Improvements:**
 - ✅ Bitmap-based severity filtering (ERROR, WARNING, NOTICE, DEBUG)
@@ -20,20 +18,7 @@ This document provides a comprehensive summary of all enhancements and improveme
 - ✅ Conditional file/line information (only for ERROR and DEBUG levels)
 - ✅ Proper macro expansion fixing `__LINE__` showing "???" issue
 
-### 2. **Banner Display System Refactoring**
-- **Before**: Duplicate banner code in multiple locations
-- **After**: Centralized `display_system_banner()` function with consistent formatting
-
-**Enhancements:**
-- ✅ Eliminated code duplication between startup and resolution change scenarios
-- ✅ Enhanced banner formatting with proper ANSI escape sequences
-- ✅ Updated copyright notice to include all contributors (2016-2025)
-- ✅ Improved banner positioning and visual consistency
-- ✅ Fixed banner visibility issues during framebuffer reinitialization
-
 ### 3. **Configuration System Improvements**
-- **Before**: Overwhelming documentation causing user confusion
-- **After**: Streamlined, user-friendly configuration with essential information
 
 **Changes:**
 - ✅ Simplified `pigfx.txt` documentation focusing on practical usage
@@ -59,6 +44,27 @@ This document provides a comprehensive summary of all enhancements and improveme
   - USPi build is fully integrated into the PiGFX build process
   - No manual steps required for USPi setup on clean checkouts
   - Ensures consistent and reliable builds across all environments
+
+### 6. **On-Screen Setup System and Live Configuration**
+- **Interactive On-Screen Setup Dialog:**
+  - Added a user-friendly on-screen setup system accessible at boot or via hotkey
+  - Allows users to interactively configure key system parameters without editing files
+  - Menu-driven interface for easy navigation and selection
+- **Live Configuration Changes:**
+  - Change fonts, colors, and resolution on the fly—no reboot required
+  - Instantly preview and apply changes to terminal appearance
+  - Supports dynamic switching between all available Spleen and built-in fonts
+  - Color palette and background/foreground colors can be adjusted in real time
+  - All changes are persistent and reflected in the configuration file
+- **Configurable Items Include:**
+  - Font selection (including Spleen and custom fonts)
+  - Display resolution (e.g., 640x480, 1024x768)
+  - Color palette and theme
+  - Keyboard layout
+  - Baud rate
+  - Banner/logo display
+  - Debug verbosity level
+  - And more, as documented in `pigfx.txt`
 
 ---
 
@@ -87,20 +93,6 @@ SetDebugSeverity(LOG_ERROR_BIT | LOG_NOTICE_BIT |
 LogError("emmc - 123: Failed to initialize SD card");     // Technical with context
 LogNotice("PS/2 keyboard found.");                        // User-friendly
 LogDebug("ps2 - 456: Keyboard type detection successful"); // Debug with details
-```
-
-### Banner System Refactoring
-```c
-// Centralized banner function eliminating duplication
-void display_system_banner() {
-    gfx_term_putstring("\x1B[2J");  // Clear screen
-    gfx_term_putstring("\n\n"); 
-    gfx_set_bg(BLUE);
-    gfx_term_putstring("\x1B[2K");  // Full-width blue line
-    LogNotice(" ===  PiGFX %d.%d.%d  ===  Build %s", 
-              PIGFX_MAJVERSION, PIGFX_MINVERSION, PIGFX_BUILDVERSION, PIGFX_VERSION);
-    // ... rest of banner
-}
 ```
 
 ---
