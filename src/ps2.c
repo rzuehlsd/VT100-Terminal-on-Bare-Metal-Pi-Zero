@@ -13,6 +13,7 @@
 #include "gpio.h"
 #include "irq.h"
 #include "ee_printf.h"
+#include "debug_levels.h"
 #include "timer.h"
 #include "utils.h"
 #include "keyboard.h"
@@ -238,13 +239,13 @@ unsigned char wait4Ack()
             }
             else
             {
-                ee_printf("[PS/2] unexpected data '%02x' from keyboard\n", rxChar);
+                LogError("PS/2 unexpected data '%02x' from keyboard\n", rxChar);
                 return 1;
             }
         }
         else if ((time_microsec() - tstart) >= RECEIVETIMEOUT)
         {
-            ee_printf("[PS/2] no keyboard detected\n");
+            LogNotice("PS/2 keyboard timeout during detection\n");
             return 1;
         }
     }
@@ -298,12 +299,12 @@ unsigned char initPS2()
     usleep(RECEIVETIMEOUT); // wait for data
     if (getPS2char(&inout.scanCodeSet) != 0)
     {
-        ee_printf("[PS/2] data error\n");
+        LogError("PS/2 data error during scancode detection\n");
         return 7;
     }
     if (inout.scanCodeSet != 2)
     {
-        ee_printf("[PS/2] keyboard seems to not support scancode set 2\n");
+        LogError("PS/2 keyboard does not support scancode set 2\n");
         return 8;
     }
 
@@ -311,7 +312,7 @@ unsigned char initPS2()
     sendPS2Byte(PS2_ENABLESCANNING);
     if (wait4Ack()) return 9;
 
-    ee_printf("[PS/2] keyboard type (0x%02x 0x%02x) detected, using scancode set %d\n", inout.keyboardType[0], inout.keyboardType[1], inout.scanCodeSet);
+    LogDebug("PS/2 keyboard type (0x%02x 0x%02x) detected, using scancode set %d\n", inout.keyboardType[0], inout.keyboardType[1], inout.scanCodeSet);
     return 0;
 }
 

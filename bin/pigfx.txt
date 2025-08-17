@@ -1,44 +1,44 @@
-;; This is the config file for PiGFX. Please don't delete any parameters or add new, unknown ones.
+;; ============================================================================
+;; PiGFX Enhanced Edition Configuration File
+;; ============================================================================
+;; Please don't delete any parameters or add new, unknown ones.
+;; ============================================================================
 
+;; UART Communication
 [UART]
-baudrate = 115200             ; Baudrate for the UART interface, should work fine between 300 and 115200 baud
+baudrate = 115200             ; Baudrate for UART (300-115200)
 
+;; Input Configuration
 [Input]
-useUsbKeyboard = 1          ; With this disabled, PiGFX will not load the uspi and look for a connected keyboard on any USB port
-keyboardLayout = de         ; Keyboard layout to be used. These are supported: us, uk, it, fr, es, de, sg
-sendCRLF = 1                ; With this enabled, the enter key on the connected keyboard will generate CRLF instead of LF only. CR has value 0x0D, LF has value 0x0A.
-replaceLFwithCR = 0         ; With this enabled, the enter key sends CR instead of LF. You should disable the sendCRLF option if you use this, otherwise it will send 2*CR.
-backspaceEcho = 0           ; Auto-echo the backspace char
-skipBackspaceEcho = 0       ; Skip the next incoming character after a backspace from keyboard
-swapDelWithBackspace = 1    ; Substitute DEL (0x7F) with BACKSPACE (0x08)
-keyboardAutorepeat = 1      ; Enable keyboard autorepeat (1 = enabled, 0 = disabled)
+useUsbKeyboard = 1          ; Enable USB keyboard (Pi 1-3 only): 1=enabled, 0=PS/2 only
+keyboardLayout = de         ; Layout: us, uk, it, fr, es, de, sg
+sendCRLF = 1                ; Enter key: 1=send CRLF, 0=send LF only
+replaceLFwithCR = 0         ; Replace LF with CR (disable sendCRLF if using this)
+backspaceEcho = 0           ; Auto-echo backspace character
+skipBackspaceEcho = 0       ; Skip next char after keyboard backspace
+swapDelWithBackspace = 1    ; Swap DEL (0x7F) with BACKSPACE (0x08)
+keyboardAutorepeat = 1      ; Enable key repeat
 
+;; Display Configuration
 [Display]
-; Color Configuration:
-; Colors 0-15 (Standard 16 colors):
-;   0=Black, 1=DarkRed, 2=DarkGreen, 3=DarkYellow, 4=DarkBlue, 5=DarkMagenta, 6=DarkCyan, 7=Gray
-;   8=DarkGray, 9=Red, 10=Green, 11=Yellow, 12=Blue, 13=Magenta, 14=Cyan, 15=White
-; Colors 16-231 (216 color cube): 6x6x6 RGB color cube
-; Colors 232-255 (Grayscale): 24 shades of gray from dark to light
-foregroundColor = 10        ; Default foreground color (0-255, 10 = bright green)
-backgroundColor = 0         ; Default background color (0-255, 0 = black)
-;
-; Font Configuration:
-; Available fonts (use index number):
-;   0 = 8x16 System Font (default)
-;   1 = 8x8 Legacy Font  
-;   2 = 8x24 TRS-80 Font
-;   3 = 6x12 Spleen Font
-;   4 = 8x16 Spleen Font
-;   5 = 12x24 Spleen Font
-fontSelection = 4           ; Default font selection (0-5, see font list above)
-;
-; Resolution Configuration:
-; Supported resolutions: 640x480 or 1024x768
-displayWidth = 1024         ; Display width (640 or 1024)
-displayHeight = 768         ; Display height (480 or 768)
+;; Colors: 0=Black, 1=DarkRed, 2=DarkGreen, 3=DarkYellow, 4=DarkBlue, 5=DarkMagenta, 
+;;         6=DarkCyan, 7=Gray, 8=DarkGray, 9=Red, 10=Green, 11=Yellow, 12=Blue, 
+;;         13=Magenta, 14=Cyan, 15=White, 16-231=RGB cube, 232-255=grayscale
+foregroundColor = 10        ; Default text color (0-255)
+backgroundColor = 0         ; Default background color (0-255)
 
+;; Fonts (0=8x16 System, 1=6x12 Spleen, 2=8x16 Spleen, 3=12x24 Spleen, 4=16x32 Spleen, 5=32x64 Spleen)
+fontSelection = 4           ; Font index (0-5)
+
+;; Resolution
+displayWidth = 1024         ; Width: 640 or 1024
+displayHeight = 768         ; Height: 480 or 768
+
+;; General Configuration
 [General]
-showRC2014Logo = 0          ; Show the RC2014 logo at startup
-disableGfxDMA = 1           ; Disable fast DMA memory access for graphics (if 1)
+showRC2014Logo = 0          ; Display RC2014 logo at startup
+disableGfxDMA = 1           ; Disable DMA acceleration (1=safer, 0=faster)
 disableCollision = 0        ; Disable sprite collision detection
+debugVerbosity = 0          ; Debug level: 0=errors+notices, 1=+warnings, 2=+debug
+
+

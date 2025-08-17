@@ -229,8 +229,6 @@ void gfx_switch_framebuffer();
 
 // Functions from pigfx.c called by some private sequences (set mode, debug tests ...)
 extern void initialize_framebuffer(unsigned int width, unsigned int height, unsigned int bpp);
-//extern void video_line_test(int maxloops);
-//extern void video_test(int maxloops);
 
 /** Fonts from binary_assets.s and fonts (*.bin) */
 extern unsigned char G_FONT8X8_GLYPHS;
@@ -2318,19 +2316,6 @@ int state_fun_final_letter( char ch, scn_state *state )
                 retval = 0;
             goto back_to_normal;
             break;
-
-            /** The following is only for debug purposes
-            case 't':
-            	// video test from pigfx.c
-            	video_test(1000);
-            	goto back_to_normal;
-            	break;
-            case 'T':
-            	// video test from pigfx.c
-            	video_line_test(1000 );
-            	goto back_to_normal;
-            	break;
-            	*/
         }
     }
 

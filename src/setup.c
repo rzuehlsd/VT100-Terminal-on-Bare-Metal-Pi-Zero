@@ -243,22 +243,6 @@ static unsigned int find_current_resolution_index(void)
     return 1;
 }
 
-// Find current font size index in available fonts array  
-static unsigned int find_current_font_size_index(void)
-{
-    // Get the current font index directly from the font registry
-    int current_index = font_registry_get_current_index();
-    
-    // Validate the index
-    if (current_index >= 0 && current_index < (int)font_registry_get_count())
-    {
-        return (unsigned int)current_index;
-    }
-    
-    // Default to first font if invalid
-    return 0;
-}
-
 void setup_mode_enter(void)
 {
     if (!setup_mode_active)

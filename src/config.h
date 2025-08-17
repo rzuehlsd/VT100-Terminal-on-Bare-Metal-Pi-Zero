@@ -41,6 +41,7 @@ typedef struct
     unsigned int showRC2014Logo;        // Show the RC2014 logo at startup
     unsigned int disableGfxDMA;         // Disable DMA for Gfx if 1
     unsigned int disableCollision;      // Disable collision detection if 1
+    unsigned int debugVerbosity;        // Debug verbosity level (0=errors+notices, 1=+warnings, 2=+debug)
     char         keyboardLayout[3];     // Keyboard layout (de,uk,us, ...)
 } tPiGfxConfig;
 

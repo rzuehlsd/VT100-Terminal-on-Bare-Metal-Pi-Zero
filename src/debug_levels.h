@@ -23,17 +23,17 @@ extern unsigned GetDebugSeverity(void);
 // Macro to check if a severity level should be logged
 #define SHOULD_LOG(severity) ((severity) & g_debug_severity)
 
-// Simplified logging macros - no need to specify severity in calls
-#define LogError(source, ...) \
-    do { if (SHOULD_LOG(LOG_ERROR_BIT)) LogWriteInternal((source), LOG_ERROR_BIT, __FILE__, __LINE__, __VA_ARGS__); } while(0)
+// Simplified logging macros - no need to specify source or severity in calls
+#define LogError(...) \
+    do { if (SHOULD_LOG(LOG_ERROR_BIT)) LogWriteInternal(LOG_ERROR_BIT, __FILE__, __LINE__, __VA_ARGS__); } while(0)
 
-#define LogWarning(source, ...) \
-    do { if (SHOULD_LOG(LOG_WARNING_BIT)) LogWriteInternal((source), LOG_WARNING_BIT, NULL, 0, __VA_ARGS__); } while(0)
+#define LogWarning(...) \
+    do { if (SHOULD_LOG(LOG_WARNING_BIT)) LogWriteInternal(LOG_WARNING_BIT, NULL, 0, __VA_ARGS__); } while(0)
 
-#define LogNotice(source, ...) \
-    do { if (SHOULD_LOG(LOG_NOTICE_BIT)) LogWriteInternal((source), LOG_NOTICE_BIT, NULL, 0, __VA_ARGS__); } while(0)
+#define LogNotice(...) \
+    do { if (SHOULD_LOG(LOG_NOTICE_BIT)) LogWriteInternal(LOG_NOTICE_BIT, NULL, 0, __VA_ARGS__); } while(0)
 
-#define LogDebug(source, ...) \
-    do { if (SHOULD_LOG(LOG_DEBUG_BIT)) LogWriteInternal((source), LOG_DEBUG_BIT, __FILE__, __LINE__, __VA_ARGS__); } while(0)
+#define LogDebug(...) \
+    do { if (SHOULD_LOG(LOG_DEBUG_BIT)) LogWriteInternal(LOG_DEBUG_BIT, __FILE__, __LINE__, __VA_ARGS__); } while(0)
 
 #endif

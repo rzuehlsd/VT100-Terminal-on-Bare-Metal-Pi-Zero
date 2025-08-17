@@ -1,11 +1,33 @@
 //
 // pigfx.c
-// Main part
+// Main entry point and core system initialization
 //
-// PiGFX is a bare metal kernel for the Raspberry Pi
-// that implements a basic ANSI terminal emulator with
-// the additional support of some primitive graphics functions.
+// PiGFX Enhanced Edition - A bare metal kernel for the Raspberry Pi
+// that implements a comprehensive ANSI terminal emulator with advanced
+// graphics capabilities, dual keyboard support, and sophisticated
+// configuration management.
+//
+// This file serves as the main system entry point and orchestrates:
+// - Hardware initialization (MMU, timers, framebuffer, UART)
+// - Memory management and heap setup
+// - Two-stage configuration system (safe boot -> user config)
+// - Keyboard support (PS/2 and USB with automatic detection)
+// - Advanced debug logging with bitmap-based severity filtering
+// - Font registry system with multiple font support
+// - Main terminal loop for ANSI escape sequence processing
+//
+// Key Features:
+// - Unified build system supporting Pi 1-4 with automatic toolchain selection
+// - Enhanced logging system with runtime debug control and automatic colors
+// - USPI compatibility layer for USB keyboard support
+// - Automatic configuration loading from pigfx.txt on SD card
+// - Safe initialization sequence preventing display corruption
+// - Full ANSI terminal emulation with graphics extensions
+//
 // Copyright (C) 2014-2020 Filippo Bergamasco, Christian Lehner
+//                    2025 Ralf Zühlsdorff
+// Enhanced Edition improvements and unified build system
+//
 
 #include "peri.h"
 #include "pigfx_config.h"
@@ -38,58 +60,15 @@
 
 #define UART_BUFFER_SIZE 16384 /* 16k */
 
-// Enhanced logging macros using our new bitmap-based debug system
-// These provide consistent formatting, runtime control, and automatic color management
+// Direct usage of the new bitmap-based debug system
+// No wrapper macros needed - use LogDebug, LogError, LogNotice, LogWarning directly
 
-// Debug messages - controlled by runtime debug severity setting
-#define DEBUG_LOG(msg, ...) LogDebug("pigfx", msg, ##__VA_ARGS__)
-
-// Error messages - always shown with red color and file/line info
-#define ERROR_LOG(msg, ...) \
-    do { \
-        unsigned saved = GetDebugSeverity(); \
-        SetDebugSeverity(LOG_ERROR_BIT); \
-        gfx_set_fg(RED); \
-        LogError("pigfx", msg, ##__VA_ARGS__); \
-        gfx_set_fg(GRAY); \
-        SetDebugSeverity(saved); \
-    } while(0)
-
-// Success messages - always shown with green color
-#define SUCCESS_LOG(msg, ...) \
-    do { \
-        unsigned saved = GetDebugSeverity(); \
-        SetDebugSeverity(LOG_NOTICE_BIT); \
-        gfx_set_fg(GREEN); \
-        LogNotice("pigfx", msg, ##__VA_ARGS__); \
-        gfx_set_fg(GRAY); \
-        SetDebugSeverity(saved); \
-    } while(0)
-
-// Info messages - always shown, normal color
-#define INFO_LOG(msg, ...) \
-    do { \
-        unsigned saved = GetDebugSeverity(); \
-        SetDebugSeverity(LOG_NOTICE_BIT); \
-        LogNotice("pigfx", msg, ##__VA_ARGS__); \
-        SetDebugSeverity(saved); \
-    } while(0)
-
-// Warning messages - controlled by runtime debug severity setting
-#define WARNING_LOG(msg, ...) LogWarning("pigfx", msg, ##__VA_ARGS__)
-
-// Legacy macros for backward compatibility - map to new system
-#define DEBUG_PRINTF(...) do { LogDebug("pigfx", __VA_ARGS__); } while(0)
-#define ERROR_PRINTF(...) do { ERROR_LOG(__VA_ARGS__); } while(0)
-#define SUCCESS_PRINTF(...) do { SUCCESS_LOG(__VA_ARGS__); } while(0)  
-#define INFO_PRINTF(...) do { INFO_LOG(__VA_ARGS__); } while(0)
-
-// Legacy color and string macros
-#define DEBUG_PUTSTRING(str) do { LogDebug("pigfx", "%s", str); } while(0)
-#define DEBUG_SET_BG(color) gfx_set_bg(color)
-#define DEBUG_SET_FG(color) gfx_set_fg(color)
-#define INFO_SET_BG(color) gfx_set_bg(color)
-#define INFO_SET_FG(color) gfx_set_fg(color)
+// For SUCCESS messages, we use LogNotice with manual green color
+#define SUCCESS_PRINTF(...) do { \
+    gfx_set_fg(10); \
+    LogNotice(__VA_ARGS__); \
+    gfx_set_fg(7); \
+} while(0)
 
 
 unsigned int led_status = 0;
@@ -113,6 +92,20 @@ extern unsigned int heap_sz;
 extern unsigned char G_STARTUP_LOGO;
 
 
+/**
+ * @brief Heartbeat timer handler for activity LED blinking
+ * 
+ * This function is called periodically by the timer system to toggle the activity LED,
+ * providing visual feedback that the system is running. The LED blinks at a rate
+ * defined by HEARTBEAT_FREQUENCY to indicate system health.
+ * 
+ * @param hnd Timer handle (unused)
+ * @param pParam Optional parameter pointer (unused)
+ * @param pContext Optional context pointer (unused)
+ * 
+ * @note This function automatically re-registers itself for the next timer event
+ * @note Uses global led_status to track current LED state
+ */
 static void _heartbeat_timer_handler( __attribute__((unused)) unsigned hnd,
                                       __attribute__((unused)) void* pParam,
                                       __attribute__((unused)) void *pContext )
@@ -131,6 +124,22 @@ static void _heartbeat_timer_handler( __attribute__((unused)) unsigned hnd,
 }
 
 
+/**
+ * @brief UART interrupt handler for filling the receive buffer
+ * 
+ * This interrupt service routine is called when UART data is received.
+ * It reads all available bytes from the UART receive FIFO and stores them
+ * in a circular buffer for later processing by the main terminal loop.
+ * 
+ * The function implements a circular buffer with automatic wraparound and
+ * overflow protection by advancing the start pointer when the buffer fills.
+ * 
+ * @param data Optional data parameter (unused)
+ * 
+ * @note This function runs in interrupt context and should be fast
+ * @note Uses global uart_buffer pointers for circular buffer management
+ * @note Automatically clears UART interrupts after processing
+ */
 void uart_fill_queue( __attribute__((unused)) void* data )
 {
     while( !( *pUART0_FR & 0x10 ))
@@ -153,6 +162,22 @@ void uart_fill_queue( __attribute__((unused)) void* data )
 }
 
 
+/**
+ * @brief Initialize UART interrupt handling system
+ * 
+ * Sets up the UART for interrupt-driven reception by:
+ * - Initializing the circular buffer pointers
+ * - Configuring UART hardware registers for interrupt mode
+ * - Enabling receive interrupts (RXIM)
+ * - Registering the interrupt handler with the IRQ system
+ * 
+ * This enables non-blocking UART reception where incoming data is
+ * automatically buffered by the interrupt handler for later processing.
+ * 
+ * @note Uses IRQ 57 for UART0 on Raspberry Pi
+ * @note Buffer size is defined by UART_BUFFER_SIZE (16KB)
+ * @note Must be called after basic UART initialization
+ */
 void initialize_uart_irq()
 {
     uart_buffer_start = uart_buffer_end = uart_buffer;
@@ -170,12 +195,58 @@ void initialize_uart_irq()
 }
 
 
-/** Sets the frame buffer with given width, height and bit depth.
- *   Other effects:
- *  	- font is set to 8x16
- *  	- tabulation is set to 8
- *  	- chars/sprites drawing mode is set to normal
+/**
+ * @brief Display system banner with PiGFX version and copyright
+ * 
+ * Displays the standardized PiGFX banner with version information and copyright
+ * notice. The banner uses a blue background with yellow text and is formatted
+ * consistently across all display contexts.
+ * 
+ * This function:
+ * - Clears the screen
+ * - Sets up banner colors (blue background, yellow text)
+ * - Displays version and build information
+ * - Displays copyright notice
+ * - Restores default colors (black background, dark gray text)
+ * 
+ * @note Uses ANSI escape sequences for line clearing and positioning
+ * @note Automatically restores colors after banner display
+ * @note Safe to call at any point during initialization or runtime
+ */
+void display_system_banner()
+{
+    gfx_term_putstring( "\x1B[2J" ); // Clear screen
+    gfx_term_putstring( "\n\n" ); 
+    gfx_set_bg(BLUE);
+    gfx_term_putstring( "\x1B[2K" ); // Render blue line at top
+    LogNotice(" ===  PiGFX %d.%d.%d  ===  Build %s", PIGFX_MAJVERSION, PIGFX_MINVERSION, PIGFX_BUILDVERSION, PIGFX_VERSION );
+    gfx_term_putstring( "\x1B[2K" );
+    LogNotice(" Copyright (c) 2016 Filippo Bergamasco, 2018 F. Pierot, 2020 Ch. Lehner, 2025 R. Zuehlsdorff");
+    gfx_term_putstring( "\x1B[2K" );
+    LogNotice("\n\n");
+    gfx_set_bg(BLACK);
+}
 
+/**
+ * @brief Initialize framebuffer and graphics subsystem
+ * 
+ * Sets up the display framebuffer with specified dimensions and configures
+ * the graphics environment for terminal operations. This function:
+ * - Releases any existing framebuffer
+ * - Allocates new framebuffer with given parameters
+ * - Sets up color palette for 8-bit mode
+ * - Configures graphics context (pitch, size, etc.)
+ * - Sets default drawing mode, font, and tabulation
+ * - Clears the screen
+ * 
+ * @param width  Display width in pixels
+ * @param height Display height in pixels  
+ * @param bpp    Bits per pixel (typically 8 for indexed color)
+ * 
+ * @note Sets font to 8x16 pixels by default
+ * @note Sets tabulation to 8 characters
+ * @note Uses normal drawing mode (not transparent)
+ * @note Logs error if palette setup fails (when FRAMEBUFFER_DEBUG enabled)
  */
 void initialize_framebuffer(unsigned int width, unsigned int height, unsigned int bpp)
 {
@@ -200,7 +271,7 @@ void initialize_framebuffer(unsigned int width, unsigned int height, unsigned in
     if (fb_set_palette(0) != 0)
     {
 #if ENABLED(FRAMEBUFFER_DEBUG)
-        cout("Set Palette failed"); cout_endl();
+        cout << "Set Palette failed" << "\n";
 #endif
     }
 
@@ -212,151 +283,34 @@ void initialize_framebuffer(unsigned int width, unsigned int height, unsigned in
 }
 
 
-void video_test(int maxloops)
-{
-    unsigned char ch='A';
-    unsigned int row=0;
-    unsigned int col=0;
-    unsigned int term_cols, term_rows;
-    gfx_get_term_size( &term_rows, &term_cols );
-
-#if 0
-    unsigned int t0 = time_microsec();
-    for( row=0; row<1000000; ++row )
-    {
-        gfx_putc(0,col,ch);
-    }
-    t0 = time_microsec()-t0;
-    cout("T: ");cout_d(t0);cout_endl();
-    return;
-#endif
-#if 0
-    while(1)
-    {
-        gfx_putc(row,col,ch);
-        col = col+1;
-        if( col >= term_cols )
-        {
-            usleep(100000);
-            col=0;
-            gfx_scroll_up(8);
-        }
-        ++ch;
-        gfx_set_fg( ch );
-    }
-#endif
-#if 1
-    int count = maxloops;
-    while(count >= 0)
-    {
-    	count--;
-        gfx_putc(row,col,ch);
-        col = col+1;
-        if( col >= term_cols )
-        {
-            usleep(50000);
-            col=0;
-            row++;
-            if( row >= term_rows )
-            {
-                row=term_rows-1;
-                int i;
-                for(i=0;i<10;++i)
-                {
-                    usleep(500000);
-                    gfx_scroll_down(8);
-                    gfx_set_bg( i );
-                }
-                usleep(1000000);
-                gfx_clear();
-                return;
-            }
-
-        }
-        ++ch;
-        gfx_set_fg( ch );
-    }
-#endif
-
-#if 0
-    while(1)
-    {
-        gfx_set_bg( RR );
-        gfx_clear();
-        RR = (RR+1)%16;
-        usleep(1000000);
-    }
-#endif
-
-}
-
-
-void video_line_test(int maxloops)
-{
-    int x=-10;
-    int y=-10;
-    int vx=1;
-    int vy=0;
-
-    gfx_set_fg( 15 );
-
-    // what is current display size?
-    unsigned int width=0, height=0;
-    gfx_get_gfx_size( &width, &height );
-
-    int count = maxloops;
-    while(count >= 0)
-    {
-    	count --;
-
-        // Render line
-        gfx_line( width, height, x, y );
-
-        usleep( 1000 );
-
-        // Clear line
-        gfx_swap_fg_bg();
-        gfx_line( width, height, x, y );
-        gfx_swap_fg_bg();
-
-        x = x+vx;
-        y = y+vy;
-
-        if( x>700 )
-        {
-            x--;
-            vx--;
-            vy++;
-        }
-        if( y>500 )
-        {
-            y--;
-            vx--;
-            vy--;
-        }
-        if( x<-10 )
-        {
-            x++;
-            vx++;
-            vy--;
-        }
-        if( y<-10 )
-        {
-            y++;
-            vx++;
-            vy++;
-        }
-
-    }
-}
-
-
+/**
+ * @brief Main terminal processing loop
+ * 
+ * This is the core terminal emulation loop that handles all user interaction
+ * and ANSI escape sequence processing. The function:
+ * 
+ * 1. Applies user display configuration after safe system initialization
+ * 2. Waits for initial UART data while polling timers and keyboards
+ * 3. Enters the main processing loop that:
+ *    - Reads characters from the UART buffer
+ *    - Handles special modes (bitmap/palette loading)
+ *    - Processes backspace echo skipping if enabled
+ *    - Sends characters to the graphics terminal for display
+ *    - Polls timers and keyboard handlers
+ * 
+ * This function never returns and runs the terminal until system reset.
+ * 
+ * @note User configuration is applied after the "Waiting for UART" message
+ * @note Supports both PS/2 and USB keyboard input
+ * @note Handles ANSI escape sequences through gfx_term_putstring()
+ * @note Implements backspace echo suppression for better terminal experience
+ */
 void term_main_loop()
 {
-    INFO_PRINTF("Waiting for UART data (%d baud).\n",PiGfxConfig.uartBaudrate);
+    LogNotice("Waiting for UART data (%d baud).\n",PiGfxConfig.uartBaudrate);
 
     // NOW apply user configuration (colors, fonts) after "Waiting for UART" message
-    INFO_PRINTF("Applying user display configuration...\n");
+    LogNotice("Applying user display configuration...\n");
     applyDisplayConfig();
 
     /**/
@@ -401,7 +355,7 @@ void term_main_loop()
 
                     if( backspace_n_skip  > 0 )
                     {
-                        //ee_printf("Skip %c",strb[0]);
+                        //LogDebug("Skip %c",strb[0]);
                         strb[0]=0; // Skip this char
                         backspace_n_skip--;
                         if( backspace_n_skip == 0)
@@ -427,6 +381,54 @@ void term_main_loop()
 
 }
 
+/**
+ * @brief Main system entry point and initialization sequence
+ * 
+ * This is the primary entry function called by the boot loader after basic
+ * ARM initialization. It orchestrates the complete system startup in a
+ * carefully ordered sequence to ensure stable operation:
+ * 
+ * PHASE 1 - Critical System Setup:
+ * - Clears BSS section for proper C runtime environment
+ * - Initializes memory management and heap allocation
+ * - Sets up UART for early logging and communication
+ * - Configures debug logging system with appropriate severity levels
+ * - Initializes MMU and page tables for memory protection
+ * 
+ * PHASE 2 - Hardware Discovery and Setup:
+ * - Detects Raspberry Pi board type and revision
+ * - Configures activity LED based on board type
+ * - Starts timer system and heartbeat LED blinking
+ * 
+ * PHASE 3 - Safe Display Initialization:
+ * - Applies safe configuration to prevent display issues
+ * - Initializes framebuffer with safe resolution (640x480)
+ * - Sets up font registry with built-in fonts
+ * - Displays system banner and version information
+ * 
+ * PHASE 4 - User Configuration Loading:
+ * - Attempts to load user settings from pigfx.txt
+ * - Reinitializes display if resolution changed
+ * - Configures UART with user-specified baud rate
+ * 
+ * PHASE 5 - Peripheral Initialization:
+ * - Detects and initializes PS/2 keyboard if present
+ * - Initializes USB system and detects USB keyboards (Pi 1-3)
+ * - Sets up keyboard layout and LED indicators
+ * 
+ * PHASE 6 - Final Setup:
+ * - Displays startup logo if enabled
+ * - Enters main terminal processing loop
+ * 
+ * @param r0    ARM register r0 from boot loader (unused)
+ * @param r1    ARM register r1 from boot loader (unused) 
+ * @param atags Device tree or ATAGS from boot loader (unused)
+ * 
+ * @note This function never returns - system runs until reset
+ * @note Uses two-stage configuration for stability and flexibility
+ * @note Implements automatic keyboard detection and fallback
+ * @note Provides comprehensive debug logging throughout initialization
+ */
 void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
 {
     unsigned int boardRevision;
@@ -454,13 +456,9 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     uart_buffer = (volatile char*)nmalloc_malloc( UART_BUFFER_SIZE );
     uart_init(9600);
     
-    // Initialize debug system - enable INFO and ERROR by default
-    // DEBUG can be enabled later with SetDebugSeverity() if needed
-#if ENABLED(SYSTEM_DEBUG)
-    SetDebugSeverity(LOG_ERROR_BIT | LOG_NOTICE_BIT | LOG_DEBUG_BIT);
-#else
-    SetDebugSeverity(LOG_ERROR_BIT | LOG_NOTICE_BIT);
-#endif
+    // Initialize debug system - enable all debug levels during early boot
+    // This will be reconfigured after loading user settings from pigfx.txt
+    SetDebugSeverity(LOG_ERROR_BIT | LOG_NOTICE_BIT | LOG_WARNING_BIT | LOG_DEBUG_BIT);
 
     // Init Pagetable
     CreatePageTable(ARM_MEMSIZE);
@@ -491,84 +489,42 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     // Now we can safely apply safe display settings (white on black, system font)
     applyDisplayConfig();
 
-    gfx_term_putstring( "\x1B[2J" ); // Clear screen
-    gfx_set_bg(BLUE);
-    gfx_term_putstring( "\x1B[2K" ); // Render blue line at top
-    gfx_set_fg(YELLOW);// bright yellow
-    ee_printf(" ===  PiGFX %d.%d.%d  ===  Build %s\n", PIGFX_MAJVERSION, PIGFX_MINVERSION, PIGFX_BUILDVERSION, PIGFX_VERSION );
-    gfx_term_putstring( "\x1B[2K" );
-    ee_printf(" Copyright (c) 2016 Filippo Bergamasco\n\n");
-    gfx_set_bg(BLACK);
-    gfx_set_fg(DARKGRAY);
+    display_system_banner();
 
-    // draw possible colors:
-    // 0-15 are primary colors
-    int color = 0;
-    for (color = 0 ; color < 16 ; color++) {
-   		DEBUG_SET_BG(color);
-   		DEBUG_PRINTF("%02x", color);
-    }
-    DEBUG_PRINTF("\n");
+    LogDebug("\nBooting on Raspberry Pi %s, %s, %iMB ARM RAM\n", 
+             board_model(raspiBoard.model), 
+             board_processor(raspiBoard.processor), 
+             ArmRam.size);
 
-    // 16-223 are gradients
-    int count = 0;
-	for (  ; color <= 255-24 ; color++) {
-		DEBUG_SET_BG(color);
-		DEBUG_PRINTF("%02x", color);
-		count = (count + 1) % 36;
-		if (count == 0)
-			DEBUG_PRINTF("\n");
-	}
-
-	// 224-255 are gray scales
-    for (  ; color <= 255 ; color++) {
-		DEBUG_SET_BG(color);
-		DEBUG_PRINTF("%02x", color);
-	}
-	DEBUG_PRINTF("\n");
-
-    /* informations
-    gfx_set_bg(0);
-    ee_printf("W: %d\nH: %d\nPitch: %d\nFont Width: %d, Height: %d\nChar bytes: %d\nFont Ints: %d, Remain: %d\n",
-			ctx.W, ctx.H,
-			ctx.Pitch,
-			ctx.term.FONTWIDTH,
-			ctx.term.FONTHEIGHT,
-			ctx.term.FONTCHARBYTES,
-			ctx.term.FONTWIDTH_INTS, ctx.term.FONTWIDTH_REMAIN);
-    ee_printf("size: %d, bpp: %d\n", ctx.size, ctx.bpp);
-	*/
-
-    //video_test();
-    //video_line_test();
-
-    gfx_set_bg(BLACK);
-    gfx_set_fg(GRAY);
-    DEBUG_PRINTF("\nBooting on Raspberry Pi ");
-    DEBUG_PRINTF(board_model(raspiBoard.model));
-    DEBUG_PRINTF(", ");
-    DEBUG_PRINTF(board_processor(raspiBoard.processor));
-    DEBUG_PRINTF(", %iMB ARM RAM\n", ArmRam.size, ArmRam.baseAddr);
 
     // Stage 2: Load user configuration from pigfx.txt
     // Set fallback default configuration first
     setDefaultConfig();
 
-    DEBUG_SET_BG(BLUE);
-    DEBUG_SET_FG(YELLOW);
-    DEBUG_PRINTF("Initializing filesystem:\n");
-    DEBUG_SET_BG(BLACK);
-    DEBUG_SET_FG(GRAY);
-
+    LogDebug("Initializing filesystem:\n");
     // Try to load user config file
     lookForConfigFile();
-    INFO_PRINTF("Filesystem initialized.\n");
+    LogNotice("Filesystem initialized.\n");
+    
+    // Apply debug verbosity setting from configuration immediately
+    // 0 = errors + notices, 1 = +warnings, 2 = +debug
+    unsigned int debugSeverity = LOG_ERROR_BIT | LOG_NOTICE_BIT;
+    if (PiGfxConfig.debugVerbosity >= 1) {
+        debugSeverity |= LOG_WARNING_BIT;
+    }
+    if (PiGfxConfig.debugVerbosity >= 2) {
+        debugSeverity |= LOG_DEBUG_BIT;
+    }
+    SetDebugSeverity(debugSeverity);
+    LogNotice("Debug verbosity set to level %d\n", PiGfxConfig.debugVerbosity);
+    
+    // Now debug messages will follow the user's preference for the rest of initialization
     
     // Check if resolution changed and reinitialize framebuffer if needed
     unsigned int currentWidth, currentHeight;
     gfx_get_gfx_size(&currentWidth, &currentHeight);
     if (currentWidth != PiGfxConfig.displayWidth || currentHeight != PiGfxConfig.displayHeight) {
-        INFO_PRINTF("Switching resolution to %dx%d\n", PiGfxConfig.displayWidth, PiGfxConfig.displayHeight);
+        LogNotice("Switching resolution to %dx%d\n", PiGfxConfig.displayWidth, PiGfxConfig.displayHeight);
         initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);
         // Re-initialize font registry after framebuffer change
         font_registry_init();
@@ -577,6 +533,9 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
         gfx_set_fg(15);  // White
         gfx_set_bg(0);   // Black
         font_registry_set_by_index(0);  // Safe system font
+        
+        // Redisplay banner after framebuffer reinitialization
+        display_system_banner();
     }
     
     // Note: User display configuration (colors, fonts) will be applied after "Waiting for UART" message
@@ -584,11 +543,7 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     uart_init(PiGfxConfig.uartBaudrate);
     initialize_uart_irq();
 
-    DEBUG_SET_BG(BLUE);
-    DEBUG_SET_FG(YELLOW);
-    DEBUG_PRINTF("Initializing PS/2:\n");
-    DEBUG_SET_BG(BLACK);
-    DEBUG_SET_FG(GRAY);
+    LogDebug("Initializing PS/2:\n");
     if (initPS2() == 0)
     {
         ps2KeyboardFound = 1;
@@ -597,22 +552,18 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     }
     else
     {
-        INFO_PRINTF("PS/2: No keyboard detected.\n");
+        LogNotice("PS/2 keyboard not detected.\n");
     }
 
 #if RPI<4
     if ((PiGfxConfig.useUsbKeyboard) && (ps2KeyboardFound == 0))
     {
-        DEBUG_SET_BG(BLUE);
-        DEBUG_SET_FG(YELLOW);
-        DEBUG_PRINTF("Initializing USB:\n");
-        DEBUG_SET_BG(BLACK);
-        DEBUG_SET_FG(GRAY);
+        LogDebug("Initializing USB:\n");
 
         if( USPiInitialize() )
         {
-            DEBUG_PRINTF("Initialization OK!\n");
-            DEBUG_PRINTF("Checking for keyboards: ");
+            LogDebug("Initialization OK!\n");
+            LogDebug("Checking for keyboards: ");
 
             if ( USPiKeyboardAvailable () )
             {
@@ -623,17 +574,17 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
             }
             else
             {
-                INFO_PRINTF("USB: No keyboard detected.\n");
+                LogNotice("USB keyboard not detected.\n");
             }
         }
         else
         {
-            ERROR_PRINTF("USB initialization failed.\n");
+            LogError("USB initialization failed.\n");
         }
     }
     else if (!PiGfxConfig.useUsbKeyboard)
     {
-        INFO_PRINTF("USB keyboard disabled in config.\n");
+        LogNotice("USB keyboard disabled in config.\n");
     }
 #endif
 
@@ -646,5 +597,6 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     gfx_set_drawing_mode(drawingNORMAL);
     gfx_set_fg(GRAY);
 
+    SUCCESS_PRINTF("Initialization completed.\n");
     term_main_loop();
 }

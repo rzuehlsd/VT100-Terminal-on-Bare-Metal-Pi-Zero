@@ -609,6 +609,19 @@ repeat:
   return str - buf;
 }
 
+// Simple sprintf wrapper for ee_vsprintf
+static int ee_sprintf(char *buf, const char *fmt, ...)
+{
+  va_list args;
+  int result;
+  
+  va_start(args, fmt);
+  result = ee_vsprintf(buf, fmt, args);
+  va_end(args);
+  
+  return result;
+}
+
 void uart_send_char(char c) {
   char str[2];
   str[0] = c;
@@ -671,8 +684,7 @@ void LogWrite (const char *pSource,
   DO_LOG_STRING( "\n" );
 }
 
-void LogWriteInternal (const char *pSource,
-                       unsigned Severity,
+void LogWriteInternal (unsigned Severity,
                        const char *pFile,
                        int nLine,
                        const char *fmt, ...)
@@ -688,6 +700,25 @@ void LogWriteInternal (const char *pSource,
   va_start(args, fmt);
   ee_vsprintf(buf, fmt, args);
   va_end(args);
+
+  // Set appropriate colors for different severity levels
+  switch( Severity )
+  {
+      case LOG_ERROR_BIT:
+          gfx_set_fg(12);  // RED
+          break;
+      case LOG_WARNING_BIT:
+          gfx_set_fg(14);  // YELLOW
+          break;
+      case LOG_NOTICE_BIT:
+          gfx_set_fg(7);   // GRAY (normal)
+          break;
+      case LOG_DEBUG_BIT:
+          gfx_set_fg(8);   // DARKGRAY
+          break;
+      default:
+          gfx_set_fg(7);   // GRAY (fallback)
+  }
 
   DO_LOG_STRING( "[" );
   switch( Severity )
@@ -709,11 +740,9 @@ void LogWriteInternal (const char *pSource,
   }
 
   DO_LOG_STRING( "] " );
-  DO_LOG_STRING( pSource );
   
   // Add file and line information if provided (for ERROR and DEBUG levels)
   if (pFile != NULL && (Severity == LOG_ERROR_BIT || Severity == LOG_DEBUG_BIT)) {
-      // Extract just the filename from full path for cleaner output
       const char *filename = pFile;
       const char *last_slash = pFile;
       while (*last_slash) {
@@ -723,27 +752,18 @@ void LogWriteInternal (const char *pSource,
           last_slash++;
       }
       
-      // Simple approach: build the string manually
-      DO_LOG_STRING( " (" );
-      DO_LOG_STRING( filename );
-      DO_LOG_STRING( ":" );
-      
-      // Convert line number to string in a simple way
-      if (nLine == 0) {
-          DO_LOG_STRING( "0" );
-      } else if (nLine < 10) {
-          char single_digit[2] = {'0' + nLine, '\0'};
-          DO_LOG_STRING( single_digit );
-      } else {
-          // For larger numbers, just output "???" to keep it simple
-          DO_LOG_STRING( "???" );
-      }
-      DO_LOG_STRING( ")" );
+      // Format the file:line information using ee_sprintf
+      char location_buf[64];
+      ee_sprintf(location_buf, "%s - %u: ", filename, nLine);
+      DO_LOG_STRING(location_buf);
   }
+  // No else clause - NOTICE and WARNING messages get no extra prefix
   
-  DO_LOG_STRING( ": " );
   DO_LOG_STRING( buf );
   DO_LOG_STRING( "\n" );
+  
+  // Restore normal color
+  gfx_set_fg(7);  // GRAY
 }
 
 void ee_printf(const char *fmt, ...)

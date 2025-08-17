@@ -107,6 +107,11 @@ int inihandler(void* user, const char* section, const char* name, const char* va
         tmpValue = atoi(value);
         if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.disableCollision = tmpValue;
     }
+    else if (pigfx_strcmp(name, "debugVerbosity") == 0)
+    {
+        tmpValue = atoi(value);
+        if ((tmpValue >= 0) && (tmpValue <= 2)) PiGfxConfig.debugVerbosity = tmpValue;
+    }
     else if (pigfx_strcmp(name, "keyboardLayout") == 0)
     {
         pigfx_strncpy(PiGfxConfig.keyboardLayout, value, sizeof(PiGfxConfig.keyboardLayout));
@@ -135,6 +140,7 @@ void setSafeConfig()
     PiGfxConfig.showRC2014Logo = 0;
     PiGfxConfig.disableGfxDMA = 1;
     PiGfxConfig.disableCollision = 0;
+    PiGfxConfig.debugVerbosity = 0;      // Safe default: errors + notices only
     pigfx_strcpy(PiGfxConfig.keyboardLayout, "us");
 }
 
@@ -159,6 +165,7 @@ void setDefaultConfig()
     PiGfxConfig.showRC2014Logo = 0;
     PiGfxConfig.disableGfxDMA = 1;
     PiGfxConfig.disableCollision = 0;
+    PiGfxConfig.debugVerbosity = 0;      // Default: errors + notices only
     pigfx_strcpy(PiGfxConfig.keyboardLayout, "us");
 }
 
