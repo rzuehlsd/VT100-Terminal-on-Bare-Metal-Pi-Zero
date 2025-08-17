@@ -41,6 +41,25 @@ This document provides a comprehensive summary of all enhancements and improveme
 - ✅ Clear, concise parameter descriptions
 - ✅ Better organization of configuration options
 
+### 4. **Font and Graphics Enhancements**
+- **Spleen Fonts Integration:**
+  - Added support for multiple Spleen bitmap fonts (e.g., Spleen 8x16, 16x32, etc.)
+  - Fonts are selectable via configuration and at runtime
+  - Enhanced font registry to support new font formats and easy extension
+  - Improved documentation and font selection guide in `pigfx.txt`
+- **BGF Converter Utility:**
+  - Added a BGF (Bitmap Graphics Font) converter tool to the toolchain
+  - Allows conversion of BGF font files into PiGFX-compatible binary font files
+  - Enables users to import and use custom bitmap fonts easily
+  - Documented the conversion process and usage examples
+
+### 5. **Build System Automation and USPi Integration**
+- **Automatic USPi Clone and Build:**
+  - Build system now automatically clones the USPi library from GitHub if not present
+  - USPi build is fully integrated into the PiGFX build process
+  - No manual steps required for USPi setup on clean checkouts
+  - Ensures consistent and reliable builds across all environments
+
 ---
 
 ## 🔧 Technical Improvements
