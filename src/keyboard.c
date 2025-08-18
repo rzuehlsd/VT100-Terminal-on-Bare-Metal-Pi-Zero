@@ -80,8 +80,8 @@ TKeyMap actKeyMap;
 static unsigned char autorepeat_disabled = 0;  // Enable autorepeat by default (can be overridden by config)
 static unsigned char autorepeat_globally_enabled = 1;  // Global autorepeat setting from config
 
-#define REPEAT_DELAY_USEC 400000   // 400ms initial delay
-#define REPEAT_RATE_USEC   80000   // 80ms repeat rate
+#define REPEAT_DELAY_USEC 500000   // 500ms initial delay
+#define REPEAT_RATE_USEC  100000   // 10 chars/sec (100ms per repeat)
 
 // Forward declaration
 void KeyStatusHandlerRaw(unsigned char ucModifiers, const unsigned char RawKeys[6]);
@@ -96,7 +96,10 @@ void RepeatKey(unsigned hnd, void* pParam, void *pContext)
     if (p->ucLastPhyCode != 0)
     {
         KeyEvent(p->ucLastPhyCode, p->ucModifiers);
-        p->repeatTimerHnd = attach_timer_handler(REPEAT_RATE_USEC, RepeatKey, p, 0);
+        // Convert microsecond delay to Hz for stupid_timer.c
+        unsigned rate_hz = (REPEAT_RATE_USEC > 0) ? (1000000 / REPEAT_RATE_USEC) : 1;
+        if (rate_hz == 0) rate_hz = 1;
+        p->repeatTimerHnd = attach_timer_handler(rate_hz, RepeatKey, p, 0);
     }
 }
 
@@ -114,33 +117,42 @@ void KeyStatusHandlerRaw(unsigned char ucModifiers, const unsigned char RawKeys[
             break;
         }
     }
+    // ee_printf("KeyStatusHandlerRaw: ucKeyCode=%u RawKeys=[%u %u %u %u %u %u]\n", ucKeyCode, RawKeys[0], RawKeys[1], RawKeys[2], RawKeys[3], RawKeys[4], RawKeys[5]);
     if (ucKeyCode == 1)
     {
         // too many keys pressed
         return;
     }
 
-    if (ucKeyCode == actKeyMap.ucLastPhyCode) return;
-    else actKeyMap.ucLastPhyCode = ucKeyCode;
-
-    actKeyMap.ucModifiers = ucModifiers;
-
-    if (ucKeyCode)
-    {
-        KeyEvent(ucKeyCode, ucModifiers);
-
-        // Only setup autorepeat if not disabled and globally enabled
-        if (!autorepeat_disabled && autorepeat_globally_enabled)
-        {
-            if (actKeyMap.repeatTimerHnd) remove_timer(actKeyMap.repeatTimerHnd);
-            actKeyMap.repeatTimerHnd = attach_timer_handler(REPEAT_DELAY_USEC, RepeatKey, (void*)&actKeyMap, 0);
+    int lastKeyStillHeld = 0;
+    for (i = 0; i < 6; i++) {
+        if (RawKeys[i] == actKeyMap.ucLastPhyCode && actKeyMap.ucLastPhyCode != 0) {
+            lastKeyStillHeld = 1;
+            break;
         }
     }
-    else
-    {
-        if (actKeyMap.repeatTimerHnd) {
-            remove_timer(actKeyMap.repeatTimerHnd);
-            actKeyMap.repeatTimerHnd = 0;
+
+    if (ucKeyCode == actKeyMap.ucLastPhyCode && lastKeyStillHeld) {
+        // Key is held, do nothing (repeat handled by timer)
+        return;
+    }
+
+    // Remove repeat timer only if last key is no longer held
+    if (!lastKeyStillHeld && actKeyMap.repeatTimerHnd) {
+        remove_timer(actKeyMap.repeatTimerHnd);
+        actKeyMap.repeatTimerHnd = 0;
+    }
+
+    actKeyMap.ucLastPhyCode = ucKeyCode;
+    actKeyMap.ucModifiers = ucModifiers;
+
+    if (ucKeyCode) {
+        KeyEvent(ucKeyCode, ucModifiers);
+        // Only setup autorepeat if not disabled and globally enabled
+        if (!autorepeat_disabled && autorepeat_globally_enabled) {
+            unsigned delay_hz = (REPEAT_DELAY_USEC > 0) ? (1000000 / REPEAT_DELAY_USEC) : 1;
+            if (delay_hz == 0) delay_hz = 1;
+            actKeyMap.repeatTimerHnd = attach_timer_handler(delay_hz, RepeatKey, (void*)&actKeyMap, 0);
         }
     }
 }
