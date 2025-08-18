@@ -1,3 +1,4 @@
+
 //
 // config.c
 // Read the content of a ini file and set the configuration
@@ -7,18 +8,24 @@
 // the additional support of some primitive graphics functions.
 // Copyright (C) 2020 Christian Lehner
 
+#include "ee_printf.h"
+#include "config.h"
+
 #include "config.h"
 #include "emmc.h"
 #include "mbr.h"
 #include "fat.h"
 #include "ee_printf.h"
 #include "block.h"
+#include "debug_levels.h"
 #include "nmalloc.h"
 #include "c_utils.h"
 #include "ini.h"
 #include "gfx.h"
 #include "font_registry.h"
 #include "framebuffer.h"
+
+
 
 int inihandler(void* user, const char* section, const char* name, const char* value)
 {
@@ -66,6 +73,16 @@ int inihandler(void* user, const char* section, const char* name, const char* va
     {
         tmpValue = atoi(value);
         if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.keyboardAutorepeat = tmpValue;
+    }
+    else if (pigfx_strcmp(name, "keyboardRepeatDelay") == 0)
+    {
+        tmpValue = atoi(value);
+        if (tmpValue > 0) PiGfxConfig.keyboardRepeatDelay = tmpValue;
+    }
+    else if (pigfx_strcmp(name, "keyboardRepeatRate") == 0)
+    {
+        tmpValue = atoi(value);
+        if (tmpValue > 0) PiGfxConfig.keyboardRepeatRate = tmpValue;
     }
     else if (pigfx_strcmp(name, "foregroundColor") == 0)
     {
@@ -132,6 +149,8 @@ void setSafeConfig()
     PiGfxConfig.skipBackspaceEcho = 0;
     PiGfxConfig.swapDelWithBackspace = 1;
     PiGfxConfig.keyboardAutorepeat = 1;
+    PiGfxConfig.keyboardRepeatDelay = 500;
+    PiGfxConfig.keyboardRepeatRate = 10;
     PiGfxConfig.foregroundColor = 15;    // WHITE (safe foreground)
     PiGfxConfig.backgroundColor = 0;     // BLACK (safe background)
     PiGfxConfig.fontSelection = 0;       // 8x16 System Font (safe font)
@@ -157,6 +176,8 @@ void setDefaultConfig()
     PiGfxConfig.skipBackspaceEcho = 0;
     PiGfxConfig.swapDelWithBackspace = 1;
     PiGfxConfig.keyboardAutorepeat = 1;  // Enable autorepeat by default
+    PiGfxConfig.keyboardRepeatDelay = 500;
+    PiGfxConfig.keyboardRepeatRate = 10;
     PiGfxConfig.foregroundColor = 7;     // GRAY (default foreground)
     PiGfxConfig.backgroundColor = 0;     // BLACK (default background)
     PiGfxConfig.fontSelection = 0;       // First font in registry (8x16 System Font)
@@ -167,6 +188,33 @@ void setDefaultConfig()
     PiGfxConfig.disableCollision = 0;
     PiGfxConfig.debugVerbosity = 0;      // Default: errors + notices only
     pigfx_strcpy(PiGfxConfig.keyboardLayout, "us");
+}
+
+void printLoadedConfig()
+{
+
+    ee_printf("--- PiGFX Config Loaded ---\n");
+    ee_printf("uartBaudrate = %u\n", PiGfxConfig.uartBaudrate);
+    ee_printf("useUsbKeyboard = %u\n", PiGfxConfig.useUsbKeyboard);
+    ee_printf("sendCRLF = %u\n", PiGfxConfig.sendCRLF);
+    ee_printf("replaceLFwithCR = %u\n", PiGfxConfig.replaceLFwithCR);
+    ee_printf("backspaceEcho = %u\n", PiGfxConfig.backspaceEcho);
+    ee_printf("skipBackspaceEcho = %u\n", PiGfxConfig.skipBackspaceEcho);
+    ee_printf("swapDelWithBackspace = %u\n", PiGfxConfig.swapDelWithBackspace);
+    ee_printf("keyboardAutorepeat = %u\n", PiGfxConfig.keyboardAutorepeat);
+    ee_printf("keyboardRepeatDelay = %u\n", PiGfxConfig.keyboardRepeatDelay);
+    ee_printf("keyboardRepeatRate = %u\n", PiGfxConfig.keyboardRepeatRate);
+    ee_printf("foregroundColor = %u\n", PiGfxConfig.foregroundColor);
+    ee_printf("backgroundColor = %u\n", PiGfxConfig.backgroundColor);
+    ee_printf("fontSelection = %u\n", PiGfxConfig.fontSelection);
+    ee_printf("displayWidth = %u\n", PiGfxConfig.displayWidth);
+    ee_printf("displayHeight = %u\n", PiGfxConfig.displayHeight);
+    ee_printf("showRC2014Logo = %u\n", PiGfxConfig.showRC2014Logo);
+    ee_printf("disableGfxDMA = %u\n", PiGfxConfig.disableGfxDMA);
+    ee_printf("disableCollision = %u\n", PiGfxConfig.disableCollision);
+    ee_printf("debugVerbosity = %u\n", PiGfxConfig.debugVerbosity);
+    ee_printf("keyboardLayout = %s\n", PiGfxConfig.keyboardLayout);
+    ee_printf("--------------------------\n");
 }
 
 unsigned char lookForConfigFile()
@@ -249,6 +297,7 @@ unsigned char lookForConfigFile()
     }
 
     nmalloc_free(cfgfiledata);
+    // printLoadedConfig();
     return errOK;
 }
 

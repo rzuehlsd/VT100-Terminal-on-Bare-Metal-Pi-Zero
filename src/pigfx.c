@@ -332,6 +332,7 @@ void term_main_loop()
 
     while(1)
     {
+
         if( uart_buffer_start != uart_buffer_end )
         {
             strb[0] = *uart_buffer_start++;
@@ -440,13 +441,13 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     (void) r1;
     (void) atags;
 
-	// clear BSS
-	extern unsigned char __bss_start;
-	extern unsigned char _end;
-	for (unsigned char *pBSS = &__bss_start; pBSS < &_end; pBSS++)
-	{
-		*pBSS = 0;
-	}
+    // clear BSS
+    extern unsigned char __bss_start;
+    extern unsigned char _end;
+    for (unsigned char *pBSS = &__bss_start; pBSS < &_end; pBSS++)
+    {
+        *pBSS = 0;
+    }
 
     // Heap init
     unsigned int memSize = ARM_MEMSIZE-MEM_HEAP_START;
@@ -505,6 +506,7 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     // Try to load user config file
     lookForConfigFile();
     LogNotice("Filesystem initialized.\n");
+
     
     // Apply debug verbosity setting from configuration immediately
     // 0 = errors + notices, 1 = +warnings, 2 = +debug
@@ -596,6 +598,8 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
 
     gfx_set_drawing_mode(drawingNORMAL);
     gfx_set_fg(GRAY);
+
+    printLoadedConfig();
 
     SUCCESS_PRINTF("Initialization completed.\n");
     term_main_loop();

@@ -80,8 +80,10 @@ TKeyMap actKeyMap;
 static unsigned char autorepeat_disabled = 0;  // Enable autorepeat by default (can be overridden by config)
 static unsigned char autorepeat_globally_enabled = 1;  // Global autorepeat setting from config
 
-#define REPEAT_DELAY_USEC 500000   // 500ms initial delay
-#define REPEAT_RATE_USEC  100000   // 10 chars/sec (100ms per repeat)
+
+// These will be set from config at runtime
+static unsigned int REPEAT_DELAY_USEC = 500000;   // 500ms initial delay
+static unsigned int REPEAT_RATE_USEC  = 100000;   // 10 chars/sec (100ms per repeat)
 
 // Forward declaration
 void KeyStatusHandlerRaw(unsigned char ucModifiers, const unsigned char RawKeys[6]);
@@ -96,9 +98,8 @@ void RepeatKey(unsigned hnd, void* pParam, void *pContext)
     if (p->ucLastPhyCode != 0)
     {
         KeyEvent(p->ucLastPhyCode, p->ucModifiers);
-        // Convert microsecond delay to Hz for stupid_timer.c
-        unsigned rate_hz = (REPEAT_RATE_USEC > 0) ? (1000000 / REPEAT_RATE_USEC) : 1;
-        if (rate_hz == 0) rate_hz = 1;
+        // Use config value directly as repeat frequency in Hz
+        unsigned rate_hz = (PiGfxConfig.keyboardRepeatRate > 0) ? PiGfxConfig.keyboardRepeatRate : 10;
         p->repeatTimerHnd = attach_timer_handler(rate_hz, RepeatKey, p, 0);
     }
 }
@@ -150,7 +151,10 @@ void KeyStatusHandlerRaw(unsigned char ucModifiers, const unsigned char RawKeys[
         KeyEvent(ucKeyCode, ucModifiers);
         // Only setup autorepeat if not disabled and globally enabled
         if (!autorepeat_disabled && autorepeat_globally_enabled) {
-            unsigned delay_hz = (REPEAT_DELAY_USEC > 0) ? (1000000 / REPEAT_DELAY_USEC) : 1;
+            // Use config value directly for initial repeat delay (ms to Hz conversion)
+            unsigned delay_hz = 2; // fallback: 2 Hz = 500ms
+            if (PiGfxConfig.keyboardRepeatDelay > 0)
+                delay_hz = 1000 / PiGfxConfig.keyboardRepeatDelay;
             if (delay_hz == 0) delay_hz = 1;
             actKeyMap.repeatTimerHnd = attach_timer_handler(delay_hz, RepeatKey, (void*)&actKeyMap, 0);
         }
@@ -191,8 +195,20 @@ void fInitKeyboard(char* layout)
     actKeyMap.ucModifiers = 0;
     actKeyMap.repeatTimerHnd = 0;
 
+
     // Set global autorepeat setting from config
     autorepeat_globally_enabled = PiGfxConfig.keyboardAutorepeat;
+
+    // Set repeat delay and rate from config (if present)
+    if (PiGfxConfig.keyboardRepeatDelay > 0)
+        REPEAT_DELAY_USEC = PiGfxConfig.keyboardRepeatDelay * 1000;
+    else
+        REPEAT_DELAY_USEC = 500000;
+
+    if (PiGfxConfig.keyboardRepeatRate > 0)
+        REPEAT_RATE_USEC = 1000000 / PiGfxConfig.keyboardRepeatRate;
+    else
+        REPEAT_RATE_USEC = 100000;
 
     if      ((layout[0] == 'u') && (layout[1] == 'k')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_uk, sizeof(actKeyMap.m_KeyMap));
     else if ((layout[0] == 'i') && (layout[1] == 't')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_it, sizeof(actKeyMap.m_KeyMap));
