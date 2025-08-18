@@ -21,57 +21,57 @@
 // order must match TSpecialKey beginning at KeySpace
 static const char *s_KeyStrings[KeyMaxCode-KeySpace] =
 {
-	" ",			// KeySpace
-	"\x1b",			// KeyEscape
-	"\x7f",			// KeyBackspace
-	"\t",			// KeyTabulator
-	"\n",			// KeyReturn
-	"\x1b[2~",		// KeyInsert
-	"\x1b[1~",		// KeyHome
-	"\x1b[5~",		// KeyPageUp
-	"\x1b[3~",		// KeyDelete
-	"\x1b[4~",		// KeyEnd
-	"\x1b[6~",		// KeyPageDown
-	"\x1b[A",		// KeyUp
-	"\x1b[B",		// KeyDown
-	"\x1b[D",		// KeyLeft
-	"\x1b[C",		// KeyRight
-	"\x1b[[A",		// KeyF1
-	"\x1b[[B",		// KeyF2
-	"\x1b[[C",		// KeyF3
-	"\x1b[[D",		// KeyF4
-	"\x1b[[E",		// KeyF5
-	"\x1b[17~",		// KeyF6
-	"\x1b[18~",		// KeyF7
-	"\x1b[19~",		// KeyF8
-	"\x1b[20~",		// KeyF9
-	"\x1b[21~",		// KeyF10
-	"\x1b[23~",		// KeyF11
-	"\x1b[24~",		// KeyF12
-	0,			// KeyApplication
-	0,			// KeyCapsLock
-	0,			// KeyPrintScreen
-	0,			// KeyScrollLock
-	0,			// KeyPause
-	0,			// KeyNumLock
-	"/",			// KeyKP_Divide
-	"*",			// KeyKP_Multiply
-	"-",			// KeyKP_Subtract
-	"+",			// KeyKP_Add
-	"\n",			// KeyKP_Enter
-	"1",			// KeyKP_1
-	"2",			// KeyKP_2
-	"3",			// KeyKP_3
-	"4",			// KeyKP_4
-	"5",			// KeyKP_5
-	"6",			// KeyKP_6
-	"7",			// KeyKP_7
-	"8",			// KeyKP_8
-	"9",			// KeyKP_9
-	"0",			// KeyKP_0
-	"\x1b[G",		// KeyKP_Center
-	",",			// KeyKP_Comma
-	"."			// KeyKP_Period
+    " ",			// KeySpace
+    "\x1b",			// KeyEscape
+    "\x7f",			// KeyBackspace
+    "\t",			// KeyTabulator
+    "\n",			// KeyReturn
+    "\x1b[2~",		// KeyInsert
+    "\x1b[1~",		// KeyHome
+    "\x1b[5~",		// KeyPageUp
+    "\x1b[3~",		// KeyDelete
+    "\x1b[4~",		// KeyEnd
+    "\x1b[6~",		// KeyPageDown
+    "\x1b[A",		// KeyUp
+    "\x1b[B",		// KeyDown
+    "\x1b[D",		// KeyLeft
+    "\x1b[C",		// KeyRight
+    "\x1b[[A",		// KeyF1
+    "\x1b[[B",		// KeyF2
+    "\x1b[[C",		// KeyF3
+    "\x1b[[D",		// KeyF4
+    "\x1b[[E",		// KeyF5
+    "\x1b[17~",		// KeyF6
+    "\x1b[18~",		// KeyF7
+    "\x1b[19~",		// KeyF8
+    "\x1b[20~",		// KeyF9
+    "\x1b[21~",		// KeyF10
+    "\x1b[23~",		// KeyF11
+    "\x1b[24~",		// KeyF12
+    0,			// KeyApplication
+    0,			// KeyCapsLock
+    0,			// KeyPrintScreen
+    0,			// KeyScrollLock
+    0,			// KeyPause
+    0,			// KeyNumLock
+    "/",			// KeyKP_Divide
+    "*",			// KeyKP_Multiply
+    "-",			// KeyKP_Subtract
+    "+",			// KeyKP_Add
+    "\n",			// KeyKP_Enter
+    "1",			// KeyKP_1
+    "2",			// KeyKP_2
+    "3",			// KeyKP_3
+    "4",			// KeyKP_4
+    "5",			// KeyKP_5
+    "6",			// KeyKP_6
+    "7",			// KeyKP_7
+    "8",			// KeyKP_8
+    "9",			// KeyKP_9
+    "0",			// KeyKP_0
+    "\x1b[G",		// KeyKP_Center
+    ",",			// KeyKP_Comma
+    "."			// KeyKP_Period
 };
 
 TKeyMap actKeyMap;
@@ -79,6 +79,71 @@ TKeyMap actKeyMap;
 // Global flag to disable autorepeat temporarily (for setup mode)
 static unsigned char autorepeat_disabled = 0;  // Enable autorepeat by default (can be overridden by config)
 static unsigned char autorepeat_globally_enabled = 1;  // Global autorepeat setting from config
+
+#define REPEAT_DELAY_USEC 400000   // 400ms initial delay
+#define REPEAT_RATE_USEC   80000   // 80ms repeat rate
+
+// Forward declaration
+void KeyStatusHandlerRaw(unsigned char ucModifiers, const unsigned char RawKeys[6]);
+
+// Unified repeat handler for both USB and PS/2
+void RepeatKey(unsigned hnd, void* pParam, void *pContext)
+{
+    (void)hnd;
+    (void)pContext;
+    TKeyMap* p = (TKeyMap*)pParam;
+
+    if (p->ucLastPhyCode != 0)
+    {
+        KeyEvent(p->ucLastPhyCode, p->ucModifiers);
+        p->repeatTimerHnd = attach_timer_handler(REPEAT_RATE_USEC, RepeatKey, p, 0);
+    }
+}
+
+// This handler should be called by both USB and PS/2 keyboard event code
+void KeyStatusHandlerRaw(unsigned char ucModifiers, const unsigned char RawKeys[6])
+{
+    unsigned char ucKeyCode = 0;
+    int i;
+
+    for (i = 5; i >= 0; i--)
+    {
+        ucKeyCode = RawKeys[i];
+        if (ucKeyCode != 0)
+        {
+            break;
+        }
+    }
+    if (ucKeyCode == 1)
+    {
+        // too many keys pressed
+        return;
+    }
+
+    if (ucKeyCode == actKeyMap.ucLastPhyCode) return;
+    else actKeyMap.ucLastPhyCode = ucKeyCode;
+
+    actKeyMap.ucModifiers = ucModifiers;
+
+    if (ucKeyCode)
+    {
+        KeyEvent(ucKeyCode, ucModifiers);
+
+        // Only setup autorepeat if not disabled and globally enabled
+        if (!autorepeat_disabled && autorepeat_globally_enabled)
+        {
+            if (actKeyMap.repeatTimerHnd) remove_timer(actKeyMap.repeatTimerHnd);
+            actKeyMap.repeatTimerHnd = attach_timer_handler(REPEAT_DELAY_USEC, RepeatKey, (void*)&actKeyMap, 0);
+        }
+    }
+    else
+    {
+        if (actKeyMap.repeatTimerHnd) {
+            remove_timer(actKeyMap.repeatTimerHnd);
+            actKeyMap.repeatTimerHnd = 0;
+        }
+    }
+}
 unsigned int backspace_n_skip;
 unsigned int last_backspace_t;
 
@@ -342,63 +407,7 @@ void KeyEvent(unsigned short ucKeyCode, unsigned char ucModifiers)
     }
 }
 
-void RepeatKey( unsigned hnd, void* pParam, void *pContext )
-{
-    (void)hnd;
-    (void)pContext;
-    TKeyMap* p = (TKeyMap*)pParam;
-
-    if (p->ucLastPhyCode != 0)
-    {
-        KeyEvent(p->ucLastPhyCode, p->ucModifiers);
-        p->repeatTimerHnd = attach_timer_handler(REPEAT_FREQ, RepeatKey, p, 0);       // 100ms interval
-    }
-}
-
-void KeyStatusHandlerRaw (unsigned char ucModifiers, const unsigned char RawKeys[6])  // key code or 0 in each byte
-{
-    unsigned char ucKeyCode = 0;
-    int i;
-
-    for (i = 5; i >= 0; i--)
-    {
-        ucKeyCode = RawKeys[i];
-        if (ucKeyCode != 0)
-        {
-            break;
-        }
-    }
-    if (ucKeyCode == 1)
-    {
-        // too many keys pressed
-        return;
-    }
-
-    if (ucKeyCode == actKeyMap.ucLastPhyCode) return;
-    else actKeyMap.ucLastPhyCode = ucKeyCode;
-
-    actKeyMap.ucModifiers = ucModifiers;
-
-    if (ucKeyCode)
-    {
-        KeyEvent(ucKeyCode, ucModifiers);
-
-        // Only setup autorepeat if not disabled and globally enabled
-        if (!autorepeat_disabled && autorepeat_globally_enabled)
-        {
-            if (actKeyMap.repeatTimerHnd) remove_timer(actKeyMap.repeatTimerHnd);
-            actKeyMap.repeatTimerHnd = attach_timer_handler(1, RepeatKey, (void*)&actKeyMap, 0);       // 1 until repeat starts
-        }
-    }
-    else
-    {
-        if (actKeyMap.repeatTimerHnd) {
-            remove_timer(actKeyMap.repeatTimerHnd);
-            actKeyMap.repeatTimerHnd = 0;
-        }
-    }
-
-}
+// (Old RepeatKey and KeyStatusHandlerRaw replaced by unified versions above)
 
 // Disable keyboard autorepeat (for setup mode)
 void keyboard_disable_autorepeat(void)
