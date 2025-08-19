@@ -40,9 +40,10 @@ static unsigned int selected_bg_color = 0;
 static unsigned int selected_font_size = 0;
 static unsigned int selected_resolution_index = 0;
 static unsigned int selected_cursor_blink = 1;
+static unsigned int selected_auto_repeat = 1;  // Default auto repeat
 static unsigned int selected_repeat_delay = 500;
 static unsigned int selected_repeat_rate = 10;
-static const unsigned int num_setup_items = 9;  // Number of setup items (added repeat delay/rate)
+static const unsigned int num_setup_items = 10;  // Number of setup items (added repeat delay/rate)
 
 // Available baudrates
 static const unsigned int available_baudrates[] = {
@@ -247,8 +248,7 @@ static unsigned int find_current_resolution_index(void)
 }
 
 void setup_mode_enter(void)
-        selected_repeat_delay = PiGfxConfig.keyboardRepeatDelay;
-        selected_repeat_rate = PiGfxConfig.keyboardRepeatRate;
+       
 {
     if (!setup_mode_active)
     {
@@ -276,6 +276,9 @@ void setup_mode_enter(void)
         selected_font_size = original_font_index;  // Use the saved original index
         selected_resolution_index = find_current_resolution_index();
         selected_cursor_blink = PiGfxConfig.cursorBlink ? 1 : 0;
+        selected_auto_repeat = PiGfxConfig.keyboardAutorepeat ? 1 : 0; // Use config value
+        selected_repeat_delay = PiGfxConfig.keyboardRepeatDelay;
+        selected_repeat_rate = PiGfxConfig.keyboardRepeatRate;
         
         // Reset the settings changed flag
         settings_changed = 0;
@@ -365,25 +368,6 @@ void setup_mode_handle_key(unsigned short key)
                 selected_item--;
                 needs_redraw = 1;
             }
-            }
-            else if (selected_item == 7) // Repeat Delay
-            {
-                if (selected_repeat_delay > 200)
-                {
-                    selected_repeat_delay -= 100;
-                    settings_changed = 1;
-                    needs_redraw = 1;
-                }
-            }
-            else if (selected_item == 8) // Repeat Rate
-            {
-                if (selected_repeat_rate > 10)
-                {
-                    selected_repeat_rate -= 10;
-                    settings_changed = 1;
-                    needs_redraw = 1;
-                }
-            }
             break;
             
         case KeyDown:
@@ -392,25 +376,6 @@ void setup_mode_handle_key(unsigned short key)
             {
                 selected_item++;
                 needs_redraw = 1;
-            }
-            }
-            else if (selected_item == 7) // Repeat Delay
-            {
-                if (selected_repeat_delay < 1000)
-                {
-                    selected_repeat_delay += 100;
-                    settings_changed = 1;
-                    needs_redraw = 1;
-                }
-            }
-            else if (selected_item == 8) // Repeat Rate
-            {
-                if (selected_repeat_rate < 50)
-                {
-                    selected_repeat_rate += 10;
-                    settings_changed = 1;
-                    needs_redraw = 1;
-                }
             }
             break;
             
@@ -474,6 +439,33 @@ void setup_mode_handle_key(unsigned short key)
                 if (selected_cursor_blink > 0)
                 {
                     selected_cursor_blink = 0;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 7) // Cursor Blink selected
+            {
+                if (selected_auto_repeat > 0)
+                {
+                    selected_auto_repeat = 0;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 8) // Repeat Delay
+            {
+                if (selected_repeat_delay > 200)
+                {
+                    selected_repeat_delay -= 100;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 9) // Repeat Rate
+            {
+                if (selected_repeat_rate > 10)
+                {
+                    selected_repeat_rate -= 10;
                     settings_changed = 1;
                     needs_redraw = 1;
                 }
@@ -545,6 +537,33 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
+            else if (selected_item == 7) // Cursor Blink selected
+            {
+                if (selected_auto_repeat < 1)
+                {
+                    selected_auto_repeat = 1;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 8) // Repeat Delay
+            {
+                if (selected_repeat_delay < 1000)
+                {
+                    selected_repeat_delay += 100;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 9) // Repeat Rate
+            {
+                if (selected_repeat_rate < 50)
+                {
+                    selected_repeat_rate += 10;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
             break;
             
         case KeyEscape:
@@ -589,6 +608,7 @@ void setup_mode_handle_key(unsigned short key)
                 PiGfxConfig.displayWidth = resolution_widths[selected_resolution_index];
                 PiGfxConfig.displayHeight = resolution_heights[selected_resolution_index];
                 PiGfxConfig.cursorBlink = selected_cursor_blink ? 1 : 0;
+                PiGfxConfig.keyboardAutorepeat = selected_auto_repeat ? 1 : 0;
                 PiGfxConfig.keyboardRepeatDelay = selected_repeat_delay;
                 PiGfxConfig.keyboardRepeatRate = selected_repeat_rate;
                 
@@ -603,7 +623,11 @@ void setup_mode_handle_key(unsigned short key)
                 setup_mode_exit();
                 // Apply cursor blinking setting immediately after setup
                 gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
-                // Apply keyboard repeat settings immediately
+                // Apply keyboard repeat and autorepeat settings immediately
+                if (PiGfxConfig.keyboardAutorepeat)
+                    keyboard_enable_autorepeat();
+                else
+                    keyboard_disable_autorepeat();
                 keyboard_set_repeat_delay(PiGfxConfig.keyboardRepeatDelay);
                 keyboard_set_repeat_rate(PiGfxConfig.keyboardRepeatRate);
                 fInitKeyboard(PiGfxConfig.keyboardLayout);
@@ -673,49 +697,6 @@ void setup_mode_handle_key(unsigned short key)
 }
 
 void setup_mode_draw(void)
-    // Draw repeat delay label and value with selection highlighting
-    if (selected_item == 7)
-    {
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 7, content_col, "Repeat Delay", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_int_at_with_bg(content_row + 7, value_col, selected_repeat_delay, 8);
-        draw_text_at_with_bg(content_row + 7, value_col + 6, "ms", 3);
-    }
-    else
-    {
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-        draw_text_at(content_row + 7, content_col, "Repeat Delay");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-        draw_int_at(content_row + 7, value_col, selected_repeat_delay);
-        draw_text_at(content_row + 7, value_col + 6, "ms");
-    }
-
-    // Draw repeat rate label and value with selection highlighting
-    if (selected_item == 8)
-    {
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 8, content_col, "Repeat Rate", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_int_at_with_bg(content_row + 8, value_col, selected_repeat_rate, 8);
-        draw_text_at_with_bg(content_row + 8, value_col + 6, "Hz", 3);
-    }
-    else
-    {
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-        draw_text_at(content_row + 8, content_col, "Repeat Rate");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-        draw_int_at(content_row + 8, value_col, selected_repeat_rate);
-        draw_text_at(content_row + 8, value_col + 6, "Hz");
-    }
 {
     unsigned int screen_width, screen_height;
     unsigned int term_rows, term_cols;
@@ -951,6 +932,70 @@ void setup_mode_draw(void)
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
         draw_text_at(content_row + 6, value_col, selected_cursor_blink ? "On" : "Off");
+    }
+
+    // Draw auto repeat label and value with selection highlighting
+    if (selected_item == 7)
+    {
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 7, content_col, "Auto Repeat", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 7, value_col, selected_auto_repeat? "On" : "Off", 8);
+    }
+    else
+    {
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 7, content_col, "Auto Repeat");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 7, value_col, selected_auto_repeat ? "On" : "Off");
+    }
+
+    // Draw repeat delay label and value with selection highlighting
+    if (selected_item == 8)
+    {
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 8, content_col, "Repeat Delay", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_int_at_with_bg(content_row + 8, value_col, selected_repeat_delay, 8);
+        draw_text_at_with_bg(content_row + 8, value_col + 6, "ms", 3);
+    }
+    else
+    {
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 8, content_col, "Repeat Delay");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_int_at(content_row + 8, value_col, selected_repeat_delay);
+        draw_text_at(content_row + 8, value_col + 6, "ms");
+    }
+
+    // Draw repeat rate label and value with selection highlighting
+    if (selected_item == 9)
+    {
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 9, content_col, "Repeat Rate", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_int_at_with_bg(content_row + 9, value_col, selected_repeat_rate, 8);
+        draw_text_at_with_bg(content_row + 9, value_col + 6, "Hz", 3);
+    }
+    else
+    {
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 9, content_col, "Repeat Rate");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_int_at(content_row + 9, value_col, selected_repeat_rate);
+        draw_text_at(content_row + 9, value_col + 6, "Hz");
     }
 
     // Draw instructions in 2-column layout at bottom, 1 line above border
