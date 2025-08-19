@@ -70,7 +70,7 @@ typedef struct
  *  information from DMA controller.
  */
 typedef struct {
-	// Graphics variables
+    // Graphics variables
     unsigned int W;						/// Screen pixel width
     unsigned int H;						/// Screen pixel height
     unsigned int bpp;					/// Bits depth
@@ -117,16 +117,16 @@ typedef struct {
     // Terminal variables
     struct
     {
-    	// Current Font variables
-    	unsigned char* FONT;			/// Points to font resource
-    	unsigned int FONTWIDTH;			/// Pixel width for characters
-    	unsigned int FONTHEIGHT;		/// Pixel height for characters
-    	unsigned int FONTCHARBYTES;		/// Number of bytes for one char in font
-    	unsigned int FONTWIDTH_INTS;	/// Number of 32-bits integers for font width (4 pixels / int)
-    	unsigned int FONTWIDTH_REMAIN;	/// Number of bytes to add to ints (when fontwidth not a multiple of 4)
-    	font_fun (*font_getglyph);		/// Function to get a glyph address for a character
+        // Current Font variables
+        unsigned char* FONT;			/// Points to font resource
+        unsigned int FONTWIDTH;			/// Pixel width for characters
+        unsigned int FONTHEIGHT;		/// Pixel height for characters
+        unsigned int FONTCHARBYTES;		/// Number of bytes for one char in font
+        unsigned int FONTWIDTH_INTS;	/// Number of 32-bits integers for font width (4 pixels / int)
+        unsigned int FONTWIDTH_REMAIN;	/// Number of bytes to add to ints (when fontwidth not a multiple of 4)
+        font_fun (*font_getglyph);		/// Function to get a glyph address for a character
 
-    	// Current Character Display variables
+        // Current Character Display variables
         unsigned int WIDTH;				/// Terminal character width (W / font width)
         unsigned int HEIGHT;			/// Terminal character height (H / font height)
         unsigned int tab_pos;			/// 8 by default, tabulation position multiplicator
@@ -157,9 +157,9 @@ typedef struct {
 /** Modes for ESC[=<mode>h - PC ANSI.SYS legacy */
 struct DISPLAY_MODE_DEFINITION
 {
-	unsigned int width;
-	unsigned int height;
-	unsigned int bpp; 		// NB: all are actually forced to 8 bpp
+    unsigned int width;
+    unsigned int height;
+    unsigned int bpp; 		// NB: all are actually forced to 8 bpp
 };
 
 // Number of known modes
@@ -175,38 +175,38 @@ struct DISPLAY_MODE_DEFINITION
  */
 static struct DISPLAY_MODE_DEFINITION ALL_MODES[LAST_MODE_NUMBER + 1] = {
 
-		// Resolution          Corresponding PC mode    PC card
-		//---------------------------------------------------
+        // Resolution          Corresponding PC mode    PC card
+        //---------------------------------------------------
 
-		// Legacy CGA
-		{320,200,8},		// 0: text mono  40 x 25    (CGA)
-		{320,200,8},		// 1: text color 40 x 25    (CGA)
-		{640,480,8},		// 2: text mono  80 x 25    (CGA)
-		{640,480,8},		// 3: text color 80 x 25    (CGA)
-		{320,200,8},		// 4: 320 x 200 4 colors    (CGA)
-		{320,200,8},		// 5: 320 x 200 mono        (CGA)
-		{640,200,8},		// 6: 640 x 200 mono        (CGA)
+        // Legacy CGA
+        {320,200,8},		// 0: text mono  40 x 25    (CGA)
+        {320,200,8},		// 1: text color 40 x 25    (CGA)
+        {640,480,8},		// 2: text mono  80 x 25    (CGA)
+        {640,480,8},		// 3: text color 80 x 25    (CGA)
+        {320,200,8},		// 4: 320 x 200 4 colors    (CGA)
+        {320,200,8},		// 5: 320 x 200 mono        (CGA)
+        {640,200,8},		// 6: 640 x 200 mono        (CGA)
 
-		// Special or non assigned
-		{0,0,0},			// 7: enable line wrapping
-		{0,0,0},			// 8:
-		{0,0,0},			// 9:
-		{0,0,0},			// 10:
-		{0,0,0},			// 11:
-		{0,0,0},			// 12:
+        // Special or non assigned
+        {0,0,0},			// 7: enable line wrapping
+        {0,0,0},			// 8:
+        {0,0,0},			// 9:
+        {0,0,0},			// 10:
+        {0,0,0},			// 11:
+        {0,0,0},			// 12:
 
-		// Legacy EGA
-		{320,200,8},		// 13: 320 x 200 16 colors  (EGA)
-		{640,200,8},		// 14: 640 x 200 16 colors  (EGA)
-		{640,350,8},		// 15: 640 x 350 mono       (EGA)
-		{640,350,8},		// 16: 640 x 350 16 colors  (EGA)
+        // Legacy EGA
+        {320,200,8},		// 13: 320 x 200 16 colors  (EGA)
+        {640,200,8},		// 14: 640 x 200 16 colors  (EGA)
+        {640,350,8},		// 15: 640 x 350 mono       (EGA)
+        {640,350,8},		// 16: 640 x 350 16 colors  (EGA)
 
-		// Legacy VGA
-		{640,480,8},		// 17: 640 x 480 mono       (VGA)
-		{640,480,8},		// 18: 640 x 480 16 colors  (VGA)
-		{320,200,8},		// 19: 320 x 200 256 colors (MCGA)
+        // Legacy VGA
+        {640,480,8},		// 17: 640 x 480 mono       (VGA)
+        {640,480,8},		// 18: 640 x 480 16 colors  (VGA)
+        {320,200,8},		// 19: 320 x 200 256 colors (MCGA)
 
-		{320,240,8},		// 20: 320 x 240 256 colors (Michael Abrash X-Mode)
+        {320,240,8},		// 20: 320 x 240 256 colors (Michael Abrash X-Mode)
 };
 
 /** Forward declaration for some state functions. */
@@ -245,71 +245,71 @@ extern unsigned char G_SPLEEN32X64_GLYPHS;
 /** Font function for the default 8x8 font. */
 unsigned char* font_get_glyph_address_8x8(unsigned int c)
 {
-	// offset of glyph is c * 64 bytes, which can be computed by c << 6
-	return ctx.term.FONT + ((unsigned int)c<<6);
+    // offset of glyph is c * 64 bytes, which can be computed by c << 6
+    return ctx.term.FONT + ((unsigned int)c<<6);
 }
 /** Font function for the 8x24 font. */
 /** Font function for the 8x16 font. */
 unsigned char* font_get_glyph_address_8x16(unsigned int c)
 {
-	// offset of glyph is c * 128 bytes, which can be computed by c << 7
-	return ctx.term.FONT + ((unsigned int)c<<7);
+    // offset of glyph is c * 128 bytes, which can be computed by c << 7
+    return ctx.term.FONT + ((unsigned int)c<<7);
 }
 
 /** Spleen font functions */
 unsigned char* font_get_glyph_address_spleen6x12(unsigned int c)
 {
-	// offset of glyph is c * 72 bytes (6 * 12)
-	return ctx.term.FONT + c * 72;
+    // offset of glyph is c * 72 bytes (6 * 12)
+    return ctx.term.FONT + c * 72;
 }
 
 unsigned char* font_get_glyph_address_spleen8x16(unsigned int c)
 {
-	// offset of glyph is c * 128 bytes (8 * 16)
-	return ctx.term.FONT + c * 128;
+    // offset of glyph is c * 128 bytes (8 * 16)
+    return ctx.term.FONT + c * 128;
 }
 
 unsigned char* font_get_glyph_address_spleen12x24(unsigned int c)
 {
-	// offset of glyph is c * 288 bytes (12 * 24)
-	return ctx.term.FONT + c * 288;
+    // offset of glyph is c * 288 bytes (12 * 24)
+    return ctx.term.FONT + c * 288;
 }
 
 unsigned char* font_get_glyph_address_spleen16x32(unsigned int c)
 {
-	// offset of glyph is c * 512 bytes (16 * 32)
-	return ctx.term.FONT + c * 512;
+    // offset of glyph is c * 512 bytes (16 * 32)
+    return ctx.term.FONT + c * 512;
 }
 
 unsigned char* font_get_glyph_address_spleen32x64(unsigned int c)
 {
-	// offset of glyph is c * 2048 bytes (32 * 64)
-	return ctx.term.FONT + c * 2048;
+    // offset of glyph is c * 2048 bytes (32 * 64)
+    return ctx.term.FONT + c * 2048;
 }
 
 /** Generic Font function. */
 unsigned char* font_get_glyph_address_any(unsigned int c)
 {
-	return (unsigned char*) ( ctx.term.FONT + c * ctx.term.FONTCHARBYTES );
+    return (unsigned char*) ( ctx.term.FONT + c * ctx.term.FONTCHARBYTES );
 }
 
 /** Compute some font variables from font size. */
 void gfx_compute_font()
 {
-	ctx.term.FONTCHARBYTES = ctx.term.FONTWIDTH * ctx.term.FONTHEIGHT;
-	ctx.term.FONTWIDTH_INTS = ctx.term.FONTWIDTH / 4 ;
-	ctx.term.FONTWIDTH_REMAIN = ctx.term.FONTWIDTH % 4;
-	ctx.cursor_buffer_size = ctx.term.FONTWIDTH * ctx.term.FONTHEIGHT;
-	if (ctx.cursor_buffer)
-	{
-		nmalloc_free(ctx.cursor_buffer);
-		ctx.cursor_buffer = 0;
-		ctx.cursor_buffer_ready = 0;
-	}
-	ctx.cursor_buffer = (unsigned char*)nmalloc_malloc(ctx.cursor_buffer_size);
-	pigfx_memset(ctx.cursor_buffer, 0, ctx.cursor_buffer_size);
+    ctx.term.FONTCHARBYTES = ctx.term.FONTWIDTH * ctx.term.FONTHEIGHT;
+    ctx.term.FONTWIDTH_INTS = ctx.term.FONTWIDTH / 4 ;
+    ctx.term.FONTWIDTH_REMAIN = ctx.term.FONTWIDTH % 4;
+    ctx.cursor_buffer_size = ctx.term.FONTWIDTH * ctx.term.FONTHEIGHT;
+    if (ctx.cursor_buffer)
+    {
+        nmalloc_free(ctx.cursor_buffer);
+        ctx.cursor_buffer = 0;
+        ctx.cursor_buffer_ready = 0;
+    }
+    ctx.cursor_buffer = (unsigned char*)nmalloc_malloc(ctx.cursor_buffer_size);
+    pigfx_memset(ctx.cursor_buffer, 0, ctx.cursor_buffer_size);
 
-	// set logical terminal size
+    // set logical terminal size
     ctx.term.WIDTH = ctx.W / ctx.term.FONTWIDTH;
     ctx.term.HEIGHT= ctx.H / ctx.term.FONTHEIGHT;
     gfx_term_save_cursor_content();
@@ -345,7 +345,7 @@ void gfx_set_env( void* p_framebuffer, unsigned int width, unsigned int height, 
 
     // set default font
     if (ctx.term.FONT == 0) {
-    	gfx_term_set_font(8,16);
+        gfx_term_set_font(8,16);
     }
 
     // Store DMA framebuffer infos
@@ -400,7 +400,7 @@ void gfx_set_bg( GFX_COL col )
     // fill precomputed 4 bytes integer
     unsigned char* p = (unsigned char*)&ctx.bg32;
     for (size_T i = 0 ; i < sizeof(ctx.bg32) ; i++)
-    	*(p++) = col;
+        *(p++) = col;
 }
 
 /** Sets the foreground color. */
@@ -410,7 +410,7 @@ void gfx_set_fg( GFX_COL col )
     // fill precomputed 4 bytes integer
     unsigned char* p = (unsigned char*)&ctx.fg32;
     for (size_T i = 0 ; i < sizeof(ctx.fg32) ; i++)
-    	*(p++) = col;
+        *(p++) = col;
 }
 
 /** Swaps the foreground and background colors. */
@@ -452,7 +452,7 @@ void gfx_get_gfx_size( unsigned int* width, unsigned int* height )
  */
 void gfx_set_transparent_color( GFX_COL color )
 {
-	ctx.transparentcolor = color;
+    ctx.transparentcolor = color;
 }
 
 
@@ -1101,46 +1101,46 @@ void gfx_putc_NORMAL( unsigned int row, unsigned int col, unsigned char c )
 
     if (ctx.term.FONTWIDTH == 8)
     {
-    	// optimized original code drawing 4 pixels at once using 32-bit ints
+        // optimized original code drawing 4 pixels at once using 32-bit ints
         const unsigned int FG = ctx.fg32;
         const unsigned int BG = ctx.bg32;
         const unsigned int int_stride = (ctx.Pitch>>2) - 2; // 2 ints = 8 pixels = 1 character
-		register unsigned int* p_glyph = (unsigned int*)ctx.term.font_getglyph(c);
-		register unsigned char h = ctx.term.FONTHEIGHT;
-		register unsigned int* pf = (unsigned int*)PFB(pixcol, pixrow);
-		while(h--)
-		{
-			// Loop unrolled for 8xH fonts
-			register unsigned int gv = *p_glyph++;
-			// Each byte is 00 for background pixel or FF for foreground pixel
-			*pf++ =  (gv & FG) | ( ~gv & BG );
-			gv = *p_glyph++;
-			*pf++ =  (gv & FG) | ( ~gv & BG );
-			pf += int_stride;
-		}
+        register unsigned int* p_glyph = (unsigned int*)ctx.term.font_getglyph(c);
+        register unsigned char h = ctx.term.FONTHEIGHT;
+        register unsigned int* pf = (unsigned int*)PFB(pixcol, pixrow);
+        while(h--)
+        {
+            // Loop unrolled for 8xH fonts
+            register unsigned int gv = *p_glyph++;
+            // Each byte is 00 for background pixel or FF for foreground pixel
+            *pf++ =  (gv & FG) | ( ~gv & BG );
+            gv = *p_glyph++;
+            *pf++ =  (gv & FG) | ( ~gv & BG );
+            pf += int_stride;
+        }
     }
     else
     {
-		// number of bytes to next line start position in framebuffer
-    	const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;
-    	// address of character in font
-		register unsigned char* p_glyph = (unsigned char*)ctx.term.font_getglyph(c);
-		// copy from font to framebuffer for each font line
-		register unsigned char h = ctx.term.FONTHEIGHT;
-		register unsigned char* pf = (unsigned char*)PFB(pixcol, pixrow);
-		while( h-- )
-		{
-			unsigned int w = ctx.term.FONTWIDTH;
-			while( w-- )
-			{
-				register unsigned char gv = *p_glyph++;	// get 1 pixel of font glyph
-				if (gv)
-					*pf++ = ctx.fg;
-				else
-					*pf++ = ctx.bg;
-			}
-			pf += byte_stride;
-		}
+        // number of bytes to next line start position in framebuffer
+        const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;
+        // address of character in font
+        register unsigned char* p_glyph = (unsigned char*)ctx.term.font_getglyph(c);
+        // copy from font to framebuffer for each font line
+        register unsigned char h = ctx.term.FONTHEIGHT;
+        register unsigned char* pf = (unsigned char*)PFB(pixcol, pixrow);
+        while( h-- )
+        {
+            unsigned int w = ctx.term.FONTWIDTH;
+            while( w-- )
+            {
+                register unsigned char gv = *p_glyph++;	// get 1 pixel of font glyph
+                if (gv)
+                    *pf++ = ctx.fg;
+                else
+                    *pf++ = ctx.bg;
+            }
+            pf += byte_stride;
+        }
     }
 }
 
@@ -1162,22 +1162,22 @@ void gfx_putc_XOR( unsigned int row, unsigned int col, unsigned char c )
 
     const unsigned int pixcol = col * ctx.term.FONTWIDTH;
     const unsigned int pixrow = row * ctx.term.FONTHEIGHT;
-	const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;
-	register unsigned char* p_glyph = (unsigned char*)ctx.term.font_getglyph(c);
-	register unsigned char h = ctx.term.FONTHEIGHT;
-	register unsigned char* pf = (unsigned char*)PFB(pixcol, pixrow);
-	while( h-- )
-	{
-		unsigned int w = ctx.term.FONTWIDTH;
-		while( w-- )
-		{
-			register unsigned char gv = *p_glyph++;
-			if (gv)
-				*pf = ctx.fg ^ gv;
-			pf++;
-		}
-		pf += byte_stride;
-	}
+    const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;
+    register unsigned char* p_glyph = (unsigned char*)ctx.term.font_getglyph(c);
+    register unsigned char h = ctx.term.FONTHEIGHT;
+    register unsigned char* pf = (unsigned char*)PFB(pixcol, pixrow);
+    while( h-- )
+    {
+        unsigned int w = ctx.term.FONTWIDTH;
+        while( w-- )
+        {
+            register unsigned char gv = *p_glyph++;
+            if (gv)
+                *pf = ctx.fg ^ gv;
+            pf++;
+        }
+        pf += byte_stride;
+    }
 }
 
 /** Displays a character at a position in transparent mode.
@@ -1199,22 +1199,22 @@ void gfx_putc_TRANSPARENT( unsigned int row, unsigned int col, unsigned char c )
 
     const unsigned int pixcol = col * ctx.term.FONTWIDTH;
     const unsigned int pixrow = row * ctx.term.FONTHEIGHT;
-	const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;
-	register unsigned char* p_glyph = (unsigned char*)ctx.term.font_getglyph(c);
-	register unsigned char h = ctx.term.FONTHEIGHT;
-	register unsigned char* pf = (unsigned char*)PFB(pixcol, pixrow);
-	while( h-- )
-	{
-		unsigned int w = ctx.term.FONTWIDTH;
-		while( w-- )
-		{
-			register unsigned char gv = *p_glyph++;
-			if (gv)
-				*pf = ctx.fg;
-			pf++;
-		}
-		pf += byte_stride;
-	}
+    const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;
+    register unsigned char* p_glyph = (unsigned char*)ctx.term.font_getglyph(c);
+    register unsigned char h = ctx.term.FONTHEIGHT;
+    register unsigned char* pf = (unsigned char*)PFB(pixcol, pixrow);
+    while( h-- )
+    {
+        unsigned int w = ctx.term.FONTWIDTH;
+        while( w-- )
+        {
+            register unsigned char gv = *p_glyph++;
+            if (gv)
+                *pf = ctx.fg;
+            pf++;
+        }
+        pf += byte_stride;
+    }
 }
 
 /** Displays a character in current drawing mode. Characters with codes from 0 to 31
@@ -1231,22 +1231,22 @@ draw_putc_fun (*gfx_putc) = &gfx_putc_NORMAL;
  */
 void gfx_set_drawing_mode( DRAWING_MODE mode )
 {
-	ctx.mode = mode;
-	switch (mode)
-	{
-	case drawingNORMAL:
-		gfx_putc = gfx_putc_NORMAL;
-		gfx_put_sprite = gfx_put_sprite_NORMAL;
-		break;
-	case drawingXOR:
-		gfx_putc = gfx_putc_XOR;
-		gfx_put_sprite = gfx_put_sprite_XOR;
-		break;
-	case drawingTRANSPARENT:
-		gfx_putc = gfx_putc_TRANSPARENT;
-		gfx_put_sprite = gfx_put_sprite_TRANSPARENT;
-		break;
-	}
+    ctx.mode = mode;
+    switch (mode)
+    {
+    case drawingNORMAL:
+        gfx_putc = gfx_putc_NORMAL;
+        gfx_put_sprite = gfx_put_sprite_NORMAL;
+        break;
+    case drawingXOR:
+        gfx_putc = gfx_putc_XOR;
+        gfx_put_sprite = gfx_put_sprite_XOR;
+        break;
+    case drawingTRANSPARENT:
+        gfx_putc = gfx_putc_TRANSPARENT;
+        gfx_put_sprite = gfx_put_sprite_TRANSPARENT;
+        break;
+    }
 }
 
 /** Restore saved content under cursor.
@@ -1254,7 +1254,7 @@ void gfx_set_drawing_mode( DRAWING_MODE mode )
  */
 void gfx_restore_cursor_content()
 {
-	if (!ctx.cursor_buffer_ready) return;
+    if (!ctx.cursor_buffer_ready) return;
 
     unsigned char* pb = ctx.cursor_buffer;
     unsigned char* pfb = (unsigned char*)PFB( ctx.term.cursor_col * ctx.term.FONTWIDTH, ctx.term.cursor_row * ctx.term.FONTHEIGHT );
@@ -1262,11 +1262,11 @@ void gfx_restore_cursor_content()
     unsigned int h = ctx.term.FONTHEIGHT;
     while(h--)
     {
-    	unsigned int w = ctx.term.FONTWIDTH;
-    	while (w--)
-    	{
-    		*pfb++ = *pb++;
-    	}
+        unsigned int w = ctx.term.FONTWIDTH;
+        while (w--)
+        {
+            *pfb++ = *pb++;
+        }
         pfb += byte_stride;
     }
 
@@ -1276,26 +1276,26 @@ void gfx_restore_cursor_content()
 /** Saves framebuffer content in the cursor bufffer so t can be restored later. */
 void gfx_term_save_cursor_content()
 {
-	unsigned char* pb = ctx.cursor_buffer;
-	unsigned char* pfb = (unsigned char*)PFB(
-	ctx.term.cursor_col * ctx.term.FONTWIDTH,
-	ctx.term.cursor_row * ctx.term.FONTHEIGHT );
-	const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;//$$ adjust if not 8 width?
-	unsigned int h = ctx.term.FONTHEIGHT;
-	while(h--)
+    unsigned char* pb = ctx.cursor_buffer;
+    unsigned char* pfb = (unsigned char*)PFB(
+    ctx.term.cursor_col * ctx.term.FONTWIDTH,
+    ctx.term.cursor_row * ctx.term.FONTHEIGHT );
+    const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;//$$ adjust if not 8 width?
+    unsigned int h = ctx.term.FONTHEIGHT;
+    while(h--)
     {
-    	int w = ctx.term.FONTWIDTH;
-    	while (w--)
-    	{
-    		*pb++ = *pfb++;
-    	}
+        int w = ctx.term.FONTWIDTH;
+        while (w--)
+        {
+            *pb++ = *pfb++;
+        }
         pfb += byte_stride;
     }
-	ctx.cursor_buffer_ready = 1;
+    ctx.cursor_buffer_ready = 1;
 }
 
 /** Saves framebuffer content that is going to be replaced by the cursor and update
-	the new content.
+    the new content.
 */
 void gfx_term_render_cursor()
 {
@@ -1303,8 +1303,8 @@ void gfx_term_render_cursor()
     unsigned char* pb = ctx.cursor_buffer;
     //cout("pb: "); cout_h((unsigned int)pb);cout_endl();
     unsigned char* pfb = (unsigned char*)PFB(
-    		ctx.term.cursor_col * ctx.term.FONTWIDTH,
-    		ctx.term.cursor_row * ctx.term.FONTHEIGHT );
+            ctx.term.cursor_col * ctx.term.FONTWIDTH,
+            ctx.term.cursor_row * ctx.term.FONTHEIGHT );
     //cout("pfb: "); cout_h((unsigned int)pfb);cout_endl();
     const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;//$$ adjust if not 8 width?
     //cout("byte_stride: "); cout_d(byte_stride);  cout(" pitch: "); cout_d(ctx.Pitch); cout(" FONTWIDTH: "); cout_d(ctx.term.FONTWIDTH);cout_endl();
@@ -1312,26 +1312,44 @@ void gfx_term_render_cursor()
     //cout("h: "); cout_d(h);cout_endl();
 
     if( ctx.term.cursor_visible )
+    {
         while(h--)
         {
-        	int w = ctx.term.FONTWIDTH;
-        	while (w--)
-        	{
-        		*pb++ = *pfb; *pfb = ~*pfb; pfb++;
-        	}
+            unsigned int w = ctx.term.FONTWIDTH;
+            while (w--)
+            {
+                *pb = *pfb; // Save original pixel
+                if (*pfb == (ctx.fg32 & 0xFF))
+                {
+                    *pfb = ctx.bg32 & 0xFF;
+                }
+                else if (*pfb == (ctx.bg32 & 0xFF))
+                {
+                    *pfb = ctx.fg32 & 0xFF;
+                }
+                // else leave pixel unchanged
+                pb++;
+                pfb++;
+            }
             pfb += byte_stride;
         }
+        ctx.cursor_buffer_ready = 1;
+    }
     else
+    {
         while(h--)
         {
-        	int w = ctx.term.FONTWIDTH;
-        	while (w--)
-        	{
-        		*pb++ = *pfb++;
-        	}
+            unsigned int w = ctx.term.FONTWIDTH;
+            while (w--)
+            {
+                *pfb = *pb++; // Restore original pixel
+                pfb++;
+            }
             pfb += byte_stride;
         }
-    ctx.cursor_buffer_ready = 1;
+        ctx.cursor_buffer_ready = 1;
+    }
+            // ...existing code...
 }
 
 /** shifts content from cursor 1 character to the right */
@@ -1666,7 +1684,7 @@ void gfx_term_putstring( const char* str )
 
 
             default:
-            	checkscroll = ctx.term.state.next( *str, &(ctx.term.state) );
+                checkscroll = ctx.term.state.next( *str, &(ctx.term.state) );
                 break;
         }
 
@@ -1824,172 +1842,172 @@ void gfx_term_clear_screen_to_here()
 /** Set the font. */
 void gfx_term_set_font(int width, int height)
 {
-	if (width == 8)
-	{
-		switch (height)
-		{
-		case 16:
-			ctx.term.FONT = &G_FONT8X16_GLYPHS;
-			ctx.term.FONTWIDTH = 8;
-			ctx.term.FONTHEIGHT = 16;
-			ctx.term.font_getglyph = font_get_glyph_address_8x16;
-			gfx_compute_font();
-			break;
-		}
-	}
-	else if (width == 6)
-	{
-		switch (height)
-		{
-		case 12:
-			ctx.term.FONT = &G_SPLEEN6X12_GLYPHS;
-			ctx.term.FONTWIDTH = 6;
-			ctx.term.FONTHEIGHT = 12;
-			ctx.term.font_getglyph = font_get_glyph_address_spleen6x12;
-			gfx_compute_font();
-			break;
-		}
-	}
-	else if (width == 12)
-	{
-		switch (height)
-		{
-		case 24:
-			ctx.term.FONT = &G_SPLEEN12X24_GLYPHS;
-			ctx.term.FONTWIDTH = 12;
-			ctx.term.FONTHEIGHT = 24;
-			ctx.term.font_getglyph = font_get_glyph_address_spleen12x24;
-			gfx_compute_font();
-			break;
-		}
-	}
-	else if (width == 16)
-	{
-		switch (height)
-		{
-		case 32:
-			ctx.term.FONT = &G_SPLEEN16X32_GLYPHS;
-			ctx.term.FONTWIDTH = 16;
-			ctx.term.FONTHEIGHT = 32;
-			ctx.term.font_getglyph = font_get_glyph_address_spleen16x32;
-			gfx_compute_font();
-			break;
-		}
-	}
-	else if (width == 32)
-	{
-		switch (height)
-		{
-		case 64:
-			ctx.term.FONT = &G_SPLEEN32X64_GLYPHS;
-			ctx.term.FONTWIDTH = 32;
-			ctx.term.FONTHEIGHT = 64;
-			ctx.term.font_getglyph = font_get_glyph_address_spleen32x64;
-			gfx_compute_font();
-			break;
-		}
-	}
-	// Also add Spleen 8x16 as an alternative to TRS 8x16
-	else if (width == -8) // Use negative width as flag for Spleen 8x16
-	{
-		ctx.term.FONT = &G_SPLEEN8X16_GLYPHS;
-		ctx.term.FONTWIDTH = 8;
-		ctx.term.FONTHEIGHT = 16;
-		ctx.term.font_getglyph = font_get_glyph_address_spleen8x16;
-		gfx_compute_font();
-	}
-	//cout("ctx.term.FONTWIDTH: ");cout_d(ctx.term.FONTWIDTH);cout_endl();
+    if (width == 8)
+    {
+        switch (height)
+        {
+        case 16:
+            ctx.term.FONT = &G_FONT8X16_GLYPHS;
+            ctx.term.FONTWIDTH = 8;
+            ctx.term.FONTHEIGHT = 16;
+            ctx.term.font_getglyph = font_get_glyph_address_8x16;
+            gfx_compute_font();
+            break;
+        }
+    }
+    else if (width == 6)
+    {
+        switch (height)
+        {
+        case 12:
+            ctx.term.FONT = &G_SPLEEN6X12_GLYPHS;
+            ctx.term.FONTWIDTH = 6;
+            ctx.term.FONTHEIGHT = 12;
+            ctx.term.font_getglyph = font_get_glyph_address_spleen6x12;
+            gfx_compute_font();
+            break;
+        }
+    }
+    else if (width == 12)
+    {
+        switch (height)
+        {
+        case 24:
+            ctx.term.FONT = &G_SPLEEN12X24_GLYPHS;
+            ctx.term.FONTWIDTH = 12;
+            ctx.term.FONTHEIGHT = 24;
+            ctx.term.font_getglyph = font_get_glyph_address_spleen12x24;
+            gfx_compute_font();
+            break;
+        }
+    }
+    else if (width == 16)
+    {
+        switch (height)
+        {
+        case 32:
+            ctx.term.FONT = &G_SPLEEN16X32_GLYPHS;
+            ctx.term.FONTWIDTH = 16;
+            ctx.term.FONTHEIGHT = 32;
+            ctx.term.font_getglyph = font_get_glyph_address_spleen16x32;
+            gfx_compute_font();
+            break;
+        }
+    }
+    else if (width == 32)
+    {
+        switch (height)
+        {
+        case 64:
+            ctx.term.FONT = &G_SPLEEN32X64_GLYPHS;
+            ctx.term.FONTWIDTH = 32;
+            ctx.term.FONTHEIGHT = 64;
+            ctx.term.font_getglyph = font_get_glyph_address_spleen32x64;
+            gfx_compute_font();
+            break;
+        }
+    }
+    // Also add Spleen 8x16 as an alternative to TRS 8x16
+    else if (width == -8) // Use negative width as flag for Spleen 8x16
+    {
+        ctx.term.FONT = &G_SPLEEN8X16_GLYPHS;
+        ctx.term.FONTWIDTH = 8;
+        ctx.term.FONTHEIGHT = 16;
+        ctx.term.font_getglyph = font_get_glyph_address_spleen8x16;
+        gfx_compute_font();
+    }
+    //cout("ctx.term.FONTWIDTH: ");cout_d(ctx.term.FONTWIDTH);cout_endl();
     //cout("ctx.term.FONTHEIGHT: ");cout_d(ctx.term.FONTHEIGHT);cout_endl();
 }
 
 /** Sets font by type index (avoids dimension conflicts) */
 void gfx_term_set_font_by_type(int font_type)
 {
-	switch (font_type)
-	{
-	case 1: // 8x16 original
-		ctx.term.FONT = &G_FONT8X16_GLYPHS;
-		ctx.term.FONTWIDTH = 8;
-		ctx.term.FONTHEIGHT = 16;
-		ctx.term.font_getglyph = font_get_glyph_address_8x16;
-		gfx_compute_font();
-		break;
-	case 3: // 6x12 Spleen
-		ctx.term.FONT = &G_SPLEEN6X12_GLYPHS;
-		ctx.term.FONTWIDTH = 6;
-		ctx.term.FONTHEIGHT = 12;
-		ctx.term.font_getglyph = font_get_glyph_address_spleen6x12;
-		gfx_compute_font();
-		break;
-	case 4: // 12x24 Spleen
-		ctx.term.FONT = &G_SPLEEN12X24_GLYPHS;
-		ctx.term.FONTWIDTH = 12;
-		ctx.term.FONTHEIGHT = 24;
-		ctx.term.font_getglyph = font_get_glyph_address_spleen12x24;
-		gfx_compute_font();
-		break;
-	case 5: // 16x32 Spleen
-		ctx.term.FONT = &G_SPLEEN16X32_GLYPHS;
-		ctx.term.FONTWIDTH = 16;
-		ctx.term.FONTHEIGHT = 32;
-		ctx.term.font_getglyph = font_get_glyph_address_spleen16x32;
-		gfx_compute_font();
-		break;
-	case 6: // 32x64 Spleen
-		ctx.term.FONT = &G_SPLEEN32X64_GLYPHS;
-		ctx.term.FONTWIDTH = 32;
-		ctx.term.FONTHEIGHT = 64;
-		ctx.term.font_getglyph = font_get_glyph_address_spleen32x64;
-		gfx_compute_font();
-		break;
-	case 7: // 8x16 Spleen
-		ctx.term.FONT = &G_SPLEEN8X16_GLYPHS;
-		ctx.term.FONTWIDTH = 8;
-		ctx.term.FONTHEIGHT = 16;
-		ctx.term.font_getglyph = font_get_glyph_address_spleen8x16;
-		gfx_compute_font();
-		break;
-	default: // Fallback to 8x16 original
-		ctx.term.FONT = &G_FONT8X16_GLYPHS;
-		ctx.term.FONTWIDTH = 8;
-		ctx.term.FONTHEIGHT = 16;
-		ctx.term.font_getglyph = font_get_glyph_address_8x16;
-		gfx_compute_font();
-		break;
-	}
+    switch (font_type)
+    {
+    case 1: // 8x16 original
+        ctx.term.FONT = &G_FONT8X16_GLYPHS;
+        ctx.term.FONTWIDTH = 8;
+        ctx.term.FONTHEIGHT = 16;
+        ctx.term.font_getglyph = font_get_glyph_address_8x16;
+        gfx_compute_font();
+        break;
+    case 3: // 6x12 Spleen
+        ctx.term.FONT = &G_SPLEEN6X12_GLYPHS;
+        ctx.term.FONTWIDTH = 6;
+        ctx.term.FONTHEIGHT = 12;
+        ctx.term.font_getglyph = font_get_glyph_address_spleen6x12;
+        gfx_compute_font();
+        break;
+    case 4: // 12x24 Spleen
+        ctx.term.FONT = &G_SPLEEN12X24_GLYPHS;
+        ctx.term.FONTWIDTH = 12;
+        ctx.term.FONTHEIGHT = 24;
+        ctx.term.font_getglyph = font_get_glyph_address_spleen12x24;
+        gfx_compute_font();
+        break;
+    case 5: // 16x32 Spleen
+        ctx.term.FONT = &G_SPLEEN16X32_GLYPHS;
+        ctx.term.FONTWIDTH = 16;
+        ctx.term.FONTHEIGHT = 32;
+        ctx.term.font_getglyph = font_get_glyph_address_spleen16x32;
+        gfx_compute_font();
+        break;
+    case 6: // 32x64 Spleen
+        ctx.term.FONT = &G_SPLEEN32X64_GLYPHS;
+        ctx.term.FONTWIDTH = 32;
+        ctx.term.FONTHEIGHT = 64;
+        ctx.term.font_getglyph = font_get_glyph_address_spleen32x64;
+        gfx_compute_font();
+        break;
+    case 7: // 8x16 Spleen
+        ctx.term.FONT = &G_SPLEEN8X16_GLYPHS;
+        ctx.term.FONTWIDTH = 8;
+        ctx.term.FONTHEIGHT = 16;
+        ctx.term.font_getglyph = font_get_glyph_address_spleen8x16;
+        gfx_compute_font();
+        break;
+    default: // Fallback to 8x16 original
+        ctx.term.FONT = &G_FONT8X16_GLYPHS;
+        ctx.term.FONTWIDTH = 8;
+        ctx.term.FONTHEIGHT = 16;
+        ctx.term.font_getglyph = font_get_glyph_address_8x16;
+        gfx_compute_font();
+        break;
+    }
 }
 
 void gfx_term_get_font(int* width, int* height)
 {
-	if (width != 0)
-	{
-		*width = ctx.term.FONTWIDTH;
-	}
-	if (height != 0)
-	{
-		*height = ctx.term.FONTHEIGHT;
-	}
+    if (width != 0)
+    {
+        *width = ctx.term.FONTWIDTH;
+    }
+    if (height != 0)
+    {
+        *height = ctx.term.FONTHEIGHT;
+    }
 }
 
 /** Get the current font type for setup mode detection. */
 int gfx_term_get_font_type(void)
 {
-	// Return a unique identifier for each font type
-	if (ctx.term.FONT == &G_FONT8X16_GLYPHS) return 1;         // 8x16
-	if (ctx.term.FONT == &G_SPLEEN6X12_GLYPHS) return 3;       // 6x12 Spleen
-	if (ctx.term.FONT == &G_SPLEEN12X24_GLYPHS) return 4;      // 12x24 Spleen
-	if (ctx.term.FONT == &G_SPLEEN16X32_GLYPHS) return 5;      // 16x32 Spleen
-	if (ctx.term.FONT == &G_SPLEEN32X64_GLYPHS) return 6;      // 32x64 Spleen
-	if (ctx.term.FONT == &G_SPLEEN8X16_GLYPHS) return 7;       // 8x16 Spleen
-	return 1; // Default to 8x16 if unknown
+    // Return a unique identifier for each font type
+    if (ctx.term.FONT == &G_FONT8X16_GLYPHS) return 1;         // 8x16
+    if (ctx.term.FONT == &G_SPLEEN6X12_GLYPHS) return 3;       // 6x12 Spleen
+    if (ctx.term.FONT == &G_SPLEEN12X24_GLYPHS) return 4;      // 12x24 Spleen
+    if (ctx.term.FONT == &G_SPLEEN16X32_GLYPHS) return 5;      // 16x32 Spleen
+    if (ctx.term.FONT == &G_SPLEEN32X64_GLYPHS) return 6;      // 32x64 Spleen
+    if (ctx.term.FONT == &G_SPLEEN8X16_GLYPHS) return 7;       // 8x16 Spleen
+    return 1; // Default to 8x16 if unknown
 }
 
 /** Sets the tabulation width. */
 void gfx_term_set_tabulation(int width)
 {
-	if (width < 0) width = 8;
-	if (width > (int)ctx.term.WIDTH) width = (int)ctx.term.WIDTH;
-	ctx.term.tab_pos = (unsigned int)width;
+    if (width < 0) width = 8;
+    if (width > (int)ctx.term.WIDTH) width = (int)ctx.term.WIDTH;
+    ctx.term.tab_pos = (unsigned int)width;
 }
 
 /**  Term ANSI prefix code */
@@ -2016,7 +2034,7 @@ void gfx_term_set_tabulation(int width)
  */
 int state_fun_final_letter( char ch, scn_state *state )
 {
-	int retval = 1;// handle line break and screen scroll by default
+    int retval = 1;// handle line break and screen scroll by default
     if( state->private_mode_char == '#' )
     {
         // Non-standard graphic commands and additionam features
@@ -2321,75 +2339,75 @@ int state_fun_final_letter( char ch, scn_state *state )
 
     if ( state->private_mode_char == '=' )
     {
-    	// ANSI.SYS style mode changing
-    	switch( ch )
-    	{
-    	case 'h': // set resolution mode on last parameter, ignore previous
-    		if( state->cmd_params_size >= 1)
-    		{
-    			// parameter is the mode index in global array
-    			if (state->cmd_params[state->cmd_params_size - 1] <= LAST_MODE_NUMBER)
-    			{
-        			struct DISPLAY_MODE_DEFINITION* p = & ALL_MODES[state->cmd_params[state->cmd_params_size-1]];
-        			if (p->width > 0)
-        			{
-        				initialize_framebuffer( p->width, p->height, p->bpp);
-        			}
-    			}
-    		}
-    		goto back_to_normal;
-    		break;
+        // ANSI.SYS style mode changing
+        switch( ch )
+        {
+        case 'h': // set resolution mode on last parameter, ignore previous
+            if( state->cmd_params_size >= 1)
+            {
+                // parameter is the mode index in global array
+                if (state->cmd_params[state->cmd_params_size - 1] <= LAST_MODE_NUMBER)
+                {
+                    struct DISPLAY_MODE_DEFINITION* p = & ALL_MODES[state->cmd_params[state->cmd_params_size-1]];
+                    if (p->width > 0)
+                    {
+                        initialize_framebuffer( p->width, p->height, p->bpp);
+                    }
+                }
+            }
+            goto back_to_normal;
+            break;
 
-    	case 'f': // ESC=0f choose 8x8 font, ESC=1f for 8x16, ESC=2f for 8x24
-    		if( state->cmd_params_size >= 1)
-    		{
-    			// parameter is the font number
-    			switch (state->cmd_params[state->cmd_params_size - 1])
-    			{
-    			case 0:
-    				gfx_term_set_font(8,8);
-    				break;
-				case 1:
-					gfx_term_set_font(8,16);
-					break;
-				case 2:
-					gfx_term_set_font(8,24);
-					break;
-				default:
-					// ignore
-					break;
-    			}
-    		}
-    		goto back_to_normal;
-    		break;
+        case 'f': // ESC=0f choose 8x8 font, ESC=1f for 8x16, ESC=2f for 8x24
+            if( state->cmd_params_size >= 1)
+            {
+                // parameter is the font number
+                switch (state->cmd_params[state->cmd_params_size - 1])
+                {
+                case 0:
+                    gfx_term_set_font(8,8);
+                    break;
+                case 1:
+                    gfx_term_set_font(8,16);
+                    break;
+                case 2:
+                    gfx_term_set_font(8,24);
+                    break;
+                default:
+                    // ignore
+                    break;
+                }
+            }
+            goto back_to_normal;
+            break;
 
-    	case 'm': // ESC=0m normal mode, ESC=1m XOR, ESC=2m TRANSPARENT
-       		if( state->cmd_params_size >= 1)
-        	{
-				// parameter is the font number
-				switch (state->cmd_params[state->cmd_params_size - 1])
-				{
-				case 1:
-					gfx_set_drawing_mode(drawingXOR);
-					break;
-				case 2:
-					gfx_set_drawing_mode(drawingTRANSPARENT);;
-					break;
-				default:
-					gfx_set_drawing_mode(drawingNORMAL);
-					break;
-        		}
-    		}
-    		goto back_to_normal;
-    		break;
+        case 'm': // ESC=0m normal mode, ESC=1m XOR, ESC=2m TRANSPARENT
+            if( state->cmd_params_size >= 1)
+            {
+                // parameter is the font number
+                switch (state->cmd_params[state->cmd_params_size - 1])
+                {
+                case 1:
+                    gfx_set_drawing_mode(drawingXOR);
+                    break;
+                case 2:
+                    gfx_set_drawing_mode(drawingTRANSPARENT);;
+                    break;
+                default:
+                    gfx_set_drawing_mode(drawingNORMAL);
+                    break;
+                }
+            }
+            goto back_to_normal;
+            break;
 
-    	case 't': // ESC=xxxt sets tabulation width
-        	if( state->cmd_params_size >= 1)
-        	{
-        		gfx_term_set_tabulation(state->cmd_params[state->cmd_params_size - 1]);
-        	}
-        	goto back_to_normal;
-        	break;
+        case 't': // ESC=xxxt sets tabulation width
+            if( state->cmd_params_size >= 1)
+            {
+                gfx_term_set_tabulation(state->cmd_params[state->cmd_params_size - 1]);
+            }
+            goto back_to_normal;
+            break;
 
 
         case 'p':
@@ -2415,7 +2433,7 @@ int state_fun_final_letter( char ch, scn_state *state )
             goto back_to_normal;
             break;
 
-    	} // switch last letter after '=' and parameters
+        } // switch last letter after '=' and parameters
     } // private mode = '='
 
     // General 'ESC[' ANSI/VT100 commands
@@ -2587,7 +2605,7 @@ int state_fun_final_letter( char ch, scn_state *state )
                 // esc[m
                 gfx_set_bg(ctx.default_bg);
                 gfx_set_fg(ctx.default_fg);
-		        ctx.reverse = 0; // sets reverse to 'normal' for the current defaults.
+                ctx.reverse = 0; // sets reverse to 'normal' for the current defaults.
                 goto back_to_normal;
             }
             else
@@ -2602,39 +2620,39 @@ int state_fun_final_letter( char ch, scn_state *state )
                             // reset
                             gfx_set_bg(ctx.default_bg);
                             gfx_set_fg(ctx.default_fg);
-		                    ctx.reverse = 0; // sets reverse to 'normal' for the current defaults.
+                            ctx.reverse = 0; // sets reverse to 'normal' for the current defaults.
                             break;
-			            case 1:
-	                        // increase intensity - as 22m for 4byte TODO: 256 Color pal
-		                    if (ctx.fg <= 7) gfx_set_fg(ctx.fg+8);
-		                    break;
-			            case 2:
-		                   // decrease intensity -transpose dim fg colors from bright TODO 255 color pal
-		                   if (ctx.fg >= 8) gfx_set_fg(ctx.fg-8);
-		                   break;
+                        case 1:
+                            // increase intensity - as 22m for 4byte TODO: 256 Color pal
+                            if (ctx.fg <= 7) gfx_set_fg(ctx.fg+8);
+                            break;
+                        case 2:
+                           // decrease intensity -transpose dim fg colors from bright TODO 255 color pal
+                           if (ctx.fg >= 8) gfx_set_fg(ctx.fg-8);
+                           break;
                         case 7:
                             // toggle text mode to 'reverse'
                             if (ctx.reverse == 0)
                             {
                                 gfx_swap_fg_bg();
-				                ctx.reverse = 1;
+                                ctx.reverse = 1;
                             }
                             break;
-			            case 22:
-		                    // transpose bright fg colors from dim, this is interesting it is meant to be 'normal'
-		                    // but is often implemented as 'bright', this is needed for gorilla.bas compatiblity.
-		                    // function is fliped since the normal terminal color is often 'dim'; in this case it is.
-		                    // TODO: 256 color (how would this have effect?)
-		                    if (ctx.fg <= 7) gfx_set_fg(ctx.fg+8);
-		                    break;
-			            case 27:
-		                    // toggle text mode to 'normal'
-		                    if (ctx.reverse == 1)
+                        case 22:
+                            // transpose bright fg colors from dim, this is interesting it is meant to be 'normal'
+                            // but is often implemented as 'bright', this is needed for gorilla.bas compatiblity.
+                            // function is fliped since the normal terminal color is often 'dim'; in this case it is.
+                            // TODO: 256 color (how would this have effect?)
+                            if (ctx.fg <= 7) gfx_set_fg(ctx.fg+8);
+                            break;
+                        case 27:
+                            // toggle text mode to 'normal'
+                            if (ctx.reverse == 1)
                             {
                                 gfx_swap_fg_bg();
-				                ctx.reverse = 0;
+                                ctx.reverse = 0;
                             }
-		                break;
+                        break;
                         case 30 ... 37:
                             // fg color
                             gfx_set_fg(state->cmd_params[i]-30);
@@ -2733,12 +2751,12 @@ int state_fun_read_digit( char ch, scn_state *state )
 {
     if( ch>='0' && ch <= '9' )
     {
-    	// make sure we have a parameter
-    	if (state->cmd_params_size == 0)
-    	{
-    		state->cmd_params_size = 1;
-    		state->cmd_params[0] = 0;
-    	}
+        // make sure we have a parameter
+        if (state->cmd_params_size == 0)
+        {
+            state->cmd_params_size = 1;
+            state->cmd_params[0] = 0;
+        }
         // parse digit
         state->cmd_params[ state->cmd_params_size - 1] = state->cmd_params[ state->cmd_params_size - 1]*10 + (ch-'0');
         state->next = state_fun_read_digit; // stay on this state
@@ -2766,11 +2784,11 @@ int state_fun_read_digit( char ch, scn_state *state )
 /** Ignore next digits of a parameter until separator. */
 int state_fun_ignore_digit( char ch, scn_state *state )
 {
-	if( ch>='0' && ch <= '9' )
-	{
-		return 1;
-	}
-	if( ch == ';' )
+    if( ch>='0' && ch <= '9' )
+    {
+        return 1;
+    }
+    if( ch == ';' )
     {
         // Another param will follow
         state->cmd_params_size++;
