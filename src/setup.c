@@ -32,14 +32,15 @@ static unsigned char settings_changed = 0;  // Flag to track if user made any ch
 static unsigned int original_font_index = 0;  // Track original font when entering setup
 
 // Setup menu state
-static unsigned int selected_item = 0;  // 0 = Baudrate, 1 = Keyboard, 2 = Foreground, 3 = Background, 4 = Font, 5 = Resolution
+static unsigned int selected_item = 0;  // 0 = Baudrate, 1 = Keyboard, 2 = Foreground, 3 = Background, 4 = Font, 5 = Resolution, 6 = Cursor Blink
 static unsigned int selected_baudrate_index = 0;
 static unsigned int selected_keyboard_index = 0;
 static unsigned int selected_fg_color = 0;
 static unsigned int selected_bg_color = 0;
 static unsigned int selected_font_size = 0;
 static unsigned int selected_resolution_index = 0;
-static const unsigned int num_setup_items = 6;  // Number of setup items
+static unsigned int selected_cursor_blink = 1;
+static const unsigned int num_setup_items = 7;  // Number of setup items (added Cursor Blink)
 
 // Available baudrates
 static const unsigned int available_baudrates[] = {
@@ -270,6 +271,7 @@ void setup_mode_enter(void)
         selected_bg_color = find_current_bg_color_index();
         selected_font_size = original_font_index;  // Use the saved original index
         selected_resolution_index = find_current_resolution_index();
+        selected_cursor_blink = PiGfxConfig.cursorBlink ? 1 : 0;
         
         // Reset the settings changed flag
         settings_changed = 0;
@@ -425,6 +427,15 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
+            else if (selected_item == 6) // Cursor Blink selected
+            {
+                if (selected_cursor_blink > 0)
+                {
+                    selected_cursor_blink = 0;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
             break;
             
         case KeyRight:
@@ -483,6 +494,15 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
+            else if (selected_item == 6) // Cursor Blink selected
+            {
+                if (selected_cursor_blink < 1)
+                {
+                    selected_cursor_blink = 1;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
             break;
             
         case KeyEscape:
@@ -526,6 +546,7 @@ void setup_mode_handle_key(unsigned short key)
                 PiGfxConfig.fontSelection = selected_font_size;
                 PiGfxConfig.displayWidth = resolution_widths[selected_resolution_index];
                 PiGfxConfig.displayHeight = resolution_heights[selected_resolution_index];
+                PiGfxConfig.cursorBlink = selected_cursor_blink ? 1 : 0;
                 
                 // Update the saved colors so they don't get overwritten on exit
                 saved_fg_color = available_colors[selected_fg_color];
@@ -536,6 +557,8 @@ void setup_mode_handle_key(unsigned short key)
                 
                 // Apply settings after setup mode has exited to avoid interference
                 setup_mode_exit();
+                // Apply cursor blinking setting immediately after setup
+                gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
                 fInitKeyboard(PiGfxConfig.keyboardLayout);
                 uart_init(PiGfxConfig.uartBaudrate);
                 
@@ -584,6 +607,8 @@ void setup_mode_handle_key(unsigned short key)
                 
                 // No changes made - exit with original saved state intact
                 setup_mode_exit();
+                // Apply cursor blinking setting immediately after setup
+                gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
             }
             break;
             
@@ -816,6 +841,28 @@ void setup_mode_draw(void)
         draw_text_at(content_row + 5, value_col, available_resolutions[selected_resolution_index]);
     }
     
+    // Draw cursor blink label and value with selection highlighting
+    if (selected_item == 6)
+    {
+        // Selected item - black on white background
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 6, content_col, "Cursor Blink", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 6, value_col, selected_cursor_blink ? "On " : "Off", 8);
+    }
+    else
+    {
+        // Not selected - normal colors
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 6, content_col, "Cursor Blink");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 6, value_col, selected_cursor_blink ? "On" : "Off");
+    }
+
     // Draw instructions in 2-column layout at bottom, 1 line above border
     unsigned int instruction_row = (box_y + box_height - 32) / 16;  // 2 lines from bottom (16px per line)
     gfx_set_fg(CYAN);

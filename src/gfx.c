@@ -1745,14 +1745,26 @@ void gfx_term_set_cursor_blinking( unsigned char blink )
     {
         ctx.term.blink_timer_hnd = attach_timer_handler(2, &gfx_term_switch_cursor_vis, 0, 0);
     }
+    else
+    {
+        // Restore any previous blinking cursor before showing static cursor
+        gfx_restore_cursor_content();
+        ctx.term.cursor_visible = 1;
+        gfx_term_render_cursor();
+    }
 }
 
 
 void gfx_term_move_cursor( unsigned int row, unsigned int col )
 {
+    // Always restore previous cursor content before moving
     gfx_restore_cursor_content();
     ctx.term.cursor_row = MIN(ctx.term.HEIGHT-1, row );
     ctx.term.cursor_col = MIN(ctx.term.WIDTH-1, col );
+    // If blinking is enabled, ensure cursor is visible and buffer is up to date
+    if (ctx.term.cursor_blink) {
+        ctx.term.cursor_visible = 1;
+    }
     gfx_term_render_cursor();
 }
 
