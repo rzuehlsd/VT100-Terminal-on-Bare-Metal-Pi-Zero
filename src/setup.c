@@ -32,7 +32,7 @@ static unsigned char settings_changed = 0;  // Flag to track if user made any ch
 static unsigned int original_font_index = 0;  // Track original font when entering setup
 
 // Setup menu state
-static unsigned int selected_item = 0;  // 0 = Baudrate, 1 = Keyboard, 2 = Foreground, 3 = Background, 4 = Font, 5 = Resolution, 6 = Cursor Blink
+static unsigned int selected_item = 0;  // 0 = Baudrate, 1 = Keyboard, 2 = Foreground, 3 = Background, 4 = Font, 5 = Resolution, 6 = Cursor Blink, 7 = Repeat Delay, 8 = Repeat Rate
 static unsigned int selected_baudrate_index = 0;
 static unsigned int selected_keyboard_index = 0;
 static unsigned int selected_fg_color = 0;
@@ -40,7 +40,9 @@ static unsigned int selected_bg_color = 0;
 static unsigned int selected_font_size = 0;
 static unsigned int selected_resolution_index = 0;
 static unsigned int selected_cursor_blink = 1;
-static const unsigned int num_setup_items = 7;  // Number of setup items (added Cursor Blink)
+static unsigned int selected_repeat_delay = 500;
+static unsigned int selected_repeat_rate = 10;
+static const unsigned int num_setup_items = 9;  // Number of setup items (added repeat delay/rate)
 
 // Available baudrates
 static const unsigned int available_baudrates[] = {
@@ -245,6 +247,8 @@ static unsigned int find_current_resolution_index(void)
 }
 
 void setup_mode_enter(void)
+        selected_repeat_delay = PiGfxConfig.keyboardRepeatDelay;
+        selected_repeat_rate = PiGfxConfig.keyboardRepeatRate;
 {
     if (!setup_mode_active)
     {
@@ -361,6 +365,25 @@ void setup_mode_handle_key(unsigned short key)
                 selected_item--;
                 needs_redraw = 1;
             }
+            }
+            else if (selected_item == 7) // Repeat Delay
+            {
+                if (selected_repeat_delay > 200)
+                {
+                    selected_repeat_delay -= 100;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 8) // Repeat Rate
+            {
+                if (selected_repeat_rate > 10)
+                {
+                    selected_repeat_rate -= 10;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
             break;
             
         case KeyDown:
@@ -369,6 +392,25 @@ void setup_mode_handle_key(unsigned short key)
             {
                 selected_item++;
                 needs_redraw = 1;
+            }
+            }
+            else if (selected_item == 7) // Repeat Delay
+            {
+                if (selected_repeat_delay < 1000)
+                {
+                    selected_repeat_delay += 100;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 8) // Repeat Rate
+            {
+                if (selected_repeat_rate < 50)
+                {
+                    selected_repeat_rate += 10;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
             }
             break;
             
@@ -547,6 +589,8 @@ void setup_mode_handle_key(unsigned short key)
                 PiGfxConfig.displayWidth = resolution_widths[selected_resolution_index];
                 PiGfxConfig.displayHeight = resolution_heights[selected_resolution_index];
                 PiGfxConfig.cursorBlink = selected_cursor_blink ? 1 : 0;
+                PiGfxConfig.keyboardRepeatDelay = selected_repeat_delay;
+                PiGfxConfig.keyboardRepeatRate = selected_repeat_rate;
                 
                 // Update the saved colors so they don't get overwritten on exit
                 saved_fg_color = available_colors[selected_fg_color];
@@ -559,6 +603,9 @@ void setup_mode_handle_key(unsigned short key)
                 setup_mode_exit();
                 // Apply cursor blinking setting immediately after setup
                 gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
+                // Apply keyboard repeat settings immediately
+                keyboard_set_repeat_delay(PiGfxConfig.keyboardRepeatDelay);
+                keyboard_set_repeat_rate(PiGfxConfig.keyboardRepeatRate);
                 fInitKeyboard(PiGfxConfig.keyboardLayout);
                 uart_init(PiGfxConfig.uartBaudrate);
                 
@@ -626,6 +673,49 @@ void setup_mode_handle_key(unsigned short key)
 }
 
 void setup_mode_draw(void)
+    // Draw repeat delay label and value with selection highlighting
+    if (selected_item == 7)
+    {
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 7, content_col, "Repeat Delay", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_int_at_with_bg(content_row + 7, value_col, selected_repeat_delay, 8);
+        draw_text_at_with_bg(content_row + 7, value_col + 6, "ms", 3);
+    }
+    else
+    {
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 7, content_col, "Repeat Delay");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_int_at(content_row + 7, value_col, selected_repeat_delay);
+        draw_text_at(content_row + 7, value_col + 6, "ms");
+    }
+
+    // Draw repeat rate label and value with selection highlighting
+    if (selected_item == 8)
+    {
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 8, content_col, "Repeat Rate", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_int_at_with_bg(content_row + 8, value_col, selected_repeat_rate, 8);
+        draw_text_at_with_bg(content_row + 8, value_col + 6, "Hz", 3);
+    }
+    else
+    {
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 8, content_col, "Repeat Rate");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_int_at(content_row + 8, value_col, selected_repeat_rate);
+        draw_text_at(content_row + 8, value_col + 6, "Hz");
+    }
 {
     unsigned int screen_width, screen_height;
     unsigned int term_rows, term_cols;

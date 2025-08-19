@@ -1,3 +1,7 @@
+// Set keyboard repeat delay (in ms)
+void keyboard_set_repeat_delay(unsigned int delay_ms);
+// Set keyboard repeat rate (in Hz)
+void keyboard_set_repeat_rate(unsigned int rate_hz);
 //
 // keyboard.h
 // Keyboard input handling
@@ -115,47 +119,47 @@ typedef struct TKeyboardLeds
 	unsigned char m_bCapsLock;
 	unsigned char m_bNumLock;
 	unsigned char m_bScrollLock;
-    unsigned char CombinedState;
-    unsigned char LastCombinedState;
+	unsigned char CombinedState;
+	unsigned char LastCombinedState;
 } TKeyboardLeds;
 
 typedef struct TKeyMap
 {
 	unsigned short m_KeyMap[PHY_MAX_CODE+1][K_ALTSHIFTTAB+1];
-    TKeyboardLeds leds;
-    unsigned char ucLastPhyCode;
-    unsigned char ucModifiers;
-    unsigned repeatTimerHnd;
+	TKeyboardLeds leds;
+	unsigned char ucLastPhyCode;
+	unsigned char ucModifiers;
+	unsigned repeatTimerHnd;
 }
 TKeyMap;
 
 static const unsigned short keyMap_de[PHY_MAX_CODE+1][K_ALTSHIFTTAB+1] =
 {
-    #include "../uspi/lib/keymap_de.h"
+	#include "../uspi/lib/keymap_de.h"
 };
 static const unsigned short keyMap_es[PHY_MAX_CODE+1][K_ALTSHIFTTAB+1] =
 {
-    #include "../uspi/lib/keymap_es.h"
+	#include "../uspi/lib/keymap_es.h"
 };
 static const unsigned short keyMap_fr[PHY_MAX_CODE+1][K_ALTSHIFTTAB+1] =
 {
-    #include "../uspi/lib/keymap_fr.h"
+	#include "../uspi/lib/keymap_fr.h"
 };
 static const unsigned short keyMap_it[PHY_MAX_CODE+1][K_ALTSHIFTTAB+1] =
 {
-    #include "../uspi/lib/keymap_it.h"
+	#include "../uspi/lib/keymap_it.h"
 };
 static const unsigned short keyMap_uk[PHY_MAX_CODE+1][K_ALTSHIFTTAB+1] =
 {
-    #include "../uspi/lib/keymap_uk.h"
+	#include "../uspi/lib/keymap_uk.h"
 };
 static const unsigned short keyMap_us[PHY_MAX_CODE+1][K_ALTSHIFTTAB+1] =
 {
-    #include "../uspi/lib/keymap_us.h"
+	#include "../uspi/lib/keymap_us.h"
 };
 static const unsigned short keyMap_sg[PHY_MAX_CODE+1][K_ALTSHIFTTAB+1] =
 {
-    #include "keymap_sg.h"
+	#include "keymap_sg.h"
 };
 
 extern unsigned int backspace_n_skip;
