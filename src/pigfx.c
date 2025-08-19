@@ -591,11 +591,6 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     }
 #endif
 
-    if (PiGfxConfig.showRC2014Logo)
-    {
-        gfx_set_drawing_mode(drawingTRANSPARENT);
-        gfx_put_sprite( (unsigned char*)&G_STARTUP_LOGO, 0, 42 );
-    }
 
     gfx_set_drawing_mode(drawingNORMAL);
     gfx_set_fg(GRAY);

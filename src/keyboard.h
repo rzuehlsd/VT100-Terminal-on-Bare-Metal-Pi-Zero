@@ -1,7 +1,4 @@
-// Set keyboard repeat delay (in ms)
-void keyboard_set_repeat_delay(unsigned int delay_ms);
-// Set keyboard repeat rate (in Hz)
-void keyboard_set_repeat_rate(unsigned int rate_hz);
+
 //
 // keyboard.h
 // Keyboard input handling
@@ -171,5 +168,9 @@ void fUpdateKeyboardLeds(unsigned char useUSB);
 void KeyEvent(unsigned short ucKeyCode, unsigned char ucModifiers);
 void keyboard_disable_autorepeat(void);
 void keyboard_enable_autorepeat(void);
+// Set keyboard repeat delay (in ms)
+void keyboard_set_repeat_delay(unsigned int delay_ms);
+// Set keyboard repeat rate (in Hz)
+void keyboard_set_repeat_rate(unsigned int rate_hz);
 
 #endif

@@ -109,11 +109,6 @@ int inihandler(void* user, const char* section, const char* name, const char* va
         tmpValue = atoi(value);
         if ((tmpValue == 480) || (tmpValue == 768)) PiGfxConfig.displayHeight = tmpValue;
     }
-    else if (pigfx_strcmp(name, "showRC2014Logo") == 0)
-    {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.showRC2014Logo = tmpValue;
-    }
     else if (pigfx_strcmp(name, "disableGfxDMA") == 0)
     {
         tmpValue = atoi(value);
@@ -161,7 +156,6 @@ void setSafeConfig()
     PiGfxConfig.fontSelection = 0;       // 8x16 System Font (safe font)
     PiGfxConfig.displayWidth = 640;      // Safe resolution: 640x480
     PiGfxConfig.displayHeight = 480;     // Safe resolution: 640x480
-    PiGfxConfig.showRC2014Logo = 0;
     PiGfxConfig.disableGfxDMA = 1;
     PiGfxConfig.disableCollision = 0;
     PiGfxConfig.debugVerbosity = 0;      // Safe default: errors + notices only
@@ -189,7 +183,6 @@ void setDefaultConfig()
     PiGfxConfig.fontSelection = 0;       // First font in registry (8x16 System Font)
     PiGfxConfig.displayWidth = 1024;     // Default display width
     PiGfxConfig.displayHeight = 768;     // Default display height
-    PiGfxConfig.showRC2014Logo = 0;
     PiGfxConfig.disableGfxDMA = 1;
     PiGfxConfig.disableCollision = 0;
     PiGfxConfig.debugVerbosity = 0;      // Default: errors + notices only
@@ -218,7 +211,6 @@ void printLoadedConfig()
     ee_printf("fontSelection          = %u\n", PiGfxConfig.fontSelection);
     ee_printf("displayWidth           = %u\n", PiGfxConfig.displayWidth);
     ee_printf("displayHeight          = %u\n", PiGfxConfig.displayHeight);
-    ee_printf("showRC2014Logo         = %u\n", PiGfxConfig.showRC2014Logo);
     ee_printf("disableGfxDMA          = %u\n", PiGfxConfig.disableGfxDMA);
     ee_printf("disableCollision       = %u\n", PiGfxConfig.disableCollision);
     ee_printf("debugVerbosity         = %u\n", PiGfxConfig.debugVerbosity);

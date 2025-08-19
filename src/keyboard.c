@@ -1,18 +1,4 @@
-// Allow runtime update of repeat delay (in ms)
-void keyboard_set_repeat_delay(unsigned int delay_ms)
-{
-    if (delay_ms < 200) delay_ms = 200;
-    if (delay_ms > 1000) delay_ms = 1000;
-    REPEAT_DELAY_USEC = delay_ms * 1000;
-}
 
-// Allow runtime update of repeat rate (in Hz)
-void keyboard_set_repeat_rate(unsigned int rate_hz)
-{
-    if (rate_hz < 10) rate_hz = 10;
-    if (rate_hz > 50) rate_hz = 50;
-    REPEAT_RATE_USEC = 1000000 / rate_hz;
-}
 //
 // keyboard.c
 // Keyboard input handling
@@ -476,3 +462,23 @@ void keyboard_enable_autorepeat(void)
     autorepeat_disabled = 0;
 }
 
+
+
+// Static repeat timing variables for runtime update
+// ...existing code...
+
+// Allow runtime update of repeat delay (in ms)
+void keyboard_set_repeat_delay(unsigned int delay_ms)
+{
+    if (delay_ms < 200) delay_ms = 200;
+    if (delay_ms > 1000) delay_ms = 1000;
+    REPEAT_DELAY_USEC = delay_ms * 1000;
+}
+
+// Allow runtime update of repeat rate (in Hz)
+void keyboard_set_repeat_rate(unsigned int rate_hz)
+{
+    if (rate_hz < 10) rate_hz = 10;
+    if (rate_hz > 50) rate_hz = 50;
+    REPEAT_RATE_USEC = 1000000 / rate_hz;
+}

@@ -25,7 +25,6 @@ All settings available in the setup dialog (Print Screen key) can now be saved a
 - `fontSelection = 0` - **NEW:** Default font selection (font registry index)
 
 #### [General] Section
-- `showRC2014Logo = 0` - Show RC2014 logo at startup
 - `disableGfxDMA = 1` - Disable fast DMA memory access
 - `disableCollision = 0` - Disable sprite collision detection
 
@@ -91,7 +90,6 @@ backgroundColor = 0         ; Black background
 fontSelection = 4           ; 12x24 Spleen Font
 
 [General]
-showRC2014Logo = 0
 disableGfxDMA = 1
 disableCollision = 0
 ```
