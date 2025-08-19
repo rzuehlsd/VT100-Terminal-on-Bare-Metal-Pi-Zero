@@ -33,6 +33,8 @@ typedef struct
     unsigned int skipBackspaceEcho;     // Skip the next incoming character after a backspace from keyboard
     unsigned int swapDelWithBackspace;  // Substitute DEL (0x7F) with BACKSPACE (0x08)
     unsigned int keyboardAutorepeat;    // Enable keyboard autorepeat (1 = enabled, 0 = disabled)
+    unsigned int keyboardRepeatDelay;   // Initial repeat delay in ms
+    unsigned int keyboardRepeatRate;    // Repeat rate in chars/sec
     unsigned int foregroundColor;       // Default foreground color (0-255)
     unsigned int backgroundColor;       // Default background color (0-255)
     unsigned int fontSelection;         // Default font selection (font registry index)
@@ -42,6 +44,7 @@ typedef struct
     unsigned int disableGfxDMA;         // Disable DMA for Gfx if 1
     unsigned int disableCollision;      // Disable collision detection if 1
     unsigned int debugVerbosity;        // Debug verbosity level (0=errors+notices, 1=+warnings, 2=+debug)
+    unsigned int cursorBlink;           // Cursor blinking: 1=enabled, 0=disabled
     char         keyboardLayout[3];     // Keyboard layout (de,uk,us, ...)
 } tPiGfxConfig;
 
@@ -51,6 +54,7 @@ extern tPiGfxConfig PiGfxConfig;
 void setSafeConfig();
 void setDefaultConfig();
 unsigned char lookForConfigFile();
+void printLoadedConfig();
 void applyDisplayConfig();
 
 #endif

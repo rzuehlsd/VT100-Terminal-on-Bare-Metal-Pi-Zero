@@ -129,6 +129,11 @@ int inihandler(void* user, const char* section, const char* name, const char* va
         tmpValue = atoi(value);
         if ((tmpValue >= 0) && (tmpValue <= 2)) PiGfxConfig.debugVerbosity = tmpValue;
     }
+    else if (pigfx_strcmp(name, "cursorBlink") == 0)
+    {
+        tmpValue = atoi(value);
+        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.cursorBlink = tmpValue;
+    }
     else if (pigfx_strcmp(name, "keyboardLayout") == 0)
     {
         pigfx_strncpy(PiGfxConfig.keyboardLayout, value, sizeof(PiGfxConfig.keyboardLayout));
@@ -160,6 +165,7 @@ void setSafeConfig()
     PiGfxConfig.disableGfxDMA = 1;
     PiGfxConfig.disableCollision = 0;
     PiGfxConfig.debugVerbosity = 0;      // Safe default: errors + notices only
+    PiGfxConfig.cursorBlink = 1; // Safe default: blinking enabled
     pigfx_strcpy(PiGfxConfig.keyboardLayout, "us");
 }
 
@@ -187,34 +193,39 @@ void setDefaultConfig()
     PiGfxConfig.disableGfxDMA = 1;
     PiGfxConfig.disableCollision = 0;
     PiGfxConfig.debugVerbosity = 0;      // Default: errors + notices only
+    PiGfxConfig.cursorBlink = 1; // Default: blinking enabled
     pigfx_strcpy(PiGfxConfig.keyboardLayout, "us");
 }
 
 void printLoadedConfig()
 {
 
-    ee_printf("--- PiGFX Config Loaded ---\n");
-    ee_printf("uartBaudrate = %u\n", PiGfxConfig.uartBaudrate);
-    ee_printf("useUsbKeyboard = %u\n", PiGfxConfig.useUsbKeyboard);
-    ee_printf("sendCRLF = %u\n", PiGfxConfig.sendCRLF);
-    ee_printf("replaceLFwithCR = %u\n", PiGfxConfig.replaceLFwithCR);
-    ee_printf("backspaceEcho = %u\n", PiGfxConfig.backspaceEcho);
-    ee_printf("skipBackspaceEcho = %u\n", PiGfxConfig.skipBackspaceEcho);
-    ee_printf("swapDelWithBackspace = %u\n", PiGfxConfig.swapDelWithBackspace);
-    ee_printf("keyboardAutorepeat = %u\n", PiGfxConfig.keyboardAutorepeat);
-    ee_printf("keyboardRepeatDelay = %u\n", PiGfxConfig.keyboardRepeatDelay);
-    ee_printf("keyboardRepeatRate = %u\n", PiGfxConfig.keyboardRepeatRate);
-    ee_printf("foregroundColor = %u\n", PiGfxConfig.foregroundColor);
-    ee_printf("backgroundColor = %u\n", PiGfxConfig.backgroundColor);
-    ee_printf("fontSelection = %u\n", PiGfxConfig.fontSelection);
-    ee_printf("displayWidth = %u\n", PiGfxConfig.displayWidth);
-    ee_printf("displayHeight = %u\n", PiGfxConfig.displayHeight);
-    ee_printf("showRC2014Logo = %u\n", PiGfxConfig.showRC2014Logo);
-    ee_printf("disableGfxDMA = %u\n", PiGfxConfig.disableGfxDMA);
-    ee_printf("disableCollision = %u\n", PiGfxConfig.disableCollision);
-    ee_printf("debugVerbosity = %u\n", PiGfxConfig.debugVerbosity);
-    ee_printf("keyboardLayout = %s\n", PiGfxConfig.keyboardLayout);
-    ee_printf("--------------------------\n");
+    if(SHOULD_LOG(LOG_DEBUG_BIT))
+    {
+    ee_printf("-------------- PiGFX Config Loaded --------------\n");
+    ee_printf("uartBaudrate           = %u\n", PiGfxConfig.uartBaudrate);
+    ee_printf("useUsbKeyboard         = %u\n", PiGfxConfig.useUsbKeyboard);
+    ee_printf("sendCRLF               = %u\n", PiGfxConfig.sendCRLF);
+    ee_printf("replaceLFwithCR        = %u\n", PiGfxConfig.replaceLFwithCR);
+    ee_printf("backspaceEcho          = %u\n", PiGfxConfig.backspaceEcho);
+    ee_printf("skipBackspaceEcho      = %u\n", PiGfxConfig.skipBackspaceEcho);
+    ee_printf("swapDelWithBackspace   = %u\n", PiGfxConfig.swapDelWithBackspace);
+    ee_printf("keyboardAutorepeat     = %u\n", PiGfxConfig.keyboardAutorepeat);
+    ee_printf("keyboardRepeatDelay    = %u\n", PiGfxConfig.keyboardRepeatDelay);
+    ee_printf("keyboardRepeatRate     = %u\n", PiGfxConfig.keyboardRepeatRate);
+    ee_printf("foregroundColor        = %u\n", PiGfxConfig.foregroundColor);
+    ee_printf("backgroundColor        = %u\n", PiGfxConfig.backgroundColor);
+    ee_printf("fontSelection          = %u\n", PiGfxConfig.fontSelection);
+    ee_printf("displayWidth           = %u\n", PiGfxConfig.displayWidth);
+    ee_printf("displayHeight          = %u\n", PiGfxConfig.displayHeight);
+    ee_printf("showRC2014Logo         = %u\n", PiGfxConfig.showRC2014Logo);
+    ee_printf("disableGfxDMA          = %u\n", PiGfxConfig.disableGfxDMA);
+    ee_printf("disableCollision       = %u\n", PiGfxConfig.disableCollision);
+    ee_printf("debugVerbosity         = %u\n", PiGfxConfig.debugVerbosity);
+    ee_printf("cursorBlink            = %u\n", PiGfxConfig.cursorBlink);
+    ee_printf("keyboardLayout         = %s\n", PiGfxConfig.keyboardLayout);
+    ee_printf("-------------------------------------------------\n");
+    }
 }
 
 unsigned char lookForConfigFile()

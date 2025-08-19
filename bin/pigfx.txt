@@ -4,6 +4,8 @@
 ;; Please don't delete any parameters or add new, unknown ones.
 ;; ============================================================================
 
+
+
 ;; UART Communication
 [UART]
 baudrate = 115200             ; Baudrate for UART (300-115200)
@@ -19,6 +21,10 @@ skipBackspaceEcho = 0       ; Skip next char after keyboard backspace
 swapDelWithBackspace = 1    ; Swap DEL (0x7F) with BACKSPACE (0x08)
 keyboardAutorepeat = 1      ; Enable key repeat
 
+;; Keyboard repeat timing (added in v2.0)
+keyboardRepeatDelay = 500   ; Initial repeat delay in ms (default: 500)
+keyboardRepeatRate = 10     ; Repeat rate in chars/sec (default: 10)
+
 ;; Display Configuration
 [Display]
 ;; Colors: 0=Black, 1=DarkRed, 2=DarkGreen, 3=DarkYellow, 4=DarkBlue, 5=DarkMagenta, 
@@ -26,6 +32,9 @@ keyboardAutorepeat = 1      ; Enable key repeat
 ;;         13=Magenta, 14=Cyan, 15=White, 16-231=RGB cube, 232-255=grayscale
 foregroundColor = 10        ; Default text color (0-255)
 backgroundColor = 0         ; Default background color (0-255)
+
+;; Enable or disable cursor blinking (1=enabled, 0=disabled)
+cursorBlink = 1
 
 ;; Fonts (0=8x16 System, 1=6x12 Spleen, 2=8x16 Spleen, 3=12x24 Spleen, 4=16x32 Spleen, 5=32x64 Spleen)
 fontSelection = 4           ; Font index (0-5)

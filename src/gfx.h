@@ -102,4 +102,6 @@ extern void gfx_term_load_bitmap(char pixel);
 extern unsigned char gfx_term_loading_palette();
 extern void gfx_term_load_palette(char rgb);
 
+extern void gfx_term_set_cursor_blinking(unsigned char blink);
+
 #endif

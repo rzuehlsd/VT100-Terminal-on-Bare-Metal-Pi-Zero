@@ -312,6 +312,7 @@ void term_main_loop()
     // NOW apply user configuration (colors, fonts) after "Waiting for UART" message
     LogNotice("Applying user display configuration...\n");
     applyDisplayConfig();
+    gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
 
     /**/
     while( uart_buffer_start == uart_buffer_end )
