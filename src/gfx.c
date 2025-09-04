@@ -118,13 +118,14 @@ typedef struct {
     struct
     {
         // Current Font variables
-        unsigned char* FONT;			/// Points to font resource
-        unsigned int FONTWIDTH;			/// Pixel width for characters
-        unsigned int FONTHEIGHT;		/// Pixel height for characters
-        unsigned int FONTCHARBYTES;		/// Number of bytes for one char in font
-        unsigned int FONTWIDTH_INTS;	/// Number of 32-bits integers for font width (4 pixels / int)
-        unsigned int FONTWIDTH_REMAIN;	/// Number of bytes to add to ints (when fontwidth not a multiple of 4)
-        font_fun (*font_getglyph);		/// Function to get a glyph address for a character
+        unsigned char* FONT;            /// Points to font resource
+        unsigned int FONTWIDTH;         /// Pixel width for characters
+        unsigned int FONTHEIGHT;        /// Pixel height for characters
+        unsigned int FONTCHARBYTES;     /// Number of bytes for one char in font
+        unsigned int FONTWIDTH_INTS;    /// Number of 32-bits integers for font width (4 pixels / int)
+        unsigned int FONTWIDTH_REMAIN;  /// Number of bytes to add to ints (when fontwidth not a multiple of 4)
+        font_fun (*font_getglyph);      /// Function to get a glyph address for a character
+        int FONTHEIGHT_OFFSET;          /// Y offset from BDF FONTBOUNDINGBOX (negative means descenders)
 
         // Current Character Display variables
         unsigned int WIDTH;				/// Terminal character width (W / font width)
@@ -241,6 +242,21 @@ extern unsigned char G_SPLEEN8X16_GLYPHS;
 extern unsigned char G_SPLEEN12X24_GLYPHS;
 extern unsigned char G_SPLEEN16X32_GLYPHS;
 extern unsigned char G_SPLEEN32X64_GLYPHS;
+
+/** VT220 fonts */
+extern unsigned char G_VT220_6X12_GLYPHS;
+extern unsigned char G_VT220_8X16_GLYPHS;
+extern unsigned char G_VT220_12X24_GLYPHS;
+extern unsigned char G_VT220_16X32_GLYPHS;
+extern unsigned char G_VT220_32X64_GLYPHS;
+
+
+unsigned char* font_get_glyph_address_vt220_6x12(unsigned int c);
+unsigned char* font_get_glyph_address_vt220_8x16(unsigned int c);
+unsigned char* font_get_glyph_address_vt220_12x24(unsigned int c);
+unsigned char* font_get_glyph_address_vt220_16x32(unsigned int c);
+unsigned char* font_get_glyph_address_vt220_32x64(unsigned int c);
+
 
 /** Font function for the default 8x8 font. */
 unsigned char* font_get_glyph_address_8x8(unsigned int c)
@@ -1299,35 +1315,29 @@ void gfx_term_save_cursor_content()
 */
 void gfx_term_render_cursor()
 {
-
     unsigned char* pb = ctx.cursor_buffer;
-    //cout("pb: "); cout_h((unsigned int)pb);cout_endl();
     unsigned char* pfb = (unsigned char*)PFB(
-            ctx.term.cursor_col * ctx.term.FONTWIDTH,
-            ctx.term.cursor_row * ctx.term.FONTHEIGHT );
-    //cout("pfb: "); cout_h((unsigned int)pfb);cout_endl();
-    const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;//$$ adjust if not 8 width?
-    //cout("byte_stride: "); cout_d(byte_stride);  cout(" pitch: "); cout_d(ctx.Pitch); cout(" FONTWIDTH: "); cout_d(ctx.term.FONTWIDTH);cout_endl();
-    unsigned int h = ctx.term.FONTHEIGHT;
-    //cout("h: "); cout_d(h);cout_endl();
+        ctx.term.cursor_col * ctx.term.FONTWIDTH,
+        ctx.term.cursor_row * ctx.term.FONTHEIGHT
+    );
+    const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;
 
-    if( ctx.term.cursor_visible )
+    // Calculate baseline position in cell, respecting negative font offset
+    int baseline_y = ctx.term.FONTHEIGHT + ctx.term.FONTHEIGHT_OFFSET - 1;
+    unsigned int h = ctx.term.FONTHEIGHT;
+
+    if (ctx.term.cursor_visible)
     {
-        while(h--)
+        for (unsigned int y = 0; y < (int)h; y++)
         {
             unsigned int w = ctx.term.FONTWIDTH;
-            while (w--)
+            for (unsigned int x = 0; x < w; x++)
             {
                 *pb = *pfb; // Save original pixel
-                if (*pfb == (ctx.fg32 & 0xFF))
+                if (y == baseline_y) // underline cursor at baseline
                 {
-                    *pfb = ctx.bg32 & 0xFF;
+                    *pfb = (*pfb == (ctx.fg32 & 0xFF)) ? (ctx.bg32 & 0xFF) : (ctx.fg32 & 0xFF);
                 }
-                else if (*pfb == (ctx.bg32 & 0xFF))
-                {
-                    *pfb = ctx.fg32 & 0xFF;
-                }
-                // else leave pixel unchanged
                 pb++;
                 pfb++;
             }
@@ -1337,12 +1347,12 @@ void gfx_term_render_cursor()
     }
     else
     {
-        while(h--)
+        for (unsigned int y = 0; y < h; y++)
         {
             unsigned int w = ctx.term.FONTWIDTH;
-            while (w--)
+            for (unsigned int x = 0; x < w; x++)
             {
-                *pfb = *pb++; // Restore original pixel
+                *pfb = *pb++;
                 pfb++;
             }
             pfb += byte_stride;
@@ -1977,6 +1987,42 @@ void gfx_term_set_font_by_type(int font_type)
         ctx.term.FONTWIDTH = 8;
         ctx.term.FONTHEIGHT = 16;
         ctx.term.font_getglyph = font_get_glyph_address_spleen8x16;
+        gfx_compute_font();
+        break;
+    case 8: // 8x16 VT220
+        ctx.term.FONT = &G_VT220_8X16_GLYPHS;
+        ctx.term.FONTWIDTH = 8;
+        ctx.term.FONTHEIGHT = 16;
+        ctx.term.font_getglyph = font_get_glyph_address_vt220_8x16;
+        gfx_compute_font();
+        break;
+    case 9: // 6x12 VT220
+        ctx.term.FONT = &G_VT220_6X12_GLYPHS;
+        ctx.term.FONTWIDTH = 6;
+        ctx.term.FONTHEIGHT = 12;
+        ctx.term.font_getglyph = font_get_glyph_address_vt220_6x12;
+        gfx_compute_font();
+        break;
+    case 10: // 12x24 VT220
+        ctx.term.FONT = &G_VT220_12X24_GLYPHS;
+        ctx.term.FONTWIDTH = 12;
+        ctx.term.FONTHEIGHT = 24;
+        ctx.term.font_getglyph = font_get_glyph_address_vt220_12x24;
+        gfx_compute_font();
+        break;
+    case 11: // 16x32 VT220
+        ctx.term.FONT = &G_VT220_16X32_GLYPHS;
+        ctx.term.FONTWIDTH = 16;
+        ctx.term.FONTHEIGHT = 32;
+        ctx.term.font_getglyph = font_get_glyph_address_vt220_16x32;
+        gfx_compute_font();
+        break;
+    case 12: // 32x64 VT220
+        ctx.term.FONT = &G_VT220_32X64_GLYPHS;
+        ctx.term.FONTWIDTH = 32;
+        ctx.term.FONTHEIGHT = 64;
+        ctx.term.font_getglyph = font_get_glyph_address_vt220_32x64;
+        ctx.term.FONTHEIGHT_OFFSET = -14; // Set this to the y-offset from FONTBOUNDINGBOX in the BDF
         gfx_compute_font();
         break;
     default: // Fallback to 8x16 original

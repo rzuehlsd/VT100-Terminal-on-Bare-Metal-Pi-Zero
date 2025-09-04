@@ -14,6 +14,13 @@ extern unsigned char G_SPLEEN12X24_GLYPHS;
 extern unsigned char G_SPLEEN16X32_GLYPHS;
 extern unsigned char G_SPLEEN32X64_GLYPHS;
 
+// Externs for VT220 font data (only those defined in binary_assets.s)
+extern unsigned char G_VT220_6X12_GLYPHS; // <-- Add this line
+extern unsigned char G_VT220_8X16_GLYPHS;
+extern unsigned char G_VT220_12X24_GLYPHS;
+extern unsigned char G_VT220_16X32_GLYPHS;
+extern unsigned char G_VT220_32X64_GLYPHS;
+
 // External glyph address functions
 extern unsigned char* font_get_glyph_address_8x16(unsigned int c);
 extern unsigned char* font_get_glyph_address_spleen6x12(unsigned int c);
@@ -21,6 +28,28 @@ extern unsigned char* font_get_glyph_address_spleen8x16(unsigned int c);
 extern unsigned char* font_get_glyph_address_spleen12x24(unsigned int c);
 extern unsigned char* font_get_glyph_address_spleen16x32(unsigned int c);
 extern unsigned char* font_get_glyph_address_spleen32x64(unsigned int c);
+
+// Glyph address functions for VT220 fonts (matching only defined assets)
+unsigned char* font_get_glyph_address_vt220_6x12(unsigned int c) {
+    if (c >= 256) return 0;
+    return ((unsigned char*)&G_VT220_6X12_GLYPHS) + c * 6*12;
+}
+unsigned char* font_get_glyph_address_vt220_8x16(unsigned int c) {
+    if (c >= 256) return 0;
+    return ((unsigned char*)&G_VT220_8X16_GLYPHS) + c * 8*16;
+}
+unsigned char* font_get_glyph_address_vt220_12x24(unsigned int c) {
+    if (c >= 256) return 0;
+    return ((unsigned char*)&G_VT220_12X24_GLYPHS) + c * 12*24;
+}
+unsigned char* font_get_glyph_address_vt220_16x32(unsigned int c) {
+    if (c >= 256) return 0;
+    return ((unsigned char*)&G_VT220_16X32_GLYPHS) + c * 16*32;
+}
+unsigned char* font_get_glyph_address_vt220_32x64(unsigned int c) {
+    if (c >= 256) return 0;
+    return ((unsigned char*)&G_VT220_32X64_GLYPHS) + c * 32*64;
+}
 
 // Global font registry
 static font_registry_t g_font_registry;
@@ -100,7 +129,7 @@ int font_registry_set_by_index(int index)
     
     if (font->width == 8 && font->height == 16)
     {
-        // Check if it's original or Spleen 8x16
+        // Check if it's original, Spleen, or VT220 8x16
         if (font->get_glyph == font_get_glyph_address_8x16)
         {
             font_type = 1; // 8x16 original
@@ -109,22 +138,54 @@ int font_registry_set_by_index(int index)
         {
             font_type = 7; // 8x16 Spleen
         }
+        else if (font->get_glyph == font_get_glyph_address_vt220_8x16)
+        {
+            font_type = 8; // 8x16 VT220
+        }
     }
     else if (font->width == 6 && font->height == 12)
     {
-        font_type = 3; // 6x12 Spleen
+        if (font->get_glyph == font_get_glyph_address_spleen6x12)
+        {
+            font_type = 3; // 6x12 Spleen
+        }
+        else if (font->get_glyph == font_get_glyph_address_vt220_6x12)
+        {
+            font_type = 9; // 6x12 VT220
+        }
     }
     else if (font->width == 12 && font->height == 24)
     {
-        font_type = 4; // 12x24 Spleen
+        if (font->get_glyph == font_get_glyph_address_spleen12x24)
+        {
+            font_type = 4; // 12x24 Spleen
+        }
+        else if (font->get_glyph == font_get_glyph_address_vt220_12x24)
+        {
+            font_type = 10; // 12x24 VT220
+        }
     }
     else if (font->width == 16 && font->height == 32)
     {
-        font_type = 5; // 16x32 Spleen
+        if (font->get_glyph == font_get_glyph_address_spleen16x32)
+        {
+            font_type = 5; // 16x32 Spleen
+        }
+        else if (font->get_glyph == font_get_glyph_address_vt220_16x32)
+        {
+            font_type = 11; // 16x32 VT220
+        }
     }
     else if (font->width == 32 && font->height == 64)
     {
-        font_type = 6; // 32x64 Spleen
+        if (font->get_glyph == font_get_glyph_address_spleen32x64)
+        {
+            font_type = 6; // 32x64 Spleen
+        }
+        else if (font->get_glyph == font_get_glyph_address_vt220_32x64)
+        {
+            font_type = 12; // 32x64 VT220
+        }
     }
     
     if (font_type >= 0)
@@ -257,4 +318,11 @@ void font_registry_register_builtin_fonts(void)
     
     font_registry_register("Spleen 32x64", 32, 64, &G_SPLEEN32X64_GLYPHS,
                           font_get_glyph_address_spleen32x64);
+    
+    // Register VT220 fonts (only those defined in binary_assets.s)
+    font_registry_register("VT220 6x12", 6, 12, &G_VT220_6X12_GLYPHS, font_get_glyph_address_vt220_6x12); // <-- Add this line
+    font_registry_register("VT220 8x16", 8, 16, &G_VT220_8X16_GLYPHS, font_get_glyph_address_vt220_8x16);
+    font_registry_register("VT220 12x24", 12, 24, &G_VT220_12X24_GLYPHS, font_get_glyph_address_vt220_12x24);
+    font_registry_register("VT220 16x32", 16, 32, &G_VT220_16X32_GLYPHS, font_get_glyph_address_vt220_16x32);
+    font_registry_register("VT220 32x64", 32, 64, &G_VT220_32X64_GLYPHS, font_get_glyph_address_vt220_32x64);
 }

@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+        {
+            "type": "shell",
+            "label": "Build PiGFX with VT323 font",
+            "command": "make",
+            "group": "build",
+            "isBackground": false,
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}

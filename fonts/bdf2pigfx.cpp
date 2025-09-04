@@ -14,6 +14,9 @@ struct Character {
     std::vector<std::string> bitmap;
 };
 
+int font_xoffset = 0;
+int font_yoffset = 0;
+
 bool parseBDFFile(const std::string& filename, std::vector<Character>& chars, int& fontWidth, int& fontHeight) {
     std::ifstream file(filename);
     if (!file.is_open()) {
@@ -38,8 +41,8 @@ bool parseBDFFile(const std::string& filename, std::vector<Character>& chars, in
         iss >> command;
         
         if (command == "FONTBOUNDINGBOX") {
-            iss >> fontWidth >> fontHeight;
-            std::cout << "Font size: " << fontWidth << "x" << fontHeight << std::endl;
+            iss >> fontWidth >> fontHeight >> font_xoffset >> font_yoffset;
+            std::cout << "Font size: " << fontWidth << "x" << fontHeight << " Offset: " << font_xoffset << "," << font_yoffset  << std::endl;
         }
         else if (command == "STARTCHAR") {
             inChar = true;
@@ -49,6 +52,7 @@ bool parseBDFFile(const std::string& filename, std::vector<Character>& chars, in
         }
         else if (command == "ENCODING") {
             iss >> currentChar.encoding;
+            std::cout << "Encoding: " << currentChar.encoding << std::endl;
         }
         else if (command == "BBX") {
             iss >> currentChar.width >> currentChar.height >> currentChar.xoffset >> currentChar.yoffset;
@@ -93,26 +97,30 @@ void writePiGFXFont(const std::vector<Character>& chars, const std::string& outp
     // Fill in the characters we have
     for (const auto& ch : chars) {
         if (ch.encoding < 0 || ch.encoding >= 256) continue;
-        
+
         std::vector<uint8_t>& data = charData[ch.encoding];
-        
-        for (int y = 0; y < fontHeight && y < (int)ch.bitmap.size(); y++) {
-            const std::string& hexLine = ch.bitmap[y];
-            
-            // Convert hex string to bits
-            for (int x = 0; x < fontWidth; x++) {
-                int hexIndex = x / 4;
-                int bitIndex = 3 - (x % 4);
-                
-                if (hexIndex < (int)hexLine.length()) {
-                    char hexChar = hexLine[hexIndex];
-                    int hexValue = 0;
-                    if (hexChar >= '0' && hexChar <= '9') hexValue = hexChar - '0';
-                    else if (hexChar >= 'A' && hexChar <= 'F') hexValue = hexChar - 'A' + 10;
-                    else if (hexChar >= 'a' && hexChar <= 'f') hexValue = hexChar - 'a' + 10;
-                    
-                    bool pixelOn = (hexValue & (1 << bitIndex)) != 0;
-                    data[y * fontWidth + x] = pixelOn ? 0xFF : 0x00;
+
+        // For each pixel in the glyph's BBX, place it at the correct offset in the cell
+        for (int by = 0; by < ch.height && by < (int)ch.bitmap.size(); by++) {
+            const std::string& hexLine = ch.bitmap[by];
+            // Convert hexLine to bytes
+            std::vector<uint8_t> rowBytes;
+            for (size_t i = 0; i + 1 < hexLine.length(); i += 2) {
+                std::string byteStr = hexLine.substr(i, 2);
+                uint8_t byte = (uint8_t)strtol(byteStr.c_str(), nullptr, 16);
+                rowBytes.push_back(byte);
+            }
+            for (int bx = 0; bx < ch.width; bx++) {
+                int byteIndex = bx / 8;
+                int bitIndex = 7 - (bx % 8);
+                bool pixelOn = false;
+                if (byteIndex < (int)rowBytes.size()) {
+                    pixelOn = (rowBytes[byteIndex] & (1 << bitIndex)) != 0;
+                }
+                int cell_x = bx + ch.xoffset + font_xoffset;
+                int cell_y = by + (fontHeight - ch.height) + font_yoffset + ch.yoffset -8;
+                if (cell_x >= 0 && cell_x < fontWidth && cell_y >= 0 && cell_y < fontHeight) {
+                    data[cell_y * fontWidth + cell_x] = pixelOn ? 0xFF : 0x00;
                 }
             }
         }
