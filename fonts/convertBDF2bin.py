@@ -28,7 +28,7 @@ with open(output_file, 'wb') as f:
         lines = [["-" for _ in range(width)] for _ in range(height)]
         if glyph:
             print("glyph width, height, dx, dy:", glyph.width, glyph.height, glyph.dx, glyph.dy, file=out)
-            yoffset = (height + dy) - (glyph.height + glyph.dy)
+            yoffset = (height + dy) - (glyph.height + glyph.dy) - 4 # test
             xoffset = glyph.dx + dx
             print("y offset:", yoffset, " x offset:", xoffset, file=out)
 
