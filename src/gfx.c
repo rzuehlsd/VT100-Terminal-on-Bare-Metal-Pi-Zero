@@ -1315,29 +1315,35 @@ void gfx_term_save_cursor_content()
 */
 void gfx_term_render_cursor()
 {
+
     unsigned char* pb = ctx.cursor_buffer;
+    //cout("pb: "); cout_h((unsigned int)pb);cout_endl();
     unsigned char* pfb = (unsigned char*)PFB(
-        ctx.term.cursor_col * ctx.term.FONTWIDTH,
-        ctx.term.cursor_row * ctx.term.FONTHEIGHT
-    );
-    const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;
-
-    // Calculate baseline position in cell, respecting negative font offset
-    int baseline_y = ctx.term.FONTHEIGHT + ctx.term.FONTHEIGHT_OFFSET - 1;
+            ctx.term.cursor_col * ctx.term.FONTWIDTH,
+            ctx.term.cursor_row * ctx.term.FONTHEIGHT );
+    //cout("pfb: "); cout_h((unsigned int)pfb);cout_endl();
+    const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;//$$ adjust if not 8 width?
+    //cout("byte_stride: "); cout_d(byte_stride);  cout(" pitch: "); cout_d(ctx.Pitch); cout(" FONTWIDTH: "); cout_d(ctx.term.FONTWIDTH);cout_endl();
     unsigned int h = ctx.term.FONTHEIGHT;
+    //cout("h: "); cout_d(h);cout_endl();
 
-    if (ctx.term.cursor_visible)
+    if( ctx.term.cursor_visible )
     {
-        for (unsigned int y = 0; y < (int)h; y++)
+        while(h--)
         {
             unsigned int w = ctx.term.FONTWIDTH;
-            for (unsigned int x = 0; x < w; x++)
+            while (w--)
             {
                 *pb = *pfb; // Save original pixel
-                if (y == baseline_y) // underline cursor at baseline
+                if (*pfb == (ctx.fg32 & 0xFF))
                 {
-                    *pfb = (*pfb == (ctx.fg32 & 0xFF)) ? (ctx.bg32 & 0xFF) : (ctx.fg32 & 0xFF);
+                    *pfb = ctx.bg32 & 0xFF;
                 }
+                else if (*pfb == (ctx.bg32 & 0xFF))
+                {
+                    *pfb = ctx.fg32 & 0xFF;
+                }
+                // else leave pixel unchanged
                 pb++;
                 pfb++;
             }
@@ -1347,12 +1353,12 @@ void gfx_term_render_cursor()
     }
     else
     {
-        for (unsigned int y = 0; y < h; y++)
+        while(h--)
         {
             unsigned int w = ctx.term.FONTWIDTH;
-            for (unsigned int x = 0; x < w; x++)
+            while (w--)
             {
-                *pfb = *pb++;
+                *pfb = *pb++; // Restore original pixel
                 pfb++;
             }
             pfb += byte_stride;
@@ -2022,7 +2028,6 @@ void gfx_term_set_font_by_type(int font_type)
         ctx.term.FONTWIDTH = 32;
         ctx.term.FONTHEIGHT = 64;
         ctx.term.font_getglyph = font_get_glyph_address_vt220_32x64;
-        ctx.term.FONTHEIGHT_OFFSET = -14; // Set this to the y-offset from FONTBOUNDINGBOX in the BDF
         gfx_compute_font();
         break;
     default: // Fallback to 8x16 original
