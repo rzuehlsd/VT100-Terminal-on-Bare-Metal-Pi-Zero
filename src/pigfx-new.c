@@ -57,7 +57,6 @@
 #include "memory.h"
 #include "mmu.h"
 #include "../uspi/include/uspi.h"
-#include "font_registry.h"
 
 #define UART_BUFFER_SIZE 16384 /* 16k */
 
@@ -71,8 +70,6 @@
     gfx_set_fg(7); \
 } while(0)
 
-
-#define TEST_INIT
 
 unsigned int led_status = 0;
 unsigned char usbKeyboardFound = 0;
@@ -281,8 +278,7 @@ void initialize_framebuffer(unsigned int width, unsigned int height, unsigned in
     gfx_set_env( p_fb, v_w, v_h, bpp, pitch, fbsize );
     gfx_set_drawing_mode(drawingNORMAL);
     gfx_term_set_tabulation(8);
-    //font_registry_init();
-    //gfx_term_set_font(0);  // Set Default font (8x16)   
+    gfx_term_set_font(8,16);
     gfx_clear();
 }
 
@@ -309,11 +305,14 @@ void initialize_framebuffer(unsigned int width, unsigned int height, unsigned in
  * @note Handles ANSI escape sequences through gfx_term_putstring()
  * @note Implements backspace echo suppression for better terminal experience
  */
-
 void term_main_loop()
 {
     LogNotice("Waiting for UART data (%d baud).\n",PiGfxConfig.uartBaudrate);
 
+    // NOW apply user configuration (colors, fonts) after "Waiting for UART" message
+    LogNotice("Applying user display configuration...\n");
+    applyDisplayConfig();
+    gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
 
     /**/
     while( uart_buffer_start == uart_buffer_end )
@@ -328,11 +327,6 @@ void term_main_loop()
     }
     /**/
 
-    // Now we can safely apply user defined settings
-    // applyDisplayConfig();
-
-
-    // Clear entire screen and position cursor at home
     gfx_term_putstring( "\x1B[2J" );
 
     char strb[2] = {0,0};
@@ -448,8 +442,6 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     (void) r1;
     (void) atags;
 
-    // PHASE 1 - Critical System Setup:
-
     // clear BSS
     extern unsigned char __bss_start;
     extern unsigned char _end;
@@ -462,12 +454,10 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     unsigned int memSize = ARM_MEMSIZE-MEM_HEAP_START;
     nmalloc_set_memory_area( (unsigned char*)MEM_HEAP_START, memSize);
 
-
     // UART buffer allocation
     uart_buffer = (volatile char*)nmalloc_malloc( UART_BUFFER_SIZE );
-    uart_init(115200);
-
-
+    uart_init(9600);
+    
     // Initialize debug system - enable all debug levels during early boot
     // This will be reconfigured after loading user settings from pigfx.txt
     SetDebugSeverity(LOG_ERROR_BIT | LOG_NOTICE_BIT | LOG_WARNING_BIT | LOG_DEBUG_BIT);
@@ -475,8 +465,6 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     // Init Pagetable
     CreatePageTable(ARM_MEMSIZE);
     EnableMMU();
-
-    // PHASE 2 - Hardware Discovery and Setup:
 
     // Get informations about the board we are booting
     boardRevision = prop_revision();
@@ -490,24 +478,20 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     timers_init();
     attach_timer_handler( HEARTBEAT_FREQUENCY, _heartbeat_timer_handler, 0, 0 );
 
-
-    // PHASE 3 - Safe Display Initialization:
-
-    // Initialize font registry system BEFORE applying any display configuration
-    font_registry_init();   // register build in fonts
-    gfx_register_builtin_fonts();
-
-    setDefaultConfig();
-
+    // Stage 1: Apply safe configuration for system initialization
+    setSafeConfig();
+    
     // Initialize framebuffer with safe resolution (640x480)
     initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);
-
     
-    gfx_term_set_font(1);   // Set Default font (8x16)
-
-    gfx_term_putstring((const char*)"\nBooting PiGFX...\n");
-
+    // Initialize font registry system BEFORE applying any display configuration
+    font_registry_init();
+    font_registry_register_builtin_fonts();
     
+    // Now we can safely apply safe display settings (white on black, system font)
+    applyDisplayConfig();
+
+    display_system_banner();
 
     LogDebug("\nBooting on Raspberry Pi %s, %s, %iMB ARM RAM\n", 
              board_model(raspiBoard.model), 
@@ -515,15 +499,16 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
              ArmRam.size);
 
 
+    // Stage 2: Load user configuration from pigfx.txt
+    // Set fallback default configuration first
+    setDefaultConfig();
 
-    // PHASE 4 - User Configuration Loading:
     LogDebug("Initializing filesystem:\n");
-    
-    lookForConfigFile();            // Try to load user config file
-
+    // Try to load user config file
+    lookForConfigFile();
     LogNotice("Filesystem initialized.\n");
 
- 
+    
     // Apply debug verbosity setting from configuration immediately
     // 0 = errors + notices, 1 = +warnings, 2 = +debug
     unsigned int debugSeverity = LOG_ERROR_BIT | LOG_NOTICE_BIT;
@@ -536,9 +521,27 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     SetDebugSeverity(debugSeverity);
     LogNotice("Debug verbosity set to level %d\n", PiGfxConfig.debugVerbosity);
     
-
-
-    // PHASE 5 - Peripheral Initialization:
+    // Now debug messages will follow the user's preference for the rest of initialization
+    
+    // Check if resolution changed and reinitialize framebuffer if needed
+    unsigned int currentWidth, currentHeight;
+    gfx_get_gfx_size(&currentWidth, &currentHeight);
+    if (currentWidth != PiGfxConfig.displayWidth || currentHeight != PiGfxConfig.displayHeight) {
+        LogNotice("Switching resolution to %dx%d\n", PiGfxConfig.displayWidth, PiGfxConfig.displayHeight);
+        initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);
+        // Re-initialize font registry after framebuffer change
+        font_registry_init();
+        font_registry_register_builtin_fonts();
+        // Apply safe colors again after resolution change
+        gfx_set_fg(15);  // White
+        gfx_set_bg(0);   // Black
+        font_registry_set_by_index(0);  // Safe system font
+        
+        // Redisplay banner after framebuffer reinitialization
+        display_system_banner();
+    }
+    
+    // Note: User display configuration (colors, fonts) will be applied after "Waiting for UART" message
 
     uart_init(PiGfxConfig.uartBaudrate);
     initialize_uart_irq();
@@ -588,8 +591,6 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
     }
 #endif
 
-
-    // PHASE 6 - Final Setup:
 
     gfx_set_drawing_mode(drawingNORMAL);
     gfx_set_fg(GRAY);

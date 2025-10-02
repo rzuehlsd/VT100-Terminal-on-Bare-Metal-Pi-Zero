@@ -10,7 +10,11 @@
 #ifndef _GFX_H_
 #define _GFX_H_
 
+#define DEPRICATED
+
 #include "gfx_types.h"
+#include "font_registry.h"
+
 
 // gfx functions
 extern void gfx_set_env( void* p_framebuffer, unsigned int width, unsigned int height, unsigned int bpp, unsigned int pitch, unsigned int size );
@@ -81,10 +85,11 @@ extern void gfx_term_clear_line();
 extern void gfx_term_clear_screen();
 extern void gfx_term_clear_screen_from_here();
 extern void gfx_term_clear_screen_to_here();
-extern void gfx_term_set_font(int width, int height);
-extern void gfx_term_set_font_by_type(int font_type);
-extern void gfx_term_get_font(int* width, int* height);
-extern int gfx_term_get_font_type(void);
+
+extern void gfx_register_builtin_fonts(void);
+extern void gfx_term_set_font(int font_type);
+extern int gfx_term_get_font(void);
+
 extern void gfx_term_set_tabulation(int width);
 extern GFX_COL gfx_get_fg();
 extern GFX_COL gfx_get_bg();

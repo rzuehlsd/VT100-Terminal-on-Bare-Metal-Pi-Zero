@@ -136,32 +136,7 @@ int inihandler(void* user, const char* section, const char* name, const char* va
     return 0;
 }
 
-void setSafeConfig()
-{
-    // Set safe/fool-proof configuration for system initialization
-    pigfx_memset(&PiGfxConfig, 0, sizeof(PiGfxConfig));
 
-    PiGfxConfig.uartBaudrate = 115200;
-    PiGfxConfig.useUsbKeyboard = 1;
-    PiGfxConfig.sendCRLF = 0;
-    PiGfxConfig.replaceLFwithCR = 0;
-    PiGfxConfig.backspaceEcho = 0;
-    PiGfxConfig.skipBackspaceEcho = 0;
-    PiGfxConfig.swapDelWithBackspace = 1;
-    PiGfxConfig.keyboardAutorepeat = 1;
-    PiGfxConfig.keyboardRepeatDelay = 500;
-    PiGfxConfig.keyboardRepeatRate = 10;
-    PiGfxConfig.foregroundColor = 15;    // WHITE (safe foreground)
-    PiGfxConfig.backgroundColor = 0;     // BLACK (safe background)
-    PiGfxConfig.fontSelection = 0;       // 8x16 System Font (safe font)
-    PiGfxConfig.displayWidth = 640;      // Safe resolution: 640x480
-    PiGfxConfig.displayHeight = 480;     // Safe resolution: 640x480
-    PiGfxConfig.disableGfxDMA = 1;
-    PiGfxConfig.disableCollision = 0;
-    PiGfxConfig.debugVerbosity = 0;      // Safe default: errors + notices only
-    PiGfxConfig.cursorBlink = 1; // Safe default: blinking enabled
-    pigfx_strcpy(PiGfxConfig.keyboardLayout, "us");
-}
 
 void setDefaultConfig()
 {
@@ -318,4 +293,5 @@ void applyDisplayConfig()
         font_registry_set_by_index(0);
         PiGfxConfig.fontSelection = 0;
     }
+    gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
 }

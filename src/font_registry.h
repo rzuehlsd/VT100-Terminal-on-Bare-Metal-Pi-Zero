@@ -13,7 +13,7 @@
 
 // Font descriptor structure containing all metadata for a font
 typedef struct {
-    const char* name;                              // Human-readable name
+    char name[32];                                 // Human-readable name
     int width;                                     // Character width in pixels
     int height;                                    // Character height in pixels
     const unsigned char* data;                     // Pointer to binary font data
@@ -82,12 +82,6 @@ const font_descriptor_t* font_registry_get_info(int index);
  */
 int font_registry_get_current_index(void);
 
-/**
- * Validate a font (check if all required characters are available)
- * @param index Font index to validate
- * @return 1 if valid, 0 if invalid
- */
-int font_registry_validate(int index);
 
 /**
  * Find a font by dimensions (width x height)
@@ -97,10 +91,6 @@ int font_registry_validate(int index);
  */
 int font_registry_find_by_dimensions(int width, int height);
 
-/**
- * Register all built-in fonts
- * This function registers all fonts that are compiled into the kernel
- */
-void font_registry_register_builtin_fonts(void);
+
 
 #endif /* FONT_REGISTRY_H_ */

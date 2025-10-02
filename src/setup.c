@@ -17,6 +17,9 @@
 #include "uart.h"
 #include "font_registry.h"
 #include <stddef.h>
+#include "myString.h"
+#include <string.h>
+#include "gfx.h"
 
 // Forward declaration for initialize_framebuffer
 extern void initialize_framebuffer(unsigned int width, unsigned int height, unsigned int bpp);
@@ -83,7 +86,7 @@ static const unsigned int num_resolutions = sizeof(available_resolutions) / size
 // Font switching function that uses font registry
 static void switch_to_font_by_index(int font_index)
 {
-    font_registry_set_by_index(font_index);
+    gfx_term_set_font(font_index);
 }
 
 // Helper function to draw text at specific position without affecting cursor
@@ -857,7 +860,7 @@ void setup_mode_draw(void)
         
         // Get font info from registry
         const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
-        if (font_info != NULL && font_info->name != NULL)
+        if (font_info != NULL && strlen(font_info->name) != 0)
         {
             draw_text_at_with_bg(content_row + 4, value_col, font_info->name, 12);
         }
@@ -878,7 +881,7 @@ void setup_mode_draw(void)
         
         // Get font info from registry
         const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
-        if (font_info != NULL && font_info->name != NULL)
+        if (font_info != NULL && strlen(font_info->name) != 0)
         {
             draw_text_at(content_row + 4, value_col, font_info->name);
         }

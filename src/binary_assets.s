@@ -25,18 +25,9 @@ G_SPLEEN16X32_GLYPHS: .incbin "fonts/spleen-16x32.bin"
 .align 4
 G_SPLEEN32X64_GLYPHS: .incbin "fonts/spleen-32x64.bin"
 
-.global G_STARTUP_LOGO
+.global G_VT100_10X20_GLYPHS
 .align 4
-G_STARTUP_LOGO: .incbin "sprite/rc2014logo.bin"
-
-@ VT220 fonts
-.global G_VT220_6X12_GLYPHS
-.align 4
-G_VT220_6X12_GLYPHS: .incbin "fonts/VT220-6x12.bin"
-
-.global G_VT220_8X16_GLYPHS
-.align 4
-G_VT220_8X16_GLYPHS: .incbin "fonts/VT220-8x16.bin"
+G_VT100_10X20_GLYPHS: .incbin "fonts/VT100-10x20.bin"
 
 .global G_VT220_12X24_GLYPHS
 .align 4

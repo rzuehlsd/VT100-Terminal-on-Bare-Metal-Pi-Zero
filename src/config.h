@@ -50,7 +50,7 @@ typedef struct
 extern tPiGfxConfig PiGfxConfig;
 
 
-void setSafeConfig();
+
 void setDefaultConfig();
 unsigned char lookForConfigFile();
 void printLoadedConfig();

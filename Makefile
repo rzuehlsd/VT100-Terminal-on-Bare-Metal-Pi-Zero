@@ -36,7 +36,11 @@ TARGET = kernel8-64
 endif
 
 ## Important!!! asm.o must be the first object to be linked!
-OOB = asm.o exceptionstub.o synchronize.o mmu.o pigfx.o uart.o irq.o utils.o gpio.o mbox.o prop.o board.o actled.o framebuffer.o console.o gfx.o dma.o nmalloc.o uspios_wrapper.o ee_printf.o stupid_timer.o block.o emmc.o c_utils.o mbr.o fat.o config.o ini.o ps2.o keyboard.o setup.o font_registry.o binary_assets.o
+OOB = asm.o exceptionstub.o synchronize.o mmu.o pigfx.o uart.o \
+	irq.o utils.o gpio.o mbox.o prop.o board.o actled.o framebuffer.o \
+	console.o gfx.o dma.o nmalloc.o uspios_wrapper.o ee_printf.o stupid_timer.o \
+	block.o emmc.o c_utils.o mbr.o fat.o config.o ini.o ps2.o keyboard.o setup.o \
+	font_registry.o myString.o binary_assets.o
 
 BUILD_DIR = build
 SRC_DIR = src

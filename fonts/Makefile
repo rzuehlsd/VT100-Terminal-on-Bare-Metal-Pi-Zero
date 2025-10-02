@@ -1,4 +1,4 @@
-all: buildfont font8x8.bin TRSfont8x24.bin TRSfont8x16.bin VT220-32x64.bin VT220-12x24.bin
+all: buildfont font8x8.bin TRSfont8x24.bin TRSfont8x16.bin VT100-10x20.bin
 
 buildfont: buildfont.cpp CImg.h
 	g++ buildfont.cpp -o buildfont
@@ -13,8 +13,5 @@ TRSfont8x16.bin: trs80-8x16.png buildfont
 	./buildfont -i trs80-8x16.png -o TRSfont8x16.bin -w 8 -h 16 -c 1 -q
 	
 
-VT220-32x64.bin: VT220-32x64.png buildfont
-	./buildfont -i VT220-32x64.png -o VT220-32x64.bin -w 32 -h 64 -c 2 -q
-
-VT220-12x24.bin: VT220-10x20.png buildfont
-	./buildfont -i VT220-10x20.png -o VT220-12x24.bin -w 10 -h 20 -c 2
+VT100-10x20.bin: VT100-10x20.png buildfont
+	./buildfont -i VT100-10x20.png -o VT100-10x20.bin -w 10 -h 20 -c 1 -q
