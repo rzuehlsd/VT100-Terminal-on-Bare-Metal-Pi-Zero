@@ -256,7 +256,7 @@ void gfx_register_builtin_fonts(void)
     // Register all built-in fonts
     // 8x16 System Font is the system default font (index 0)
 
-    font_registry_register("System 8x16", 8, 16, G_FONT8X16_GLYPHS, font_get_glyph_address);
+    font_registry_register("System 8x16", 8, 16, G_FONT8X16_GLYPHS, font_get_glyph_address);  // has to be at position 0 !!
     font_registry_register("Spleen 6x12", 6, 12, G_SPLEEN6X12_GLYPHS, font_get_glyph_address);
     font_registry_register("Spleen 8x16", 8, 16, G_SPLEEN8X16_GLYPHS, font_get_glyph_address);
     font_registry_register("Spleen 12x24", 12, 24, G_SPLEEN12X24_GLYPHS, font_get_glyph_address);

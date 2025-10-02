@@ -73,13 +73,13 @@ static const unsigned int num_colors = sizeof(available_colors) / sizeof(availab
 
 // Available resolutions
 static const char* available_resolutions[] = {
-    "640x480", "1024x768"
+    "640x480", "800x640", "1024x768"
 };
 static const unsigned int resolution_widths[] = {
-    640, 1024
+    640, 800, 1024
 };
 static const unsigned int resolution_heights[] = {
-    480, 768
+    480, 640, 768
 };
 static const unsigned int num_resolutions = sizeof(available_resolutions) / sizeof(available_resolutions[0]);
 
@@ -624,8 +624,10 @@ void setup_mode_handle_key(unsigned short key)
                 
                 // Apply settings after setup mode has exited to avoid interference
                 setup_mode_exit();
+
                 // Apply cursor blinking setting immediately after setup
                 gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
+
                 // Apply keyboard repeat and autorepeat settings immediately
                 if (PiGfxConfig.keyboardAutorepeat)
                     keyboard_enable_autorepeat();
@@ -634,12 +636,16 @@ void setup_mode_handle_key(unsigned short key)
                 keyboard_set_repeat_delay(PiGfxConfig.keyboardRepeatDelay);
                 keyboard_set_repeat_rate(PiGfxConfig.keyboardRepeatRate);
                 fInitKeyboard(PiGfxConfig.keyboardLayout);
+
+                // Re-initialize UART with new baudrate
                 uart_init(PiGfxConfig.uartBaudrate);
                 
                 // Handle resolution change if needed
                 if (resolution_was_changed)
                 {
                     gfx_term_putstring("Changing display resolution, please wait...\r\n");
+
+                    // Re-initialize framebuffer with new resolution
                     initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);
                     gfx_term_clear_screen();
                     gfx_term_move_cursor(1, 1); // Move to row 1, column 1 (top-left)
@@ -654,7 +660,7 @@ void setup_mode_handle_key(unsigned short key)
                     unsigned int font_count = font_registry_get_count();
                     if (PiGfxConfig.fontSelection < font_count)
                     {
-                        font_registry_set_by_index(PiGfxConfig.fontSelection);
+                        gfx_term_set_font(PiGfxConfig.fontSelection);
                     }
                 }
                 // Only clear screen and reset cursor if font was changed (and resolution wasn't changed)
