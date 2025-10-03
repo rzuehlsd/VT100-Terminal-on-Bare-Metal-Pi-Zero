@@ -1,17 +1,28 @@
-all: buildfont font8x8.bin TRSfont8x24.bin TRSfont8x16.bin VT100-10x20.bin
+PNG_DIR := png
+BIN_DIR := bin
 
-buildfont: buildfont.cpp CImg.h
-	g++ buildfont.cpp -o buildfont
+# Find all PNG files in png directory
+PNGS := $(wildcard $(PNG_DIR)/*.png)
+BINS := $(patsubst $(PNG_DIR)/%.png, $(BIN_DIR)/%.bin, $(PNGS))
 
-font8x8.bin: Cbios_8x8_8x32.png buildfont
-	./buildfont -i Cbios_8x8_8x32.png -o font8x8.bin -w 8 -h 8 -c 0	-q
+all: buildfont $(BINS) ../src/binary_assets.s ../src/buildin_fonts.inc
 
-TRSfont8x24.bin: trs80-8x24.png buildfont
-	./buildfont -i trs80-8x24.png -o TRSfont8x24.bin -w 8 -h 24 -c 1 -q
-	
-TRSfont8x16.bin: trs80-8x16.png buildfont
-	./buildfont -i trs80-8x16.png -o TRSfont8x16.bin -w 8 -h 16 -c 1 -q
-	
+buildfont: src/buildfont.cpp src/CImg.h
+	g++ src/buildfont.cpp -o buildfont
 
-VT100-10x20.bin: VT100-10x20.png buildfont
-	./buildfont -i VT100-10x20.png -o VT100-10x20.bin -w 10 -h 20 -c 1 -q
+# General rule: convert each PNG in png/ to BIN in bin/
+$(BIN_DIR)/%.bin: $(PNG_DIR)/%.png buildfont
+	@mkdir -p $(BIN_DIR)
+	python3 buildfont.py $< -o $@ -c 1 -q
+
+../src/binary_assets.s: $(BINS)
+	python3 src/gen_bin_assets.py $(BINS) > ./src/binary_assets.s
+
+../src/buildin_fonts.inc: $(BINS)
+	python3 src/gen_buildin_inc.py $(BINS) > ./src/buildin_fonts.inc
+
+clean:
+	rm -f buildfont
+	rm -f $(BIN_DIR)/*.bin
+	rm -f ./src/buildin_fonts.inc
+	rm -f ./src/binary_assets.s

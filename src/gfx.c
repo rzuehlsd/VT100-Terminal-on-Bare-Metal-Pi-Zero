@@ -231,43 +231,15 @@ void gfx_switch_framebuffer();
 // Functions from pigfx.c called by some private sequences (set mode, debug tests ...)
 extern void initialize_framebuffer(unsigned int width, unsigned int height, unsigned int bpp);
 
-// Externs from binary_assets.s
-extern unsigned char G_FONT8X16_GLYPHS[];
-extern unsigned char G_SPLEEN6X12_GLYPHS[];
-extern unsigned char G_SPLEEN8X16_GLYPHS[];
-extern unsigned char G_SPLEEN12X24_GLYPHS[];
-extern unsigned char G_SPLEEN16X32_GLYPHS[];
-extern unsigned char G_SPLEEN32X64_GLYPHS[];
-extern unsigned char G_VT100_10X20_GLYPHS[];
-extern unsigned char G_VT220_8X16_GLYPHS[];
-extern unsigned char G_VT220_12X24_GLYPHS[];
-extern unsigned char G_VT220_16X32_GLYPHS[];
-extern unsigned char G_VT220_32X64_GLYPHS[];
-
-
 /** Generic Font function. */
 unsigned char* font_get_glyph_address(unsigned int c)
 {
     return (unsigned char*) ( ctx.term.FONT + c * ctx.term.FONTCHARBYTES );
 }
 
-void gfx_register_builtin_fonts(void)
-{
-    // Register all built-in fonts
-    // 8x16 System Font is the system default font (index 0)
 
-    font_registry_register("System 8x16", 8, 16, G_FONT8X16_GLYPHS, font_get_glyph_address);  // has to be at position 0 !!
-    font_registry_register("Spleen 6x12", 6, 12, G_SPLEEN6X12_GLYPHS, font_get_glyph_address);
-    font_registry_register("Spleen 8x16", 8, 16, G_SPLEEN8X16_GLYPHS, font_get_glyph_address);
-    font_registry_register("Spleen 12x24", 12, 24, G_SPLEEN12X24_GLYPHS, font_get_glyph_address);
-    font_registry_register("Spleen 16x32", 16, 32, G_SPLEEN16X32_GLYPHS, font_get_glyph_address);
-    font_registry_register("Spleen 32x64", 32, 64, G_SPLEEN32X64_GLYPHS, font_get_glyph_address);
-    font_registry_register("VT100 10x20", 10, 20, G_VT100_10X20_GLYPHS, font_get_glyph_address);
-    font_registry_register("VT220 12x24", 12, 24, G_VT220_12X24_GLYPHS, font_get_glyph_address);
-    font_registry_register("VT220 16x32", 16, 32, G_VT220_16X32_GLYPHS, font_get_glyph_address);
-    font_registry_register("VT220 32x64", 32, 64, G_VT220_32X64_GLYPHS, font_get_glyph_address);
-}
-
+// include the built-in fonts registration code
+#include "buildin_fonts.inc"
 
 
 /** Compute some font variables from font size. */
