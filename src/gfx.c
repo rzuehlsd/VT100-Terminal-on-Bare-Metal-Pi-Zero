@@ -1596,14 +1596,20 @@ void gfx_term_putstring( const char* str )
             case '\r':
                 gfx_restore_cursor_content();
                 ctx.term.cursor_col = 0;
-                if( ctx.term.cursor_row < ctx.term.HEIGHT ) gfx_term_render_cursor();
+                if( ctx.term.cursor_row < ctx.term.HEIGHT ) {
+                    gfx_term_save_cursor_content();
+                    gfx_term_render_cursor();
+                }
                 break;
 
             case '\n':
                 gfx_restore_cursor_content();
                 ++ctx.term.cursor_row;
                 ctx.term.cursor_col = 0;
-                if( ctx.term.cursor_row < ctx.term.HEIGHT ) gfx_term_render_cursor();
+                if( ctx.term.cursor_row < ctx.term.HEIGHT ) {
+                    gfx_term_save_cursor_content();
+                    gfx_term_render_cursor();
+                }
                 break;
 
             case 0x09: /* tab */
@@ -1750,9 +1756,7 @@ void gfx_term_clear_till_end()
     gfx_swap_fg_bg();
     gfx_fill_rect( ctx.term.cursor_col * ctx.term.FONTWIDTH, ctx.term.cursor_row * ctx.term.FONTHEIGHT, ctx.W, ctx.term.FONTHEIGHT );
     gfx_swap_fg_bg();
-    gfx_term_render_cursor();
 }
-
 
 void gfx_term_clear_till_cursor()
 {

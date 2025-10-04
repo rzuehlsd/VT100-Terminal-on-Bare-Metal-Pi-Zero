@@ -15,7 +15,6 @@
 #include "gfx_types.h"
 #include "font_registry.h"
 
-
 // gfx functions
 extern void gfx_set_env( void* p_framebuffer, unsigned int width, unsigned int height, unsigned int bpp, unsigned int pitch, unsigned int size );
 extern void gfx_set_default_bg( GFX_COL col );

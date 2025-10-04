@@ -9,6 +9,7 @@
         "locale": "cpp",
         "optional": "cpp",
         "ratio": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "timer.h": "c"
     }
 }

@@ -45,15 +45,22 @@ typedef struct
     unsigned int debugVerbosity;        // Debug verbosity level (0=errors+notices, 1=+warnings, 2=+debug)
     unsigned int cursorBlink;           // Cursor blinking: 1=enabled, 0=disabled
     char         keyboardLayout[3];     // Keyboard layout (de,uk,us, ...)
+    int          hasChanged;
 } tPiGfxConfig;
 
 extern tPiGfxConfig PiGfxConfig;
 
 
-
+// Initialize configuration with default values
 void setDefaultConfig();
-unsigned char lookForConfigFile();
-void printLoadedConfig();
-void applyDisplayConfig();
+
+// Load configuration from pigfx.txt file on SD card
+unsigned char loadConfigFile();
+
+// Print current configuration values to debug output
+void printConfig();
+
+// Apply configuration changes to hardware (display, UART, fonts)
+void applyConfig();
 
 #endif

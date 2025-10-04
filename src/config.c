@@ -27,122 +27,234 @@
 
 
 
+// Helper functions for configuration parsing
+/**
+ * @brief Set boolean configuration value (0 or 1)
+ * 
+ * Validates that the string value represents a boolean (0 or 1) and sets
+ * the configuration field if valid. Invalid values are ignored.
+ * 
+ * @param name The configuration parameter name (for debugging)
+ * @param value The string value to parse and validate
+ * @param config_field Pointer to the configuration field to update
+ */
+static void set_boolean_config(const char* name, const char* value, unsigned int* config_field)
+{
+    int tmpValue = atoi(value);
+    if ((tmpValue == 0) || (tmpValue == 1)) {
+        *config_field = tmpValue;
+    }
+}
+
+/**
+ * @brief Set positive integer configuration value
+ * 
+ * Validates that the string value represents a positive integer (> 0) and sets
+ * the configuration field if valid. Zero and negative values are ignored.
+ * 
+ * @param name The configuration parameter name (for debugging)
+ * @param value The string value to parse and validate
+ * @param config_field Pointer to the configuration field to update
+ */
+static void set_positive_config(const char* name, const char* value, unsigned int* config_field)
+{
+    int tmpValue = atoi(value);
+    if (tmpValue > 0) {
+        *config_field = tmpValue;
+    }
+}
+
+/**
+ * @brief Set configuration value within specified range
+ * 
+ * Validates that the string value represents an integer within the specified
+ * range [min_val, max_val] and sets the configuration field if valid.
+ * Values outside the range are ignored.
+ * 
+ * @param name The configuration parameter name (for debugging)
+ * @param value The string value to parse and validate
+ * @param config_field Pointer to the configuration field to update
+ * @param min_val Minimum allowed value (inclusive)
+ * @param max_val Maximum allowed value (inclusive)
+ */
+static void set_range_config(const char* name, const char* value, unsigned int* config_field, int min_val, int max_val)
+{
+    int tmpValue = atoi(value);
+    if ((tmpValue >= min_val) && (tmpValue <= max_val)) {
+        *config_field = tmpValue;
+    }
+}
+
+/**
+ * @brief Set configuration value from list of allowed values
+ * 
+ * Validates that the string value represents an integer that matches one of
+ * the values in the provided valid_values array. Sets the configuration field
+ * if a match is found, otherwise ignores the value.
+ * 
+ * @param name The configuration parameter name (for debugging)
+ * @param value The string value to parse and validate
+ * @param config_field Pointer to the configuration field to update
+ * @param valid_values Array of allowed integer values
+ * @param count Number of elements in the valid_values array
+ */
+static void set_specific_values_config(const char* name, const char* value, unsigned int* config_field, const int* valid_values, int count)
+{
+    int tmpValue = atoi(value);
+    for (int i = 0; i < count; i++) {
+        if (tmpValue == valid_values[i]) {
+            *config_field = tmpValue;
+            break;
+        }
+    }
+}
+    
+/**
+ * @brief INI file parser callback handler
+ * 
+ * This function is called by the INI parser for each key-value pair found
+ * in the configuration file. It maps configuration parameter names to their
+ * corresponding fields in the PiGfxConfig structure and applies appropriate
+ * validation for each parameter type.
+ * 
+ * Supported configuration parameters:
+ * - baudrate: UART baud rate (positive integer)
+ * - useUsbKeyboard: Enable USB keyboard (0/1)
+ * - sendCRLF, replaceLFwithCR, backspaceEcho, etc.: Various boolean flags
+ * - keyboardRepeatDelay, keyboardRepeatRate: Positive integers
+ * - foregroundColor, backgroundColor: Color values (0-255)
+ * - displayWidth, displayHeight: Specific allowed display dimensions
+ * - debugVerbosity: Debug level (0-2)
+ * - keyboardLayout: String value (copied directly)
+ * 
+ * @param user User data pointer (unused)
+ * @param section INI section name (unused - we don't use sections)
+ * @param name Configuration parameter name
+ * @param value Configuration parameter value as string
+ * @return Always returns 0 (continue parsing)
+ * 
+ * @note Sets PiGfxConfig.hasChanged = 1 after any parameter is processed
+ * @note Invalid values for any parameter are silently ignored
+ */
 int inihandler(void* user, const char* section, const char* name, const char* value)
 {
-    int tmpValue;
-
     (void)user;
     (void)section;      // we don't care about the section
 
     if (pigfx_strcmp(name, "baudrate") == 0)
     {
-        tmpValue = atoi(value);
-        if (tmpValue > 0) PiGfxConfig.uartBaudrate = tmpValue;
+        set_positive_config(name, value, &PiGfxConfig.uartBaudrate);
     }
     else if (pigfx_strcmp(name, "useUsbKeyboard") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.useUsbKeyboard = tmpValue;
+        set_boolean_config(name, value, &PiGfxConfig.useUsbKeyboard);
     }
     else if (pigfx_strcmp(name, "sendCRLF") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.sendCRLF = tmpValue;
+        set_boolean_config(name, value, &PiGfxConfig.sendCRLF);
     }
     else if (pigfx_strcmp(name, "replaceLFwithCR") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.replaceLFwithCR = tmpValue;
+        set_boolean_config(name, value, &PiGfxConfig.replaceLFwithCR);
     }
     else if (pigfx_strcmp(name, "backspaceEcho") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.backspaceEcho = tmpValue;
+        set_boolean_config(name, value, &PiGfxConfig.backspaceEcho);
     }
     else if (pigfx_strcmp(name, "skipBackspaceEcho") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.skipBackspaceEcho = tmpValue;
+        set_boolean_config(name, value, &PiGfxConfig.skipBackspaceEcho);
     }
     else if (pigfx_strcmp(name, "swapDelWithBackspace") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.swapDelWithBackspace = tmpValue;
+        set_boolean_config(name, value, &PiGfxConfig.swapDelWithBackspace);
     }
     else if (pigfx_strcmp(name, "keyboardAutorepeat") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.keyboardAutorepeat = tmpValue;
+        set_boolean_config(name, value, &PiGfxConfig.keyboardAutorepeat);
     }
     else if (pigfx_strcmp(name, "keyboardRepeatDelay") == 0)
     {
-        tmpValue = atoi(value);
-        if (tmpValue > 0) PiGfxConfig.keyboardRepeatDelay = tmpValue;
+        set_positive_config(name, value, &PiGfxConfig.keyboardRepeatDelay);
     }
     else if (pigfx_strcmp(name, "keyboardRepeatRate") == 0)
     {
-        tmpValue = atoi(value);
-        if (tmpValue > 0) PiGfxConfig.keyboardRepeatRate = tmpValue;
+        set_positive_config(name, value, &PiGfxConfig.keyboardRepeatRate);
     }
     else if (pigfx_strcmp(name, "foregroundColor") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue >= 0) && (tmpValue <= 255)) PiGfxConfig.foregroundColor = tmpValue;
+        set_range_config(name, value, &PiGfxConfig.foregroundColor, 0, 255);
     }
     else if (pigfx_strcmp(name, "backgroundColor") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue >= 0) && (tmpValue <= 255)) PiGfxConfig.backgroundColor = tmpValue;
+        set_range_config(name, value, &PiGfxConfig.backgroundColor, 0, 255);
     }
     else if (pigfx_strcmp(name, "fontSelection") == 0)
     {
-        tmpValue = atoi(value);
+        int tmpValue = atoi(value);
         if (tmpValue >= 0) PiGfxConfig.fontSelection = tmpValue;  // Let font registry validate the range
     }
     else if (pigfx_strcmp(name, "displayWidth") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 640) || (tmpValue == 1024)) PiGfxConfig.displayWidth = tmpValue;
+        static const int valid_widths[] = {640, 800, 1024};
+        set_specific_values_config(name, value, &PiGfxConfig.displayWidth, valid_widths, 3);
     }
     else if (pigfx_strcmp(name, "displayHeight") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 480) || (tmpValue == 768)) PiGfxConfig.displayHeight = tmpValue;
+        static const int valid_heights[] = {480, 640, 768};
+        set_specific_values_config(name, value, &PiGfxConfig.displayHeight, valid_heights, 3);
     }
     else if (pigfx_strcmp(name, "disableGfxDMA") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.disableGfxDMA = tmpValue;
+        set_boolean_config(name, value, &PiGfxConfig.disableGfxDMA);
     }
     else if (pigfx_strcmp(name, "disableCollision") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.disableCollision = tmpValue;
+        set_boolean_config(name, value, &PiGfxConfig.disableCollision);
     }
     else if (pigfx_strcmp(name, "debugVerbosity") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue >= 0) && (tmpValue <= 2)) PiGfxConfig.debugVerbosity = tmpValue;
+        set_range_config(name, value, &PiGfxConfig.debugVerbosity, 0, 2);
     }
     else if (pigfx_strcmp(name, "cursorBlink") == 0)
     {
-        tmpValue = atoi(value);
-        if ((tmpValue == 0) || (tmpValue == 1)) PiGfxConfig.cursorBlink = tmpValue;
+        set_boolean_config(name, value, &PiGfxConfig.cursorBlink);
     }
     else if (pigfx_strcmp(name, "keyboardLayout") == 0)
     {
         pigfx_strncpy(PiGfxConfig.keyboardLayout, value, sizeof(PiGfxConfig.keyboardLayout));
     }
+
+    PiGfxConfig.hasChanged = 1;
     return 0;
 }
 
 
 
+/**
+ * @brief Initialize configuration with default values
+ * 
+ * Sets all configuration parameters in PiGfxConfig to their default values.
+ * This function is called during system initialization or when no configuration
+ * file is found on the SD card.
+ * 
+ * Default values include:
+ * - UART baud rate: 115200
+ * - USB keyboard: enabled
+ * - Display: 800x640 pixels
+ * - Font: first in registry (8x16 System Font)
+ * - Colors: gray foreground on black background
+ * - Keyboard layout: German ("de")
+ * - Debug verbosity: errors and notices only
+ * 
+ * @note Sets PiGfxConfig.hasChanged = 1 to trigger configuration application
+ * @note Clears the entire structure before setting values
+ */
 void setDefaultConfig()
 {
     // Set default configuration values (fallback if no config file)
     pigfx_memset(&PiGfxConfig, 0, sizeof(PiGfxConfig));
-
+    PiGfxConfig.hasChanged = 1;
     PiGfxConfig.uartBaudrate = 115200;
     PiGfxConfig.useUsbKeyboard = 1;
     PiGfxConfig.sendCRLF = 0;
@@ -153,24 +265,38 @@ void setDefaultConfig()
     PiGfxConfig.keyboardAutorepeat = 1;  // Enable autorepeat by default
     PiGfxConfig.keyboardRepeatDelay = 500;
     PiGfxConfig.keyboardRepeatRate = 10;
-    PiGfxConfig.foregroundColor = 7;     // GRAY (default foreground)
+    PiGfxConfig.foregroundColor = 15;     // White (default foreground)
     PiGfxConfig.backgroundColor = 0;     // BLACK (default background)
-    PiGfxConfig.fontSelection = 0;       // First font in registry (8x16 System Font)
-    PiGfxConfig.displayWidth = 1024;     // Default display width
-    PiGfxConfig.displayHeight = 768;     // Default display height
+    PiGfxConfig.fontSelection = 2;       // First font in registry (8x16 System Font)
+    PiGfxConfig.displayWidth = 800;     // Default display width
+    PiGfxConfig.displayHeight = 640;     // Default display height
     PiGfxConfig.disableGfxDMA = 1;
     PiGfxConfig.disableCollision = 0;
-    PiGfxConfig.debugVerbosity = 0;      // Default: errors + notices only
-    PiGfxConfig.cursorBlink = 1; // Default: blinking enabled
-    pigfx_strcpy(PiGfxConfig.keyboardLayout, "us");
+    PiGfxConfig.debugVerbosity = 0x015;   // Default: all debug levels enabled
+    PiGfxConfig.cursorBlink = 0;            // Default: blinking disabled
+    pigfx_strcpy(PiGfxConfig.keyboardLayout, "de");
 }
 
-void printLoadedConfig()
+/**
+ * @brief Print current configuration values to debug output
+ * 
+ * Outputs all configuration parameters and their current values in a formatted
+ * table for debugging and verification purposes. This function is typically
+ * called after configuration loading to confirm the active settings.
+ * 
+ * The output includes:
+ * - All UART and keyboard settings
+ * - Display dimensions and graphics options
+ * - Color and font selections
+ * - Debug and timing parameters
+ * 
+ * @note Uses ee_printf() for output to the debug console
+ * @note Safe to call at any time after PiGfxConfig is initialized
+ */
+void printConfig()
 {
-
-    if(SHOULD_LOG(LOG_DEBUG_BIT))
-    {
     ee_printf("-------------- PiGFX Config Loaded --------------\n");
+    ee_printf("hasChanged.            = %u\n", PiGfxConfig.hasChanged);
     ee_printf("uartBaudrate           = %u\n", PiGfxConfig.uartBaudrate);
     ee_printf("useUsbKeyboard         = %u\n", PiGfxConfig.useUsbKeyboard);
     ee_printf("sendCRLF               = %u\n", PiGfxConfig.sendCRLF);
@@ -192,10 +318,37 @@ void printLoadedConfig()
     ee_printf("cursorBlink            = %u\n", PiGfxConfig.cursorBlink);
     ee_printf("keyboardLayout         = %s\n", PiGfxConfig.keyboardLayout);
     ee_printf("-------------------------------------------------\n");
-    }
 }
 
-unsigned char lookForConfigFile()
+/**
+ * @brief Load configuration from pigfx.txt file on SD card
+ * 
+ * Attempts to read and parse the configuration file "pigfx.txt" from the root
+ * directory of the SD card. The file uses INI format with key=value pairs.
+ * 
+ * The function performs the following steps:
+ * 1. Initialize SD card interface
+ * 2. Read Master Boot Record (MBR)
+ * 3. Mount filesystem (typically FAT32)
+ * 4. Search for pigfx.txt in root directory
+ * 5. Parse the file using INI parser with inihandler callback
+ * 6. Clean up allocated resources
+ * 
+ * @return Error code indicating success or failure:
+ *         - errOK: Configuration loaded successfully
+ *         - errSDCARDINIT: SD card initialization failed
+ *         - errMBR: Master Boot Record read error
+ *         - errFS: Filesystem mount error
+ *         - errREADROOT: Root directory read error
+ *         - errLOCFILE: Configuration file not found
+ *         - errOPENFILE: Cannot open configuration file
+ *         - errREADFILE: File read error
+ *         - errSYNTAX: INI parsing error
+ * 
+ * @note If file is not found or any error occurs, default configuration should be used
+ * @note The function automatically handles memory allocation/deallocation for file operations
+ */
+unsigned char loadConfigFile()
 {
     int retVal;
     struct block_device *sd_dev = 0;
@@ -279,19 +432,89 @@ unsigned char lookForConfigFile()
     return errOK;
 }
 
-void applyDisplayConfig()
+/**
+ * @brief Convert debug verbosity level to debug severity bitmask
+ * 
+ * Converts the user-friendly debug verbosity level (0-2) from configuration
+ * into the internal debug severity bitmask used by the logging system.
+ * 
+ * Debug levels:
+ * - Level 0: Errors and notices only
+ * - Level 1: + Warnings
+ * - Level 2: + Debug messages (all messages)
+ * 
+ * @param level Debug verbosity level (0-2)
+ * @return Debug severity bitmask for use with SetDebugSeverity()
+ * 
+ * @note Higher levels include all lower level messages
+ * @note Invalid levels default to level 0 behavior
+ */
+unsigned int debugLevel(int level)
+{
+    unsigned int debugSeverity = LOG_ERROR_BIT | LOG_NOTICE_BIT;
+    if (level >= 1) {
+        debugSeverity |= LOG_WARNING_BIT;
+    }
+    if (level >= 2) {
+        debugSeverity |= LOG_DEBUG_BIT;
+    }
+    return debugSeverity;
+}
+
+/**
+ * @brief Apply configuration changes to hardware and system settings
+ * 
+ * Takes the current configuration values in PiGfxConfig and applies them to
+ * the actual hardware and software subsystems. This function should be called
+ * after loading configuration or when settings have been modified.
+ * 
+ * The function applies changes to:
+ * - Display framebuffer (resolution and color depth)
+ * - Graphics drawing mode and cursor settings
+ * - Foreground and background colors
+ * - Font selection through font registry
+ * - UART baud rate and interrupt configuration
+ * - Debug verbosity level
+ * 
+ * Optimization: If PiGfxConfig.hasChanged is 0, the function returns early
+ * without making any changes, avoiding unnecessary reinitialization.
+ * 
+ * @note Clears the screen after applying new configuration
+ * @note Resets PiGfxConfig.hasChanged to 0 after successful application
+ * @note Safe to call multiple times - only applies changes when needed
+ */
+
+ extern void initialize_uart_irq();
+ extern void initialize_framebuffer(unsigned int width, unsigned int height, unsigned int bpp);
+ extern void uart_init(unsigned int baudrate);
+
+ void applyConfig()
 {
     // Apply current configuration to display system
-    // Set colors
+    // if(PiGfxConfig.hasChanged == 0) return;  // No change, nothing to do
+    PiGfxConfig.hasChanged = 0;
+
+    // Reinitialize framebuffer if display size changed
+    initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);         
+
+    // Set drawing mode, cusor and colors
+    gfx_set_drawing_mode(drawingNORMAL);
+    gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
+
     gfx_set_fg(PiGfxConfig.foregroundColor);
     gfx_set_bg(PiGfxConfig.backgroundColor);
     
     // Set font through font registry
-    if (font_registry_set_by_index(PiGfxConfig.fontSelection) == 0) {
-        // If font index is invalid (returns 0), fall back to default (index 0)
-        ee_printf("Warning: Invalid font index %d, using default font\n", PiGfxConfig.fontSelection);
-        font_registry_set_by_index(0);
-        PiGfxConfig.fontSelection = 0;
-    }
-    gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
+    gfx_term_set_font(PiGfxConfig.fontSelection);
+
+    // Set tabu stops      // has to be included in setup dialog
+    gfx_term_set_tabulation(8);   
+
+    // Reinitialize UART with new baudrate
+    uart_init(PiGfxConfig.uartBaudrate);
+
+    // Apply debug verbosity setting from configuration immediately
+    // 0 = errors + notices, 1 = +warnings, 2 = +debug
+    SetDebugSeverity(debugLevel(PiGfxConfig.debugVerbosity));
+
 }

@@ -30,11 +30,11 @@ backgroundColor = 0         ; Default background color (0-255)
 cursorBlink = 1             ; Enable or disable cursor blinking (1=enabled, 0=disabled)
 
 ;; Fonts (0=8x16 System, 1=6x12 Spleen, 2=8x16 Spleen, 3=12x24 Spleen, 4=16x32 Spleen, 5=32x64 Spleen)
-fontSelection = 4           ; Font index (0-5)
+fontSelection = 3           ; Font index (0-5)
 
 ;; Resolution
-displayWidth = 1024         ; Width: 640 or 1024
-displayHeight = 768         ; Height: 480 or 768
+displayWidth = 800         ; Width: 640 or 1024
+displayHeight = 640         ; Height: 480 or 768
 
 ;; General Configuration
 disableGfxDMA = 1           ; Disable DMA acceleration (1=safer, 0=faster)

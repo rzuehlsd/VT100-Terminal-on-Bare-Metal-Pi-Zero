@@ -58,16 +58,18 @@
 #include "mmu.h"
 #include "../uspi/include/uspi.h"
 #include "font_registry.h"
+#include "../uspi/include/uspi.h"
+#include "uart.h"
 
 #define UART_BUFFER_SIZE 16384 /* 16k */
 
 // Direct usage of the new bitmap-based debug system
-// No wrapper macros needed - use LogDebug, LogError, LogNotice, LogWarning directly
+// No wrapper macros needed - use LogNotice, LogError, LogDebug, LogWarning directly
 
-// For SUCCESS messages, we use LogNotice with manual green color
+// For SUCCESS messages, we use LogDebug with manual green color
 #define SUCCESS_PRINTF(...) do { \
     gfx_set_fg(10); \
-    LogNotice(__VA_ARGS__); \
+    LogDebug(__VA_ARGS__); \
     gfx_set_fg(7); \
 } while(0)
 
@@ -75,6 +77,7 @@
 #define TEST_INIT
 
 unsigned int led_status = 0;
+unsigned long timer_ticks = 0;
 unsigned char usbKeyboardFound = 0;
 unsigned char ps2KeyboardFound = 0;
 volatile unsigned int* pUART0_DR;
@@ -122,9 +125,11 @@ static void _heartbeat_timer_handler( __attribute__((unused)) unsigned hnd,
         led_set(1);
         led_status = 1;
     }
+    timer_ticks++;
 
     attach_timer_handler( HEARTBEAT_FREQUENCY, _heartbeat_timer_handler, 0, 0 );
 }
+
 
 
 /**
@@ -222,11 +227,11 @@ void display_system_banner()
     gfx_term_putstring( "\n\n" ); 
     gfx_set_bg(BLUE);
     gfx_term_putstring( "\x1B[2K" ); // Render blue line at top
-    LogNotice(" ===  PiGFX %d.%d.%d  ===  Build %s", PIGFX_MAJVERSION, PIGFX_MINVERSION, PIGFX_BUILDVERSION, PIGFX_VERSION );
+    LogDebug(" ===  PiGFX %d.%d.%d  ===  Build %s", PIGFX_MAJVERSION, PIGFX_MINVERSION, PIGFX_BUILDVERSION, PIGFX_VERSION );
     gfx_term_putstring( "\x1B[2K" );
-    LogNotice(" Copyright (c) 2016 Filippo Bergamasco, 2018 F. Pierot, 2020 Ch. Lehner, 2025 R. Zuehlsdorff");
+    LogDebug(" Copyright (c) 2016 Filippo Bergamasco, 2018 F. Pierot, 2020 Ch. Lehner, 2025 R. Zuehlsdorff");
     gfx_term_putstring( "\x1B[2K" );
-    LogNotice("\n\n");
+    LogDebug("\n\n");
     gfx_set_bg(BLACK);
 }
 
@@ -279,11 +284,9 @@ void initialize_framebuffer(unsigned int width, unsigned int height, unsigned in
     }
 
     gfx_set_env( p_fb, v_w, v_h, bpp, pitch, fbsize );
-    gfx_set_drawing_mode(drawingNORMAL);
-    gfx_term_set_tabulation(8);
-    //font_registry_init();
-    //gfx_term_set_font(0);  // Set Default font (8x16)   
-    gfx_clear();
+    // gfx_set_drawing_mode(drawingNORMAL);
+    // gfx_term_set_tabulation(8);   
+    // gfx_clear();
 }
 
 
@@ -312,7 +315,7 @@ void initialize_framebuffer(unsigned int width, unsigned int height, unsigned in
 
 void term_main_loop()
 {
-    LogNotice("Waiting for UART data (%d baud).\n",PiGfxConfig.uartBaudrate);
+    LogDebug("Waiting for UART data (%d baud).\n",PiGfxConfig.uartBaudrate);
 
 
     /**/
@@ -327,9 +330,6 @@ void term_main_loop()
         else if (usbKeyboardFound) fUpdateKeyboardLeds(1);
     }
     /**/
-
-    // Now we can safely apply user defined settings
-    // applyDisplayConfig();
 
 
     // Clear entire screen and position cursor at home
@@ -390,6 +390,80 @@ void term_main_loop()
 }
 
 /**
+ * @brief Initialize keyboard subsystem (PS/2 and USB)
+ * 
+ * This function initializes the keyboard input system by attempting to detect
+ * and configure both PS/2 and USB keyboards. It follows a prioritized approach:
+ * 1. First attempts to initialize PS/2 keyboard
+ * 2. If PS/2 fails and USB is enabled, initializes USB keyboard subsystem
+ * 
+ * The function:
+ * - Initializes PS/2 interface and checks for connected keyboard
+ * - Sets up keyboard layout from configuration if PS/2 keyboard found
+ * - Falls back to USB initialization on Raspberry Pi models < 4 if enabled
+ * - Registers USB keyboard event handlers when USB keyboard detected
+ * - Provides debug logging for each initialization step
+ * 
+ * @note PS/2 keyboard takes priority over USB keyboard
+ * @note USB keyboard support is only available on Raspberry Pi models < 4
+ * @note USB keyboard initialization requires USPi library
+ * @note Keyboard layout is configured from PiGfxConfig.keyboardLayout
+ * 
+ * @see initPS2() for PS/2 initialization details
+ * @see USPiInitialize() for USB subsystem initialization
+ */
+void init_keyboard(void)
+{
+    LogDebug("Initializing PS/2:\n");
+    if (initPS2() == 0)
+    {
+        ps2KeyboardFound = 1;
+        fInitKeyboard(PiGfxConfig.keyboardLayout);
+        SUCCESS_PRINTF("PS/2 keyboard found.\n");
+    }
+    else
+    {
+        LogDebug("PS/2 keyboard not detected.\n");
+    }
+
+#if RPI<4
+    if ((PiGfxConfig.useUsbKeyboard) && (ps2KeyboardFound == 0))
+    {
+        LogDebug("Initializing USB:\n");
+
+        if( USPiInitialize() )
+        {
+            LogDebug("Initialization OK!\n");
+            LogDebug("Checking for keyboards: ");
+
+            if ( USPiKeyboardAvailable () )
+            {
+                fInitKeyboard(PiGfxConfig.keyboardLayout);
+                USPiKeyboardRegisterKeyStatusHandlerRaw(KeyStatusHandlerRaw);
+                usbKeyboardFound = 1;
+                SUCCESS_PRINTF("USB keyboard found.\n");
+            }
+            else
+            {
+                LogDebug("USB keyboard not detected.\n");
+            }
+        }
+        else
+        {
+            LogError("USB initialization failed.\n");
+        }
+    }
+    else if (!PiGfxConfig.useUsbKeyboard)
+    {
+        LogDebug("USB keyboard disabled in config.\n");
+    }
+#endif
+
+}
+
+
+
+/**
  * @brief Main system entry point and initialization sequence
  * 
  * This is the primary entry function called by the boot loader after basic
@@ -407,25 +481,20 @@ void term_main_loop()
  * - Detects Raspberry Pi board type and revision
  * - Configures activity LED based on board type
  * - Starts timer system and heartbeat LED blinking
- * 
- * PHASE 3 - Safe Display Initialization:
- * - Applies safe configuration to prevent display issues
  * - Initializes framebuffer with safe resolution (640x480)
+ * - Initializes keyboard subsystem (PS/2 and USB)
  * - Sets up font registry with built-in fonts
- * - Displays system banner and version information
  * 
- * PHASE 4 - User Configuration Loading:
+ * PHASE 3 - User Specific Initialization:
  * - Attempts to load user settings from pigfx.txt
+ * - if loading fails, applies default configuration
+ * - Prints loaded configuration to debug log
+ * - Applies user configuration to display and system settings
  * - Reinitializes display if resolution changed
  * - Configures UART with user-specified baud rate
+ * - Configures debug logging severity based on user settings
  * 
- * PHASE 5 - Peripheral Initialization:
- * - Detects and initializes PS/2 keyboard if present
- * - Initializes USB system and detects USB keyboards (Pi 1-3)
- * - Sets up keyboard layout and LED indicators
- * 
- * PHASE 6 - Final Setup:
- * - Displays startup logo if enabled
+ * PHASE 4 - Main Terminal Loop:
  * - Enters main terminal processing loop
  * 
  * @param r0    ARM register r0 from boot loader (unused)
@@ -450,152 +519,94 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
 
     // PHASE 1 - Critical System Setup:
 
-    // clear BSS
-    extern unsigned char __bss_start;
-    extern unsigned char _end;
-    for (unsigned char *pBSS = &__bss_start; pBSS < &_end; pBSS++)
-    {
-        *pBSS = 0;
-    }
-
-    // Heap init
-    unsigned int memSize = ARM_MEMSIZE-MEM_HEAP_START;
-    nmalloc_set_memory_area( (unsigned char*)MEM_HEAP_START, memSize);
-
-
-    // UART buffer allocation
-    uart_buffer = (volatile char*)nmalloc_malloc( UART_BUFFER_SIZE );
-    uart_init(115200);
-
-
-    // Initialize debug system - enable all debug levels during early boot
-    // This will be reconfigured after loading user settings from pigfx.txt
-    SetDebugSeverity(LOG_ERROR_BIT | LOG_NOTICE_BIT | LOG_WARNING_BIT | LOG_DEBUG_BIT);
-
-    // Init Pagetable
-    CreatePageTable(ARM_MEMSIZE);
-    EnableMMU();
-
-    // PHASE 2 - Hardware Discovery and Setup:
-
-    // Get informations about the board we are booting
-    boardRevision = prop_revision();
-    raspiBoard = board_info(boardRevision);
-    prop_ARMRAM(&ArmRam);
-
-    // Where is the Act LED?
-    led_init(raspiBoard);
-
-    // Timers and heartbeat
-    timers_init();
-    attach_timer_handler( HEARTBEAT_FREQUENCY, _heartbeat_timer_handler, 0, 0 );
-
-
-    // PHASE 3 - Safe Display Initialization:
-
-    // Initialize font registry system BEFORE applying any display configuration
-    font_registry_init();   // register build in fonts
-    gfx_register_builtin_fonts();
-
-    setDefaultConfig();
-
-    // Initialize framebuffer with safe resolution (640x480)
-    initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);
-
-    
-    gfx_term_set_font(1);   // Set Default font (8x16)
-
-    gfx_term_putstring((const char*)"\nBooting PiGFX...\n");
-
-    
-
-    LogDebug("\nBooting on Raspberry Pi %s, %s, %iMB ARM RAM\n", 
-             board_model(raspiBoard.model), 
-             board_processor(raspiBoard.processor), 
-             ArmRam.size);
-
-
-
-    // PHASE 4 - User Configuration Loading:
-    LogDebug("Initializing filesystem:\n");
-    
-    lookForConfigFile();            // Try to load user config file
-
-    LogNotice("Filesystem initialized.\n");
-
- 
-    // Apply debug verbosity setting from configuration immediately
-    // 0 = errors + notices, 1 = +warnings, 2 = +debug
-    unsigned int debugSeverity = LOG_ERROR_BIT | LOG_NOTICE_BIT;
-    if (PiGfxConfig.debugVerbosity >= 1) {
-        debugSeverity |= LOG_WARNING_BIT;
-    }
-    if (PiGfxConfig.debugVerbosity >= 2) {
-        debugSeverity |= LOG_DEBUG_BIT;
-    }
-    SetDebugSeverity(debugSeverity);
-    LogNotice("Debug verbosity set to level %d\n", PiGfxConfig.debugVerbosity);
-    
-
-
-    // PHASE 5 - Peripheral Initialization:
-
-    uart_init(PiGfxConfig.uartBaudrate);
-    initialize_uart_irq();
-
-    LogDebug("Initializing PS/2:\n");
-    if (initPS2() == 0)
-    {
-        ps2KeyboardFound = 1;
-        fInitKeyboard(PiGfxConfig.keyboardLayout);
-        SUCCESS_PRINTF("PS/2 keyboard found.\n");
-    }
-    else
-    {
-        LogNotice("PS/2 keyboard not detected.\n");
-    }
-
-#if RPI<4
-    if ((PiGfxConfig.useUsbKeyboard) && (ps2KeyboardFound == 0))
-    {
-        LogDebug("Initializing USB:\n");
-
-        if( USPiInitialize() )
+        // clear BSS
+        extern unsigned char __bss_start;
+        extern unsigned char _end;
+        for (unsigned char *pBSS = &__bss_start; pBSS < &_end; pBSS++)
         {
-            LogDebug("Initialization OK!\n");
-            LogDebug("Checking for keyboards: ");
+            *pBSS = 0;
+        }
 
-            if ( USPiKeyboardAvailable () )
-            {
-                fInitKeyboard(PiGfxConfig.keyboardLayout);
-                USPiKeyboardRegisterKeyStatusHandlerRaw(KeyStatusHandlerRaw);
-                usbKeyboardFound = 1;
-                SUCCESS_PRINTF("USB keyboard found.\n");
-            }
-            else
-            {
-                LogNotice("USB keyboard not detected.\n");
-            }
+        // Heap init
+        unsigned int memSize = ARM_MEMSIZE-MEM_HEAP_START;
+        nmalloc_set_memory_area( (unsigned char*)MEM_HEAP_START, memSize);
+
+        // UART buffer allocation
+        uart_buffer = (volatile char*)nmalloc_malloc( UART_BUFFER_SIZE );
+        uart_init(115200);
+        initialize_uart_irq();
+
+        // Init Pagetable
+        CreatePageTable(ARM_MEMSIZE);
+        EnableMMU();
+    
+
+    // PHASE 2 - Hardware Discovery and Initial Setup:
+
+        // Get informations about the board we are booting
+        boardRevision = prop_revision();
+        raspiBoard = board_info(boardRevision);
+        prop_ARMRAM(&ArmRam);
+
+        // Where is the Act LED?
+        led_init(raspiBoard);
+
+        // Timers and heartbeat
+        timers_init();
+        attach_timer_handler( HEARTBEAT_FREQUENCY, _heartbeat_timer_handler, 0, 0 );
+
+        // Initialize font registry system BEFORE applying any display configuration
+        font_registry_init();   
+        gfx_register_builtin_fonts();
+
+        // Initialize framebuffer with safe resolution (1024x768)
+        //initialize_framebuffer(1024, 768, 8);
+        
+        // set the default configuration
+        setDefaultConfig();
+        applyConfig();
+        LogNotice("Framebuffer initialized. Now we can print to screen!\n");
+
+        // display_system_banner();
+
+        LogNotice("\nBooting on Raspberry Pi %s, %s, %iMB ARM RAM\n", 
+                board_model(raspiBoard.model), 
+                board_processor(raspiBoard.processor), 
+                ArmRam.size);
+
+        
+        // init keyboard system (PS/2 and USB)
+        LogNotice("Initializing keyboard system:\n");
+        init_keyboard();
+
+        LogNotice("Hardware Discovery and Initial Setup complete.\n");
+        
+        
+
+    // PHASE 3 - User Specific Initialization:
+
+        LogNotice("Reading configuration file:\n");
+
+        int ret = 0;
+        ret = loadConfigFile();
+        if(ret != 0)            // Try to load user config file
+        {
+            LogNotice("Could not load configuration file. Error %d.\n", ret);
+            setDefaultConfig();
         }
         else
-        {
-            LogError("USB initialization failed.\n");
-        }
-    }
-    else if (!PiGfxConfig.useUsbKeyboard)
-    {
-        LogNotice("USB keyboard disabled in config.\n");
-    }
-#endif
+            LogNotice("Configuration loaded from file.\n");
+     
+        printConfig();
+
+        LogNotice("Setting user configuration.\n");
+        // applyConfig();
+    
 
 
-    // PHASE 6 - Final Setup:
-
-    gfx_set_drawing_mode(drawingNORMAL);
-    gfx_set_fg(GRAY);
-
-    printLoadedConfig();
-
-    SUCCESS_PRINTF("Initialization completed.\n");
-    term_main_loop();
+    // PHASE 4 - Setup Complete - Go to Loop:
+ 
+        LogNotice("Initialization completed.\n");
+    
+        term_main_loop();
 }

@@ -84,12 +84,30 @@ static const unsigned int resolution_heights[] = {
 static const unsigned int num_resolutions = sizeof(available_resolutions) / sizeof(available_resolutions[0]);
 
 // Font switching function that uses font registry
+/**
+ * @brief Switch to a specific font by registry index
+ * 
+ * Changes the current font to the one specified by the font registry index.
+ * Used during setup mode to preview different fonts.
+ * 
+ * @param font_index Index of the font in the font registry
+ */
 static void switch_to_font_by_index(int font_index)
 {
     gfx_term_set_font(font_index);
 }
 
 // Helper function to draw text at specific position without affecting cursor
+/**
+ * @brief Draw text at specified terminal position
+ * 
+ * Renders text at the given row and column position using terminal coordinates.
+ * Uses the current foreground and background colors.
+ * 
+ * @param row Terminal row position (0-based)
+ * @param col Terminal column position (0-based)
+ * @param text Null-terminated string to display
+ */
 static void draw_text_at(unsigned int row, unsigned int col, const char* text)
 {
     const char* p = text;
@@ -103,6 +121,18 @@ static void draw_text_at(unsigned int row, unsigned int col, const char* text)
 }
 
 // Helper function to draw text with background clearing
+/**
+ * @brief Draw text with background clearing to specified length
+ * 
+ * Renders text at the given position and clears the background to the specified
+ * length with space characters. This ensures clean display when overwriting
+ * existing text with shorter text.
+ * 
+ * @param row Terminal row position (0-based)
+ * @param col Terminal column position (0-based)
+ * @param text Null-terminated string to display
+ * @param length Total length to clear (text + trailing spaces)
+ */
 static void draw_text_at_with_bg(unsigned int row, unsigned int col, const char* text, unsigned int length)
 {
     const char* p = text;
@@ -128,6 +158,16 @@ static void draw_text_at_with_bg(unsigned int row, unsigned int col, const char*
 }
 
 // Helper function to draw integer at specific position
+/**
+ * @brief Draw integer value at specified terminal position
+ * 
+ * Converts an unsigned integer to string and displays it at the given
+ * row and column position using current colors.
+ * 
+ * @param row Terminal row position (0-based)
+ * @param col Terminal column position (0-based) 
+ * @param value Unsigned integer value to display
+ */
 static void draw_int_at(unsigned int row, unsigned int col, unsigned int value)
 {
     char buffer[16];
@@ -152,6 +192,18 @@ static void draw_int_at(unsigned int row, unsigned int col, unsigned int value)
 }
 
 // Helper function to draw integer with background clearing
+/**
+ * @brief Draw integer value with background clearing
+ * 
+ * Converts an unsigned integer to string and displays it with background
+ * clearing to the specified length. This prevents visual artifacts when
+ * overwriting longer numbers with shorter ones.
+ * 
+ * @param row Terminal row position (0-based)
+ * @param col Terminal column position (0-based)
+ * @param value Unsigned integer value to display
+ * @param length Total field length to clear with spaces
+ */
 static void draw_int_at_with_bg(unsigned int row, unsigned int col, unsigned int value, unsigned int length)
 {
     char buffer[16];
@@ -176,6 +228,14 @@ static void draw_int_at_with_bg(unsigned int row, unsigned int col, unsigned int
 }
 
 // Find current baudrate index in available_baudrates array
+/**
+ * @brief Find index of current baud rate in available options
+ * 
+ * Searches the available_baudrates array to find the index that matches
+ * the current UART baud rate configuration.
+ * 
+ * @return Index in available_baudrates array, or 0 if not found
+ */
 static unsigned int find_current_baudrate_index(void)
 {
     unsigned int current_baudrate = PiGfxConfig.uartBaudrate;
@@ -191,6 +251,14 @@ static unsigned int find_current_baudrate_index(void)
 }
 
 // Find current keyboard layout index in available_keyboards array
+/**
+ * @brief Find index of current keyboard layout in available options
+ * 
+ * Searches the available_keyboards array to find the index that matches
+ * the current keyboard layout configuration.
+ * 
+ * @return Index in available_keyboards array, or 0 if not found
+ */
 static unsigned int find_current_keyboard_index(void)
 {
     for (unsigned int i = 0; i < num_keyboards; i++)
@@ -206,6 +274,14 @@ static unsigned int find_current_keyboard_index(void)
 }
 
 // Find current foreground color index in available_colors array
+/**
+ * @brief Find index of current foreground color in available options
+ * 
+ * Searches the available_colors array to find the index that matches
+ * the current foreground color setting.
+ * 
+ * @return Index in available_colors array, or 0 if not found
+ */
 static unsigned int find_current_fg_color_index(void)
 {
     GFX_COL current_fg = gfx_get_fg();
@@ -221,6 +297,14 @@ static unsigned int find_current_fg_color_index(void)
 }
 
 // Find current background color index in available_colors array
+/**
+ * @brief Find index of current background color in available options
+ * 
+ * Searches the available_colors array to find the index that matches
+ * the current background color setting.
+ * 
+ * @return Index in available_colors array, or 0 if not found
+ */
 static unsigned int find_current_bg_color_index(void)
 {
     GFX_COL current_bg = gfx_get_bg();
@@ -236,6 +320,14 @@ static unsigned int find_current_bg_color_index(void)
 }
 
 // Find current resolution index based on config
+/**
+ * @brief Find index of current display resolution in available options
+ * 
+ * Searches the available_resolutions array to find the index that matches
+ * the current display width and height configuration.
+ * 
+ * @return Index in available_resolutions array, or 0 if not found
+ */
 static unsigned int find_current_resolution_index(void)
 {
     for (unsigned int i = 0; i < num_resolutions; i++)
@@ -250,6 +342,29 @@ static unsigned int find_current_resolution_index(void)
     return 1;
 }
 
+/**
+ * @brief Enter setup/configuration mode
+ * 
+ * Activates the interactive setup mode where users can configure PiGFX settings
+ * using keyboard navigation. This function:
+ * - Saves current terminal state (cursor, colors, font, screen content)
+ * - Initializes setup menu state with current configuration values
+ * - Disables keyboard autorepeat to prevent navigation issues
+ * - Switches to a suitable dialog font for the setup interface
+ * - Saves screen buffer for restoration when exiting setup mode
+ * 
+ * The setup mode allows configuration of:
+ * - UART baud rate
+ * - Keyboard layout  
+ * - Foreground/background colors
+ * - Font selection
+ * - Display resolution
+ * - Cursor blinking
+ * - Keyboard repeat settings
+ * 
+ * @note Only enters setup mode if not already active
+ * @note Screen buffer saving may fail on memory constraints
+ */
 void setup_mode_enter(void)
        
 {
@@ -308,6 +423,25 @@ void setup_mode_enter(void)
     }
 }
 
+/**
+ * @brief Exit setup mode and restore previous state
+ * 
+ * Deactivates setup mode and restores the terminal to its previous state
+ * before setup mode was entered. This function:
+ * - Restores original font, colors, and cursor settings
+ * - Applies any configuration changes made during setup
+ * - Restores screen content from saved buffer (if available)
+ * - Re-enables keyboard autorepeat if it was enabled
+ * - Clears any setup mode visual artifacts
+ * 
+ * If the user made changes during setup mode (settings_changed flag),
+ * the new configuration is applied and saved. If no changes were made,
+ * the original settings are preserved.
+ * 
+ * @note Only exits if setup mode is currently active
+ * @note Screen restoration may fail if buffer was not saved
+ * @note Configuration changes are applied immediately
+ */
 void setup_mode_exit(void)
 {
     if (setup_mode_active)
@@ -353,11 +487,48 @@ void setup_mode_exit(void)
     }
 }
 
+/**
+ * @brief Check if setup mode is currently active
+ * 
+ * Returns the current state of setup mode. Used by other parts of the system
+ * to determine if they should handle input differently or avoid interfering
+ * with setup mode operations.
+ * 
+ * @return 1 if setup mode is active, 0 if inactive
+ */
 unsigned char setup_mode_is_active(void)
 {
     return setup_mode_active;
 }
 
+/**
+ * @brief Handle keyboard input in setup mode
+ * 
+ * Processes keyboard input when setup mode is active, implementing the
+ * navigation and configuration interface. Supported keys:
+ * 
+ * Navigation:
+ * - UP/DOWN arrows: Navigate between configuration items
+ * - LEFT/RIGHT arrows: Change values for selected item
+ * 
+ * Actions:
+ * - ENTER: Apply changes and exit setup mode
+ * - ESC: Cancel changes and exit setup mode
+ * 
+ * The function handles value cycling for each configuration type:
+ * - Baud rates: Cycles through predefined values
+ * - Keyboard layouts: Cycles through available layouts  
+ * - Colors: Cycles through color palette
+ * - Fonts: Cycles through font registry
+ * - Resolution: Cycles through supported resolutions
+ * - Boolean settings: Toggles between enabled/disabled
+ * 
+ * @param key Raw keyboard scancode/keycode
+ * 
+ * @note Only processes input if setup mode is active
+ * @note Sets needs_redraw flag when display updates are required
+ * @note Tracks configuration changes with settings_changed flag
+ */
 void setup_mode_handle_key(unsigned short key)
 {
     if (!setup_mode_active) return;
@@ -705,6 +876,30 @@ void setup_mode_handle_key(unsigned short key)
     }
 }
 
+/**
+ * @brief Render the setup mode user interface
+ * 
+ * Draws the complete setup mode interface on the screen, including:
+ * - Configuration menu with all available options
+ * - Current values for each configuration parameter
+ * - Visual highlighting of the currently selected item
+ * - Instructions for navigation and control keys
+ * - Real-time preview of color and font changes
+ * 
+ * The interface layout includes:
+ * - Title bar with "PiGFX Setup Mode"
+ * - Menu items with current values (Baudrate, Keyboard, Colors, etc.)
+ * - Selected item highlighted with different colors
+ * - Help text showing available key commands
+ * 
+ * The function automatically adapts to different screen sizes and
+ * positions the dialog centrally. It saves and restores background
+ * colors to avoid interfering with preview colors.
+ * 
+ * @note Only draws if setup mode is active and needs_redraw flag is set
+ * @note Resets needs_redraw flag after successful rendering
+ * @note Uses current font for display (typically dialog font)
+ */
 void setup_mode_draw(void)
 {
     unsigned int screen_width, screen_height;
