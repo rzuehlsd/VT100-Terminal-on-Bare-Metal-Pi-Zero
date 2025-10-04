@@ -319,14 +319,6 @@ void gfx_set_env( void* p_framebuffer, unsigned int width, unsigned int height, 
     // store reverse state to 'normal'
     ctx.reverse = 0;
 
-    // set default colors
-    gfx_set_default_fg(GRAY);
-    gfx_set_default_bg(BLUE);
-
-    // set colors
-    gfx_set_fg(ctx.default_fg);
-    gfx_set_bg(ctx.default_bg);
-
     ctx.paletteloader.pCustPal = fb_get_cust_pal_p();
 
     gfx_term_render_cursor();
@@ -1821,8 +1813,6 @@ void gfx_term_set_font(int font_type)
         ctx.term.FONTHEIGHT = fontInfo->height;
         ctx.term.font_getglyph = fontInfo->get_glyph;
         gfx_compute_font();
-        gfx_term_move_cursor(0,0);
-        gfx_term_clear_screen();
     }
 }
 

@@ -265,14 +265,14 @@ void setDefaultConfig()
     PiGfxConfig.keyboardAutorepeat = 1;  // Enable autorepeat by default
     PiGfxConfig.keyboardRepeatDelay = 500;
     PiGfxConfig.keyboardRepeatRate = 10;
-    PiGfxConfig.foregroundColor = 15;     // White (default foreground)
+    PiGfxConfig.foregroundColor = 11;     // Yellow (default foreground)
     PiGfxConfig.backgroundColor = 0;     // BLACK (default background)
     PiGfxConfig.fontSelection = 2;       // First font in registry (8x16 System Font)
     PiGfxConfig.displayWidth = 800;     // Default display width
     PiGfxConfig.displayHeight = 640;     // Default display height
     PiGfxConfig.disableGfxDMA = 1;
     PiGfxConfig.disableCollision = 0;
-    PiGfxConfig.debugVerbosity = 0x015;   // Default: all debug levels enabled
+    PiGfxConfig.debugVerbosity = 2;     // Default: all debug levels enabled
     PiGfxConfig.cursorBlink = 0;            // Default: blinking disabled
     pigfx_strcpy(PiGfxConfig.keyboardLayout, "de");
 }
@@ -491,8 +491,8 @@ unsigned int debugLevel(int level)
  void applyConfig()
 {
     // Apply current configuration to display system
-    // if(PiGfxConfig.hasChanged == 0) return;  // No change, nothing to do
-    PiGfxConfig.hasChanged = 0;
+    if(PiGfxConfig.hasChanged == 0) return;  // No change, nothing to do
+        PiGfxConfig.hasChanged = 0;
 
     // Reinitialize framebuffer if display size changed
     initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);         

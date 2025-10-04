@@ -68,9 +68,7 @@
 
 // For SUCCESS messages, we use LogDebug with manual green color
 #define SUCCESS_PRINTF(...) do { \
-    gfx_set_fg(10); \
     LogDebug(__VA_ARGS__); \
-    gfx_set_fg(7); \
 } while(0)
 
 
@@ -284,9 +282,6 @@ void initialize_framebuffer(unsigned int width, unsigned int height, unsigned in
     }
 
     gfx_set_env( p_fb, v_w, v_h, bpp, pitch, fbsize );
-    // gfx_set_drawing_mode(drawingNORMAL);
-    // gfx_term_set_tabulation(8);   
-    // gfx_clear();
 }
 
 
@@ -419,7 +414,7 @@ void init_keyboard(void)
     {
         ps2KeyboardFound = 1;
         fInitKeyboard(PiGfxConfig.keyboardLayout);
-        SUCCESS_PRINTF("PS/2 keyboard found.\n");
+        LogNotice("PS/2 keyboard found.\n");
     }
     else
     {
@@ -441,7 +436,7 @@ void init_keyboard(void)
                 fInitKeyboard(PiGfxConfig.keyboardLayout);
                 USPiKeyboardRegisterKeyStatusHandlerRaw(KeyStatusHandlerRaw);
                 usbKeyboardFound = 1;
-                SUCCESS_PRINTF("USB keyboard found.\n");
+                LogNotice("USB keyboard found.\n");
             }
             else
             {
@@ -458,7 +453,6 @@ void init_keyboard(void)
         LogDebug("USB keyboard disabled in config.\n");
     }
 #endif
-
 }
 
 
@@ -559,13 +553,11 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
         font_registry_init();   
         gfx_register_builtin_fonts();
 
-        // Initialize framebuffer with safe resolution (1024x768)
-        //initialize_framebuffer(1024, 768, 8);
-        
-        // set the default configuration
+        // set and apply the default configuration
         setDefaultConfig();
         applyConfig();
-        LogNotice("Framebuffer initialized. Now we can print to screen!\n");
+
+        LogNotice("Framebuffer is initialized. Now we can print to screen!\n");
 
         // display_system_banner();
 
@@ -599,10 +591,9 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
      
         printConfig();
 
-        LogNotice("Setting user configuration.\n");
-        // applyConfig();
+        // LogNotice("Setting user configuration.\n");
+        applyConfig();
     
-
 
     // PHASE 4 - Setup Complete - Go to Loop:
  

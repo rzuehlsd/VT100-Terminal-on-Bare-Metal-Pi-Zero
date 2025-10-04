@@ -701,24 +701,6 @@ void LogWriteInternal (unsigned Severity,
   ee_vsprintf(buf, fmt, args);
   va_end(args);
 
-  // Set appropriate colors for different severity levels
-  switch( Severity )
-  {
-      case LOG_ERROR_BIT:
-          gfx_set_fg(12);  // RED
-          break;
-      case LOG_WARNING_BIT:
-          gfx_set_fg(14);  // YELLOW
-          break;
-      case LOG_NOTICE_BIT:
-          gfx_set_fg(7);   // GRAY (normal)
-          break;
-      case LOG_DEBUG_BIT:
-          gfx_set_fg(8);   // DARKGRAY
-          break;
-      default:
-          gfx_set_fg(7);   // GRAY (fallback)
-  }
 
   DO_LOG_STRING( "[" );
   switch( Severity )
@@ -762,8 +744,6 @@ void LogWriteInternal (unsigned Severity,
   DO_LOG_STRING( buf );
   DO_LOG_STRING( "\n" );
   
-  // Restore normal color
-  gfx_set_fg(7);  // GRAY
 }
 
 void ee_printf(const char *fmt, ...)
