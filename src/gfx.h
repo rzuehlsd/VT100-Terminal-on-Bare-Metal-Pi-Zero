@@ -89,6 +89,8 @@ extern void gfx_register_builtin_fonts(void);
 extern void gfx_term_set_font(int font_type);
 extern int gfx_term_get_font(void);
 
+extern void gfx_term_set_font_by_type(int font_type);
+extern int gfx_term_get_font_type(void);
 extern void gfx_term_set_tabulation(int width);
 extern GFX_COL gfx_get_fg();
 extern GFX_COL gfx_get_bg();

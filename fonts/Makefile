@@ -5,7 +5,7 @@ BIN_DIR := bin
 PNGS := $(wildcard $(PNG_DIR)/*.png)
 BINS := $(patsubst $(PNG_DIR)/%.png, $(BIN_DIR)/%.bin, $(PNGS))
 
-all: buildfont $(BINS) ../src/binary_assets.s ../src/buildin_fonts.h
+all: buildfont $(BINS) ../src/binary_assets.s ../src/buildin_fonts.inc
 
 buildfont: src/buildfont.cpp src/CImg.h
 	g++ src/buildfont.cpp -o buildfont
@@ -18,7 +18,7 @@ $(BIN_DIR)/%.bin: $(PNG_DIR)/%.png buildfont
 ../src/binary_assets.s: $(BINS)
 	python3 src/gen_bin_assets.py $(BINS) > ./src/binary_assets.s
 
-../src/buildin_fonts.h: $(BINS)
+../src/buildin_fonts.inc: $(BINS)
 	python3 src/gen_buildin_inc.py $(BINS) > ./src/buildin_fonts.inc
 
 clean:

@@ -5,7 +5,6 @@
 
 #define PIGFX_VERSION           "$VERSION$"
 #define FRAMEBUFFER_DEBUG       OFF             /* Log framebuffer operations to UART */
-#define SYSTEM_DEBUG            OFF             /* Show system initialization messages */
 #define HEARTBEAT_FREQUENCY     1               /* Status led blink frequency in Hz */
 
 #define PIGFX_MAJVERSION        1               /* Major version number */
@@ -18,13 +17,6 @@
 1.1.1  fix for 1-based coordinates in ESC H command instead of 0-based
 1.1.2  fix for reversed row/col parameter index in ESC H command
 
-Debug System:
-- Set SYSTEM_DEBUG to ON to show detailed initialization messages (color palette, hardware info, verbose USB messages)
-- Set SYSTEM_DEBUG to OFF for clean boot with essential status messages only
-- Essential messages always shown: filesystem init, PS/2 status, USB status, keyboard detection, UART ready
-- Error messages are always shown regardless of debug setting
-
 */
 
 #endif
-

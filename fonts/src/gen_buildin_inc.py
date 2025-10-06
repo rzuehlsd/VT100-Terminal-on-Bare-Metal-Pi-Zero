@@ -1,7 +1,7 @@
 import os
 
 BIN_DIR = "bin"
-OUTFILE = "../src/buildin_fonts.h"
+OUTFILE = "../src/buildin_fonts.inc"
 
 def font_symbol_name(bin_filename):
     # Example: spleen-6x12.bin -> G_SPLEEN6X12_GLYPHS

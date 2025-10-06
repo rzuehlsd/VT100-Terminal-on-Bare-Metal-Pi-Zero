@@ -1,1 +1,1 @@
-Wrote ../src/buildin_fonts.h with 3 font entries.
+Wrote ../src/buildin_fonts.inc with 4 font entries.

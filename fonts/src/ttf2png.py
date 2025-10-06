@@ -4,9 +4,9 @@ import argparse
 from PIL import Image, ImageDraw, ImageFont
 
 parser = argparse.ArgumentParser(description="Render ASCII table to PNG.")
-parser.add_argument('--cell-width', type=int, default=20, help='Width of each cell in pixels')
-parser.add_argument('--cell-height', type=int, default=40, help='Height of each cell in pixels')
-parser.add_argument('--font-size', type=int, default=40, help='Font size')
+parser.add_argument('--cell-width', type=int, default=12, help='Width of each cell in pixels')
+parser.add_argument('--cell-height', type=int, default=24, help='Height of each cell in pixels')
+parser.add_argument('--font-size', type=int, default=24, help='Font size')
 parser.add_argument('--font-path', type=str, default="/Users/rz/Library/Fonts/Glass_TTY_VT220.ttf", help='Path to TTF font')
 parser.add_argument('--output', type=str, default="ascii_table.png", help='Output PNG filename')
 args = parser.parse_args()
@@ -26,10 +26,10 @@ output_file = args.output
 num_chars = end_code - start_code + 1
 rows = (num_chars + cols - 1) // cols
 
-# Create image
+# Create image in 1-bit mode (black and white only)
 img_width = cols * cell_width
 img_height = rows * cell_height
-image = Image.new("RGB", (img_width, img_height), "black")
+image = Image.new("1", (img_width, img_height), 0)  # "1" = 1-bit pixels, 0 = black
 draw = ImageDraw.Draw(image)
 
 # Load font
@@ -46,9 +46,9 @@ for i, code in enumerate(range(start_code, end_code + 1)):
     x = col * cell_width
     y = row * cell_height
     ch = chr(code)
-    draw.text((x, y), ch, font=font, fill="white")
+    draw.text((x, y), ch, font=font, fill=1)  # fill=1 means white in 1-bit mode
     # Optionally, draw the code below the character:
-    # draw.text((x, y + font_size), str(code), font=font, fill="gray")
+    # draw.text((x, y + font_size), str(code), font=font, fill=1)
 
 # Save image
 image.save(output_file)

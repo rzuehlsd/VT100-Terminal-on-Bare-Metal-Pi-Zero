@@ -839,6 +839,12 @@ void setup_mode_handle_key(unsigned short key)
                 {
                     gfx_term_clear_screen();
                     gfx_term_move_cursor(1, 1); // Move to row 1, column 1 (top-left)
+                    
+                    // Properly set up cursor at new position
+                    gfx_term_save_cursor();  // Save content under cursor
+                    if (saved_cursor_visibility) {
+                        gfx_term_render_cursor();    // Show cursor if it should be visible
+                    }
                 }
                 // For color changes only, cursor stays at current position with new colors
             }
