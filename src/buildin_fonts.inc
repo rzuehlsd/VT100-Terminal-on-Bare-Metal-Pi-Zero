@@ -16,6 +16,6 @@ void gfx_register_builtin_fonts(void)
 
     font_registry_register("System 8x16", 8, 16, G_SYSTEM_8X16_GLYPHS, font_get_glyph_address);
     font_registry_register("System 8x24", 8, 24, G_SYSTEM_8X24_GLYPHS, font_get_glyph_address);
-    font_registry_register("Vt100 10x20", 10, 20, G_VT100_10X20_GLYPHS, font_get_glyph_address);
-    font_registry_register("Vt220 10x20", 10, 20, G_VT220_10X20_GLYPHS, font_get_glyph_address);
+    font_registry_register("VT100 10x20", 10, 20, G_VT100_10X20_GLYPHS, font_get_glyph_address);
+    font_registry_register("VT220 10x20", 10, 20, G_VT220_10X20_GLYPHS, font_get_glyph_address);
 }

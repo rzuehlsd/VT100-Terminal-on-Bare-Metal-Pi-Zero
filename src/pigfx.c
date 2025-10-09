@@ -326,9 +326,12 @@ void term_main_loop()
     }
     /**/
 
+    display_system_banner();
 
     // Clear entire screen and position cursor at home
     gfx_term_putstring( "\x1B[2J" );
+
+
 
     char strb[2] = {0,0};
 
@@ -566,12 +569,7 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
                 board_processor(raspiBoard.processor), 
                 ArmRam.size);
 
-        
-        // init keyboard system (PS/2 and USB)
-        LogNotice("Initializing keyboard system:\n");
-        init_keyboard();
-
-        LogNotice("Hardware Discovery and Initial Setup complete.\n");
+    LogNotice("Hardware Discovery and Initial Setup complete.\n");
         
         
 
@@ -589,10 +587,14 @@ void entry_point(unsigned int r0, unsigned int r1, unsigned int *atags)
         else
             LogNotice("Configuration loaded from file.\n");
      
-        printConfig();
+    printConfig();
 
-        // LogNotice("Setting user configuration.\n");
-        applyConfig();
+    LogNotice("Applying user configuration.\n");
+    applyConfig();
+
+    // Initialize keyboard system (PS/2 and/or USB) AFTER applying config
+    LogNotice("Initializing keyboard system:\n");
+    init_keyboard();
     
 
     // PHASE 4 - Setup Complete - Go to Loop:

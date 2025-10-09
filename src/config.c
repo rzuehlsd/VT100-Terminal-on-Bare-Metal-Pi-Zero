@@ -268,8 +268,8 @@ void setDefaultConfig()
     PiGfxConfig.foregroundColor = 11;     // Yellow (default foreground)
     PiGfxConfig.backgroundColor = 0;     // BLACK (default background)
     PiGfxConfig.fontSelection = 2;       // First font in registry (8x16 System Font)
-    PiGfxConfig.displayWidth = 800;     // Default display width
-    PiGfxConfig.displayHeight = 640;     // Default display height
+    PiGfxConfig.displayWidth = 1024;     // Default display width
+    PiGfxConfig.displayHeight = 768;     // Default display height
     PiGfxConfig.disableGfxDMA = 1;
     PiGfxConfig.disableCollision = 0;
     PiGfxConfig.debugVerbosity = 2;     // Default: all debug levels enabled
