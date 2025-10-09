@@ -10,6 +10,8 @@
         "optional": "cpp",
         "ratio": "cpp",
         "vector": "cpp",
-        "timer.h": "c"
+        "timer.h": "c",
+        "debug_levels.h": "c",
+        "ee_printf.h": "c"
     }
 }

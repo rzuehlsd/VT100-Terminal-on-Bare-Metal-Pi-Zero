@@ -224,6 +224,10 @@ int inihandler(void* user, const char* section, const char* name, const char* va
     {
         set_boolean_config(name, value, &PiGfxConfig.cursorBlink);
     }
+    else if (pigfx_strcmp(name, "soundLevel") == 0)
+    {
+        set_range_config(name, value, &PiGfxConfig.soundLevel, 0, 100);
+    }
     else if (pigfx_strcmp(name, "keyboardLayout") == 0)
     {
         pigfx_strncpy(PiGfxConfig.keyboardLayout, value, sizeof(PiGfxConfig.keyboardLayout));
@@ -262,7 +266,7 @@ void setDefaultConfig()
     PiGfxConfig.uartBaudrate = 115200;
     PiGfxConfig.useUsbKeyboard = 1;
     PiGfxConfig.sendCRLF = 0;
-    PiGfxConfig.replaceLFwithCR = 0;
+    PiGfxConfig.replaceLFwithCR = 1;
     PiGfxConfig.backspaceEcho = 0;
     PiGfxConfig.skipBackspaceEcho = 0;
     PiGfxConfig.swapDelWithBackspace = 1;
@@ -279,6 +283,7 @@ void setDefaultConfig()
     PiGfxConfig.debugVerbosity = 2;     // Default: all debug levels enabled
     PiGfxConfig.cursorBlink = 0;            // Default: blinking disabled
     PiGfxConfig.switchRxTx = 0;          // Default: normal UART operation
+    PiGfxConfig.soundLevel = 50;         // Default sound level (duty %) for beep
     pigfx_strcpy(PiGfxConfig.keyboardLayout, "de");
 }
 
@@ -322,6 +327,7 @@ void printConfig()
     LogDebug("disableCollision       = %u\n", PiGfxConfig.disableCollision);
     LogDebug("debugVerbosity         = %u\n", PiGfxConfig.debugVerbosity);
     LogDebug("cursorBlink            = %u\n", PiGfxConfig.cursorBlink);
+    LogDebug("soundLevel             = %u\n", PiGfxConfig.soundLevel);
     LogDebug("keyboardLayout         = %s\n", PiGfxConfig.keyboardLayout);
     LogDebug("-------------------------------------------------\n");
 }

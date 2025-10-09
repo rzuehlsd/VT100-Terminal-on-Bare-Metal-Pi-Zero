@@ -5,10 +5,12 @@
 #include "gpio.h"
 #include "timer.h"
 #include "utils.h"
+#include "ee_printf.h"
+#include "debug_levels.h"
 #include "pwm.h"
 
 #define PWM_GPIO 12
-#define PWM_FREQ_HZ 800u
+#define PWM_FREQ_HZ 785u
 #define PWM_PERIOD_US (1000000u / PWM_FREQ_HZ) // 1250 us
 
 // Internal state
@@ -26,11 +28,15 @@ static void pwm_period_handler(unsigned hnd, void* pParam, void* pContext)
     (void)pParam; (void)pContext; (void)hnd;
     pwm_timer_period = 0;
 
+    LogDebug("Bell: pwm_period_handler()"); 
+
     // Stop condition
     if (pwm_end_time && (int)(time_microsec() - pwm_end_time) >= 0) {
         if (pwm_timer_off) { remove_timer(pwm_timer_off); pwm_timer_off = 0; }
         gpio_set(PWM_GPIO, 0);
         pwm_active = 0;
+
+        LogDebug("Bell: pwm_period_handler() - stopped");
         return;
     }
 
@@ -50,6 +56,7 @@ static void pwm_period_handler(unsigned hnd, void* pParam, void* pContext)
         pwm_timer_off = attach_timer_handler(hz_off, pwm_off_handler, 0, 0);
     }
 
+    LogDebug("Bell: pwm_period_handler() - scheduled off in %u us", on_us);
     // Schedule next period tick at 800 Hz
     pwm_timer_period = attach_timer_handler(PWM_FREQ_HZ, pwm_period_handler, 0, 0);
 }
@@ -57,6 +64,8 @@ static void pwm_period_handler(unsigned hnd, void* pParam, void* pContext)
 static void pwm_off_handler(unsigned hnd, void* pParam, void* pContext)
 {
     (void)pParam; (void)pContext; (void)hnd;
+
+    LogDebug("Bell: pwm_off_handler()");
     pwm_timer_off = 0;
     gpio_set(PWM_GPIO, 0);
 }
@@ -65,6 +74,7 @@ void pwm800_start(uint8_t duty_percent, uint32_t duration_ms)
 {
     if (duty_percent > 100) duty_percent = 100;
 
+    LogDebug("Bell: pwm_start()");
     // Configure GPIO12 as output low
     gpio_select(PWM_GPIO, GPIO_OUTPUT);
     gpio_setpull(PWM_GPIO, GPIO_PULL_OFF);
@@ -88,6 +98,8 @@ void pwm800_start(uint8_t duty_percent, uint32_t duration_ms)
 
 void pwm800_stop(void)
 {
+    LogDebug("Bell: pwm_stop()");
+    // Remove any pending timers
     if (pwm_timer_period) { remove_timer(pwm_timer_period); pwm_timer_period = 0; }
     if (pwm_timer_off) { remove_timer(pwm_timer_off); pwm_timer_off = 0; }
     gpio_set(PWM_GPIO, 0);

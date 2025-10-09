@@ -48,9 +48,13 @@ static unsigned int selected_resolution_index = 0;
 static unsigned int selected_cursor_blink = 1;
 static unsigned int selected_auto_repeat = 1;  // Default auto repeat
 static unsigned int selected_send_crlf = 0;    // Default CRLF sending toggle
+static unsigned int selected_replace_lf_cr = 0; // New: Replace LF with CR toggle
 static unsigned int selected_repeat_delay = 500;
 static unsigned int selected_repeat_rate = 10;
-static const unsigned int num_setup_items = 12;  // Number of setup items (added Switch Rx<>Tx and Send CRLF)
+static const unsigned int num_setup_items = 14;  // Number of setup items (added Switch Rx<>Tx, Send CRLF, Replace LF->CR, Sound Level)
+
+// Sound level variable
+static unsigned int selected_sound_level = 0;  // Sound level (duty %) 0..100
 
 // Available baudrates
 static const unsigned int available_baudrates[] = {
@@ -403,6 +407,8 @@ void setup_mode_enter(void)
         selected_repeat_delay = PiGfxConfig.keyboardRepeatDelay;
         selected_repeat_rate = PiGfxConfig.keyboardRepeatRate;
     selected_send_crlf = PiGfxConfig.sendCRLF ? 1 : 0;
+    selected_replace_lf_cr = PiGfxConfig.replaceLFwithCR ? 1 : 0;
+    selected_sound_level = PiGfxConfig.soundLevel; // initialize sound level
         
         // Reset the settings changed flag
         settings_changed = 0;
@@ -668,6 +674,24 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
+            else if (selected_item == 12) // Replace LF with CR toggle
+            {
+                if (selected_replace_lf_cr > 0)
+                {
+                    selected_replace_lf_cr = 0;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 13) // Sound Level decrease
+            {
+                if (selected_sound_level >= 5)
+                {
+                    selected_sound_level -= 5;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
             break;
             
         case KeyRight:
@@ -780,6 +804,24 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
+            else if (selected_item == 12) // Replace LF with CR toggle
+            {
+                if (selected_replace_lf_cr < 1)
+                {
+                    selected_replace_lf_cr = 1;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 13) // Sound Level increase
+            {
+                if (selected_sound_level <= 95)
+                {
+                    selected_sound_level += 5;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
             break;
             
         case KeyEscape:
@@ -828,7 +870,9 @@ void setup_mode_handle_key(unsigned short key)
                 PiGfxConfig.keyboardRepeatDelay = selected_repeat_delay;
                 PiGfxConfig.keyboardRepeatRate = selected_repeat_rate;
                 PiGfxConfig.sendCRLF = selected_send_crlf ? 1 : 0;
+                PiGfxConfig.replaceLFwithCR = selected_replace_lf_cr ? 1 : 0;
                 PiGfxConfig.switchRxTx = selected_switch_rxtx ? 1 : 0;
+                PiGfxConfig.soundLevel = selected_sound_level;
                 
                 // Update the saved colors so they don't get overwritten on exit
                 saved_fg_color = available_colors[selected_fg_color];
@@ -975,9 +1019,9 @@ void setup_mode_draw(void)
     const unsigned int font_px_h = 16;
 
     // Content sizing in character cells
-    const unsigned int label_width = 18;       // columns for left labels
+    const unsigned int label_width = 23;       // columns for left labels (added 5-char gap before values)
     const unsigned int value_width_max = 22;   // columns for right values (font names etc.)
-    const unsigned int content_width_cols = label_width + value_width_max; // total content width
+    const unsigned int content_width_cols = label_width + value_width_max; // total content width (label includes gap)
 
     // Box sizing in character cells (inner padding of 2 cols on each side)
     const unsigned int min_box_cols = 48;      // ensure enough space for two instruction columns
@@ -1025,7 +1069,7 @@ void setup_mode_draw(void)
     // Center the content area horizontally within inner box area
     unsigned int inner_width_cols = (box_char_cols - 4);
     unsigned int content_col = inner_left_col + (inner_width_cols > content_width_cols ? (inner_width_cols - content_width_cols) / 2 : 0);
-    unsigned int value_col = content_col + label_width;  // Start of value column
+    unsigned int value_col = content_col + label_width;  // Start of value column (after 5-char gap)
     
     // Draw title using direct character drawing - centered
     gfx_set_fg(YELLOW);
@@ -1325,6 +1369,49 @@ void setup_mode_draw(void)
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
     draw_text_at(content_row + 11, value_col, selected_send_crlf ? "On" : "Off");
+    }
+
+    // Draw Replace LF with CR label and value with selection highlighting
+    if (selected_item == 12)
+    {
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 12, content_col, "Replace LF with CR", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 12, value_col, selected_replace_lf_cr ? "On " : "Off", 8);
+    }
+    else
+    {
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 12, content_col, "Replace LF with CR");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 12, value_col, selected_replace_lf_cr ? "On" : "Off");
+    }
+
+    // Draw Sound Level label and value with selection highlighting
+    if (selected_item == 13)
+    {
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 13, content_col, "Sound Level", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        // Show as percentage with trailing percent sign
+        draw_int_at_with_bg(content_row + 13, value_col, selected_sound_level, 4);
+        draw_text_at_with_bg(content_row + 13, value_col + 3, "%", 2);
+    }
+    else
+    {
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 13, content_col, "Sound Level");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_int_at(content_row + 13, value_col, selected_sound_level);
+        draw_text_at(content_row + 13, value_col + 3, "%");
     }
 
     // Draw instructions in 2-column layout near bottom, with safe spacing above border

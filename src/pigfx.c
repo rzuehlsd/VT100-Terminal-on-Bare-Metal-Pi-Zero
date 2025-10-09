@@ -437,15 +437,15 @@ void term_main_loop()
 
     display_system_banner();
 
+
     // Clear entire screen and position cursor at home
     gfx_term_putstring("\x1B[2J");
-    // gfx_term_putstring("\x07n");    // Bell
-
+    
     char strb[2] = {0, 0};
 
     while (1)
     {
-
+        
         if (uart_buffer_start != uart_buffer_end)
         {
             strb[0] = *uart_buffer_start++;

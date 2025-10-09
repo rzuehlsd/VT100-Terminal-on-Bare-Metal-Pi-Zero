@@ -1583,8 +1583,8 @@ void gfx_term_beep()
 {
     if(!pwm800_is_active())
     {
-        LogDebug("Bell %d%% %dms ON", 50, 250);
-        pwm800_start(50, 250);
+        LogDebug("Bell %d%% %dms ON", PiGfxConfig.soundLevel, 250);
+        pwm800_start((uint8_t)PiGfxConfig.soundLevel, 250);
     }
     else
     {
