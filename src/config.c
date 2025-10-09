@@ -300,30 +300,30 @@ void setDefaultConfig()
  */
 void printConfig()
 {
-    ee_printf("-------------- PiGFX Config Loaded --------------\n");
-    ee_printf("hasChanged.            = %u\n", PiGfxConfig.hasChanged);
-    ee_printf("uartBaudrate           = %u\n", PiGfxConfig.uartBaudrate);
-    ee_printf("switchRxTx             = %u\n", PiGfxConfig.switchRxTx);
-    ee_printf("useUsbKeyboard         = %u\n", PiGfxConfig.useUsbKeyboard);
-    ee_printf("sendCRLF               = %u\n", PiGfxConfig.sendCRLF);
-    ee_printf("replaceLFwithCR        = %u\n", PiGfxConfig.replaceLFwithCR);
-    ee_printf("backspaceEcho          = %u\n", PiGfxConfig.backspaceEcho);
-    ee_printf("skipBackspaceEcho      = %u\n", PiGfxConfig.skipBackspaceEcho);
-    ee_printf("swapDelWithBackspace   = %u\n", PiGfxConfig.swapDelWithBackspace);
-    ee_printf("keyboardAutorepeat     = %u\n", PiGfxConfig.keyboardAutorepeat);
-    ee_printf("keyboardRepeatDelay    = %u\n", PiGfxConfig.keyboardRepeatDelay);
-    ee_printf("keyboardRepeatRate     = %u\n", PiGfxConfig.keyboardRepeatRate);
-    ee_printf("foregroundColor        = %u\n", PiGfxConfig.foregroundColor);
-    ee_printf("backgroundColor        = %u\n", PiGfxConfig.backgroundColor);
-    ee_printf("fontSelection          = %u\n", PiGfxConfig.fontSelection);
-    ee_printf("displayWidth           = %u\n", PiGfxConfig.displayWidth);
-    ee_printf("displayHeight          = %u\n", PiGfxConfig.displayHeight);
-    ee_printf("disableGfxDMA          = %u\n", PiGfxConfig.disableGfxDMA);
-    ee_printf("disableCollision       = %u\n", PiGfxConfig.disableCollision);
-    ee_printf("debugVerbosity         = %u\n", PiGfxConfig.debugVerbosity);
-    ee_printf("cursorBlink            = %u\n", PiGfxConfig.cursorBlink);
-    ee_printf("keyboardLayout         = %s\n", PiGfxConfig.keyboardLayout);
-    ee_printf("-------------------------------------------------\n");
+    LogDebug("-------------- PiGFX Config Loaded --------------\n");
+    LogDebug("hasChanged.            = %u\n", PiGfxConfig.hasChanged);
+    LogDebug("uartBaudrate           = %u\n", PiGfxConfig.uartBaudrate);
+    LogDebug("switchRxTx             = %u\n", PiGfxConfig.switchRxTx);
+    LogDebug("useUsbKeyboard         = %u\n", PiGfxConfig.useUsbKeyboard);
+    LogDebug("sendCRLF               = %u\n", PiGfxConfig.sendCRLF);
+    LogDebug("replaceLFwithCR        = %u\n", PiGfxConfig.replaceLFwithCR);
+    LogDebug("backspaceEcho          = %u\n", PiGfxConfig.backspaceEcho);
+    LogDebug("skipBackspaceEcho      = %u\n", PiGfxConfig.skipBackspaceEcho);
+    LogDebug("swapDelWithBackspace   = %u\n", PiGfxConfig.swapDelWithBackspace);
+    LogDebug("keyboardAutorepeat     = %u\n", PiGfxConfig.keyboardAutorepeat);
+    LogDebug("keyboardRepeatDelay    = %u\n", PiGfxConfig.keyboardRepeatDelay);
+    LogDebug("keyboardRepeatRate     = %u\n", PiGfxConfig.keyboardRepeatRate);
+    LogDebug("foregroundColor        = %u\n", PiGfxConfig.foregroundColor);
+    LogDebug("backgroundColor        = %u\n", PiGfxConfig.backgroundColor);
+    LogDebug("fontSelection          = %u\n", PiGfxConfig.fontSelection);
+    LogDebug("displayWidth           = %u\n", PiGfxConfig.displayWidth);
+    LogDebug("displayHeight          = %u\n", PiGfxConfig.displayHeight);
+    LogDebug("disableGfxDMA          = %u\n", PiGfxConfig.disableGfxDMA);
+    LogDebug("disableCollision       = %u\n", PiGfxConfig.disableCollision);
+    LogDebug("debugVerbosity         = %u\n", PiGfxConfig.debugVerbosity);
+    LogDebug("cursorBlink            = %u\n", PiGfxConfig.cursorBlink);
+    LogDebug("keyboardLayout         = %s\n", PiGfxConfig.keyboardLayout);
+    LogDebug("-------------------------------------------------\n");
 }
 
 /**

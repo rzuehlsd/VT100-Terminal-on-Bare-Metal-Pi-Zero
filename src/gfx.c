@@ -21,6 +21,7 @@
 #include "mbox.h"
 #include "config.h"
 #include "synchronize.h"
+#include "pwm.h"
 
 #define MIN( v1, v2 ) ( ((v1) < (v2)) ? (v1) : (v2))
 #define MAX( v1, v2 ) ( ((v1) > (v2)) ? (v1) : (v2))
@@ -1577,6 +1578,22 @@ void gfx_term_load_palette(char rgb)
     }
 }
 
+
+void gfx_term_beep()
+{
+    if(!pwm800_is_active())
+    {
+        LogDebug("Bell %d%% %dms ON", 50, 250);
+        pwm800_start(50, 250);
+    }
+    else
+    {
+        pwm800_stop();
+
+    }
+        
+}
+
 /** Draws a character string and handle control characters. */
 void gfx_term_putstring( const char* str )
 {
@@ -1609,6 +1626,10 @@ void gfx_term_putstring( const char* str )
                 ctx.term.cursor_col += 1;
                 ctx.term.cursor_col =  MIN( ctx.term.cursor_col + ctx.term.tab_pos - ctx.term.cursor_col%ctx.term.tab_pos, ctx.term.WIDTH-1 );
                 gfx_term_render_cursor();
+                break;
+
+            case 0x07: /* bell */
+                gfx_term_beep();
                 break;
 
             case 0x08:

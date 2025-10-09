@@ -439,6 +439,7 @@ void term_main_loop()
 
     // Clear entire screen and position cursor at home
     gfx_term_putstring("\x1B[2J");
+    // gfx_term_putstring("\x07n");    // Bell
 
     char strb[2] = {0, 0};
 
