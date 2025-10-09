@@ -44,9 +44,10 @@ static unsigned int selected_font_size = 0;
 static unsigned int selected_resolution_index = 0;
 static unsigned int selected_cursor_blink = 1;
 static unsigned int selected_auto_repeat = 1;  // Default auto repeat
+static unsigned int selected_send_crlf = 0;    // Default CRLF sending toggle
 static unsigned int selected_repeat_delay = 500;
 static unsigned int selected_repeat_rate = 10;
-static const unsigned int num_setup_items = 10;  // Number of setup items (added repeat delay/rate)
+static const unsigned int num_setup_items = 11;  // Number of setup items (added send CRLF)
 
 // Available baudrates
 static const unsigned int available_baudrates[] = {
@@ -397,6 +398,7 @@ void setup_mode_enter(void)
         selected_auto_repeat = PiGfxConfig.keyboardAutorepeat ? 1 : 0; // Use config value
         selected_repeat_delay = PiGfxConfig.keyboardRepeatDelay;
         selected_repeat_rate = PiGfxConfig.keyboardRepeatRate;
+    selected_send_crlf = PiGfxConfig.sendCRLF ? 1 : 0;
         
         // Reset the settings changed flag
         settings_changed = 0;
@@ -644,6 +646,15 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
+            else if (selected_item == 10) // Send CRLF toggle
+            {
+                if (selected_send_crlf > 0)
+                {
+                    selected_send_crlf = 0;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
             break;
             
         case KeyRight:
@@ -738,6 +749,15 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
+            else if (selected_item == 10) // Send CRLF toggle
+            {
+                if (selected_send_crlf < 1)
+                {
+                    selected_send_crlf = 1;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
             break;
             
         case KeyEscape:
@@ -785,6 +805,7 @@ void setup_mode_handle_key(unsigned short key)
                 PiGfxConfig.keyboardAutorepeat = selected_auto_repeat ? 1 : 0;
                 PiGfxConfig.keyboardRepeatDelay = selected_repeat_delay;
                 PiGfxConfig.keyboardRepeatRate = selected_repeat_rate;
+                PiGfxConfig.sendCRLF = selected_send_crlf ? 1 : 0;
                 
                 // Update the saved colors so they don't get overwritten on exit
                 saved_fg_color = available_colors[selected_fg_color];
@@ -915,21 +936,48 @@ void setup_mode_draw(void)
     gfx_get_gfx_size(&screen_width, &screen_height);
     gfx_get_term_size(&term_rows, &term_cols);
     
-    // Save current background color and restore original background for screen clear
-    GFX_COL current_bg = gfx_get_bg();
-    gfx_set_bg(saved_bg_color);
+    // Fully clear the entire screen area in pixels to the original background color
+    // This avoids any terminal/grid rounding artifacts or leftover glyph pixels
+    GFX_COL prev_fg = gfx_get_fg();
+    GFX_COL prev_bg = gfx_get_bg();
+    gfx_set_fg(saved_bg_color);
+    gfx_fill_rect(0, 0, screen_width, screen_height);
+    gfx_set_fg(prev_fg);
+    gfx_set_bg(prev_bg);
     
-    // Clear screen with original background color
-    gfx_term_clear_screen();
-    
-    // Restore working background color
-    gfx_set_bg(current_bg);
-    
-    // Calculate setup box dimensions (centered)
-    unsigned int box_width = 450;  // pixels - increased to accommodate longer font names
-    unsigned int box_height = 300; // pixels - increased for additional instruction line
-    unsigned int box_x = (screen_width - box_width) / 2;
-    unsigned int box_y = (screen_height - box_height) / 2;
+    // Use character-cell aligned layout for crisp rendering
+    const unsigned int font_px_w = 8;
+    const unsigned int font_px_h = 16;
+
+    // Content sizing in character cells
+    const unsigned int label_width = 18;       // columns for left labels
+    const unsigned int value_width_max = 22;   // columns for right values (font names etc.)
+    const unsigned int content_width_cols = label_width + value_width_max; // total content width
+
+    // Box sizing in character cells (inner padding of 2 cols on each side)
+    const unsigned int min_box_cols = 48;      // ensure enough space for two instruction columns
+    const unsigned int box_inner_cols = (content_width_cols + 4) < min_box_cols ? min_box_cols : (content_width_cols + 4);
+    unsigned int box_char_cols = box_inner_cols; // total columns of the dialog box
+
+    // Vertical sizing: top pad + title + spacer + items + spacer + instructions(2) + bottom pad
+    const unsigned int top_pad_rows = 1;
+    const unsigned int title_rows = 1;
+    const unsigned int spacer_after_title = 1;
+    const unsigned int items_rows = num_setup_items; // one row per item
+    const unsigned int spacer_before_instructions = 1;
+    const unsigned int instruction_rows = 2;
+    const unsigned int bottom_pad_rows = 1;
+    const unsigned int box_char_rows = top_pad_rows + title_rows + spacer_after_title + items_rows + spacer_before_instructions + instruction_rows + bottom_pad_rows;
+
+    // Center the box in character grid
+    unsigned int box_char_x = (term_cols > box_char_cols) ? ((term_cols - box_char_cols) / 2) : 0;
+    unsigned int box_char_y = (term_rows > box_char_rows) ? ((term_rows - box_char_rows) / 2) : 0;
+
+    // Convert to pixels for drawing borders/background (aligns perfectly with cell grid)
+    unsigned int box_x = box_char_x * font_px_w;
+    unsigned int box_y = box_char_y * font_px_h;
+    unsigned int box_width = box_char_cols * font_px_w;
+    unsigned int box_height = box_char_rows * font_px_h;
     
     // Draw setup box border
     gfx_set_fg(WHITE);
@@ -942,19 +990,24 @@ void setup_mode_draw(void)
     gfx_set_fg(BLUE);
     gfx_fill_rect(box_x + 2, box_y + 2, box_width - 4, box_height - 4);
     
-    // Calculate text positions (row/col based) for 2-column layout
-    unsigned int title_row = box_y / 16 + 1;  // assuming 16px font height
-    unsigned int title_col = box_x / 8 + 2;   // assuming 8px font width
-    unsigned int content_row = title_row + 2;
-    unsigned int content_col = title_col + 2;
-    unsigned int label_width = 16;  // Fixed width for label column
+    // Calculate text positions in character cells
+    unsigned int title_row = box_char_y + top_pad_rows; // first line inside box after top pad
+    unsigned int title_col = box_char_x + 2;            // slight left margin inside box
+    unsigned int inner_left_col = box_char_x + 2;
+    unsigned int inner_right_col = box_char_x + box_char_cols - 3; // -2 border pad, -1 to keep inside
+    unsigned int content_row = title_row + title_rows + spacer_after_title; // first content row
+
+    // Center the content area horizontally within inner box area
+    unsigned int inner_width_cols = (box_char_cols - 4);
+    unsigned int content_col = inner_left_col + (inner_width_cols > content_width_cols ? (inner_width_cols - content_width_cols) / 2 : 0);
     unsigned int value_col = content_col + label_width;  // Start of value column
     
     // Draw title using direct character drawing - centered
     gfx_set_fg(YELLOW);
     gfx_set_bg(BLUE);
     // Center "Pi VT100 Setup" in the dialog box (13 characters)
-    unsigned int title_center_col = title_col + (box_width / 8 - 13) / 2;
+    const unsigned int title_len = 13;
+    unsigned int title_center_col = box_char_x + (box_char_cols - title_len) / 2;
     draw_text_at(title_row, title_center_col, "Pi VT100 Setup");
     
     // Draw baud rate label and value with selection highlighting
@@ -1208,17 +1261,42 @@ void setup_mode_draw(void)
         draw_text_at(content_row + 9, value_col + 6, "Hz");
     }
 
-    // Draw instructions in 2-column layout at bottom, 1 line above border
-    unsigned int instruction_row = (box_y + box_height - 32) / 16;  // 2 lines from bottom (16px per line)
+    // Draw send CRLF label and value with selection highlighting
+    if (selected_item == 10)
+    {
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 10, content_col, "Send CRLF", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 10, value_col, selected_send_crlf ? "On " : "Off", 8);
+    }
+    else
+    {
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 10, content_col, "Send CRLF");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 10, value_col, selected_send_crlf ? "On" : "Off");
+    }
+
+    // Draw instructions in 2-column layout near bottom, with safe spacing above border
+    unsigned int instruction_row = content_row + items_rows + spacer_before_instructions;
     gfx_set_fg(CYAN);
     gfx_set_bg(BLUE);
-    
-    // Left column instructions
-    draw_text_at(instruction_row, content_col, "Up/Down: Select");
-    draw_text_at(instruction_row + 1, content_col, "ESC: Exit");
-    
-    // Right column instructions  
-    unsigned int right_instruction_col = content_col + 20;
-    draw_text_at(instruction_row, right_instruction_col, "Left/Right: Change");
-    draw_text_at(instruction_row + 1, right_instruction_col, "Enter: Save & Exit");
+
+    // Left column instructions (aligned to inner left + small indent)
+    unsigned int left_instruction_col = inner_left_col + 2;
+    draw_text_at(instruction_row, left_instruction_col, "Up/Down: Select");
+    draw_text_at(instruction_row + 1, left_instruction_col, "ESC: Exit");
+
+    // Right column instructions (aligned to inner right minus text width)
+    const unsigned int right_text_len_top = 19;   // strlen("Left/Right: Change")
+    const unsigned int right_text_len_bottom = 18; // strlen("Enter: Save & Exit")
+    unsigned int right_instruction_col_top = (inner_right_col + 1 > right_text_len_top) ? (inner_right_col + 1 - right_text_len_top) : inner_left_col + inner_width_cols / 2;
+    // Shift bottom instruction one character to the left for better visual alignment
+    unsigned int right_instruction_col_bottom = (inner_right_col + 1 > right_text_len_bottom + 1) ? (inner_right_col - right_text_len_bottom) : (right_instruction_col_top > 0 ? right_instruction_col_top - 1 : 0);
+    draw_text_at(instruction_row, right_instruction_col_top, "Left/Right: Change");
+    draw_text_at(instruction_row + 1, right_instruction_col_bottom, "Enter: Save & Exit");
 }
