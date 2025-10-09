@@ -16,6 +16,8 @@
 #include "mbox.h"
 #include "memory.h"
 
+static volatile unsigned int s_uart_tx_guard_until = 0; // absolute time in usec until which TX should wait
+
 void uart_init(unsigned int baudrate)
 {
     unsigned int ibrd = 0;
@@ -94,8 +96,24 @@ void uart_init(unsigned int baudrate)
     W32(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
 }
 
+void uart_tx_set_guard_us(unsigned usec)
+{
+    if (usec == 0) {
+        s_uart_tx_guard_until = 0;
+        return;
+    }
+    unsigned int now = time_microsec();
+    s_uart_tx_guard_until = now + usec;
+}
+
 void uart_write(const char ch )
 {
+    // If a guard is active, wait until it expires before sending first byte(s)
+    if (s_uart_tx_guard_until)
+    {
+        while ((int)(time_microsec() - s_uart_tx_guard_until) < 0) { }
+        s_uart_tx_guard_until = 0; // one-shot guard
+    }
     // Wait for UART to become ready to transmit.
     while ( R32(UART0_FR) & (1 << 5) ) { }
     W32(UART0_DR, ch);

@@ -145,6 +145,10 @@ int inihandler(void* user, const char* section, const char* name, const char* va
     {
         set_positive_config(name, value, &PiGfxConfig.uartBaudrate);
     }
+    else if (pigfx_strcmp(name, "switchRxTx") == 0)
+    {
+        set_boolean_config(name, value, &PiGfxConfig.switchRxTx);
+    }
     else if (pigfx_strcmp(name, "useUsbKeyboard") == 0)
     {
         set_boolean_config(name, value, &PiGfxConfig.useUsbKeyboard);
@@ -274,6 +278,7 @@ void setDefaultConfig()
     PiGfxConfig.disableCollision = 0;
     PiGfxConfig.debugVerbosity = 2;     // Default: all debug levels enabled
     PiGfxConfig.cursorBlink = 0;            // Default: blinking disabled
+    PiGfxConfig.switchRxTx = 0;          // Default: normal UART operation
     pigfx_strcpy(PiGfxConfig.keyboardLayout, "de");
 }
 
@@ -298,6 +303,7 @@ void printConfig()
     ee_printf("-------------- PiGFX Config Loaded --------------\n");
     ee_printf("hasChanged.            = %u\n", PiGfxConfig.hasChanged);
     ee_printf("uartBaudrate           = %u\n", PiGfxConfig.uartBaudrate);
+    ee_printf("switchRxTx             = %u\n", PiGfxConfig.switchRxTx);
     ee_printf("useUsbKeyboard         = %u\n", PiGfxConfig.useUsbKeyboard);
     ee_printf("sendCRLF               = %u\n", PiGfxConfig.sendCRLF);
     ee_printf("replaceLFwithCR        = %u\n", PiGfxConfig.replaceLFwithCR);

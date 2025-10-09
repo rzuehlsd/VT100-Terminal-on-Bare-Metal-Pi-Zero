@@ -99,8 +99,10 @@ void RepeatKey(unsigned hnd, void* pParam, void *pContext)
     if (p->ucLastPhyCode != 0)
     {
         KeyEvent(p->ucLastPhyCode, p->ucModifiers);
-        // Use config value directly as repeat frequency in Hz
+        // Use config value as repeat frequency in Hz, but clamp to sane bounds
         unsigned rate_hz = (PiGfxConfig.keyboardRepeatRate > 0) ? PiGfxConfig.keyboardRepeatRate : 10;
+        if (rate_hz < 10) rate_hz = 10;
+        if (rate_hz > 50) rate_hz = 50;
         p->repeatTimerHnd = attach_timer_handler(rate_hz, RepeatKey, p, 0);
     }
 }
@@ -152,11 +154,17 @@ void KeyStatusHandlerRaw(unsigned char ucModifiers, const unsigned char RawKeys[
         KeyEvent(ucKeyCode, ucModifiers);
         // Only setup autorepeat if not disabled and globally enabled
         if (!autorepeat_disabled && autorepeat_globally_enabled) {
+            // Ensure no stale timer is pending
+            if (actKeyMap.repeatTimerHnd) {
+                remove_timer(actKeyMap.repeatTimerHnd);
+                actKeyMap.repeatTimerHnd = 0;
+            }
             // Use config value directly for initial repeat delay (ms to Hz conversion)
-            unsigned delay_hz = 2; // fallback: 2 Hz = 500ms
-            if (PiGfxConfig.keyboardRepeatDelay > 0)
-                delay_hz = 1000 / PiGfxConfig.keyboardRepeatDelay;
-            if (delay_hz == 0) delay_hz = 1;
+            unsigned int delay_ms = PiGfxConfig.keyboardRepeatDelay;
+            if (delay_ms < 200) delay_ms = 200;           // clamp to sane min
+            if (delay_ms > 1000) delay_ms = 1000;         // clamp to sane max
+            unsigned delay_hz = (delay_ms > 0) ? (1000u / delay_ms) : 2u; // e.g. 500ms -> 2 Hz
+            if (delay_hz == 0) delay_hz = 1;              // avoid zero Hz
             actKeyMap.repeatTimerHnd = attach_timer_handler(delay_hz, RepeatKey, (void*)&actKeyMap, 0);
         }
     }
@@ -407,6 +415,12 @@ void KeyEvent(unsigned short ucKeyCode, unsigned char ucModifiers)
                 {
                     // Send CR first
                     uart_write( CR );
+                    // Small guard: give line a few character times after pin switching
+                    // (covers case where the first CR after switching might be lost)
+                    // 1 char time at 115200 baud ~ 87 usec; we wait ~200 usec
+                    unsigned int t_wait = time_microsec();
+                    while ((time_microsec() - t_wait) < 200)
+                        ;
                 }
 
                 if ((PiGfxConfig.replaceLFwithCR) && (ch == 10))

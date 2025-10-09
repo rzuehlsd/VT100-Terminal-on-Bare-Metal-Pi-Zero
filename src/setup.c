@@ -23,6 +23,8 @@
 
 // Forward declaration for initialize_framebuffer
 extern void initialize_framebuffer(unsigned int width, unsigned int height, unsigned int bpp);
+// Apply UART pin switch immediately after saving from setup
+extern void switch_uart_pins(void);
 
 static unsigned char setup_mode_active = 0;
 static void* saved_screen_buffer = 0;
@@ -37,6 +39,7 @@ static unsigned int original_font_index = 0;  // Track original font when enteri
 // Setup menu state
 static unsigned int selected_item = 0;  // 0 = Baudrate, 1 = Keyboard, 2 = Foreground, 3 = Background, 4 = Font, 5 = Resolution, 6 = Cursor Blink, 7 = Repeat Delay, 8 = Repeat Rate
 static unsigned int selected_baudrate_index = 0;
+static unsigned int selected_switch_rxtx = 0; // New: toggle Rx<>Tx switch
 static unsigned int selected_keyboard_index = 0;
 static unsigned int selected_fg_color = 0;
 static unsigned int selected_bg_color = 0;
@@ -47,7 +50,7 @@ static unsigned int selected_auto_repeat = 1;  // Default auto repeat
 static unsigned int selected_send_crlf = 0;    // Default CRLF sending toggle
 static unsigned int selected_repeat_delay = 500;
 static unsigned int selected_repeat_rate = 10;
-static const unsigned int num_setup_items = 11;  // Number of setup items (added send CRLF)
+static const unsigned int num_setup_items = 12;  // Number of setup items (added Switch Rx<>Tx and Send CRLF)
 
 // Available baudrates
 static const unsigned int available_baudrates[] = {
@@ -389,7 +392,8 @@ void setup_mode_enter(void)
         // Initialize setup menu state (before switching dialog font)
         selected_item = 0;  // Start with Baudrate selected
         selected_baudrate_index = find_current_baudrate_index();
-        selected_keyboard_index = find_current_keyboard_index();
+    selected_keyboard_index = find_current_keyboard_index();
+    selected_switch_rxtx = PiGfxConfig.switchRxTx ? 1 : 0;
         selected_fg_color = find_current_fg_color_index();
         selected_bg_color = find_current_bg_color_index();
         selected_font_size = original_font_index;  // Use the saved original index
@@ -565,7 +569,16 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 1) // Keyboard layout selected
+            else if (selected_item == 1) // Switch Rx<>Tx
+            {
+                if (selected_switch_rxtx > 0)
+                {
+                    selected_switch_rxtx = 0;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 2) // Keyboard layout selected
             {
                 if (selected_keyboard_index > 0)
                 {
@@ -574,7 +587,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 2) // Foreground color selected
+            else if (selected_item == 3) // Foreground color selected
             {
                 if (selected_fg_color > 0)
                 {
@@ -583,7 +596,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 3) // Background color selected
+            else if (selected_item == 4) // Background color selected
             {
                 if (selected_bg_color > 0)
                 {
@@ -592,7 +605,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 4) // Font size selected
+            else if (selected_item == 5) // Font size selected
             {
                 if (selected_font_size > 0)
                 {
@@ -601,7 +614,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 5) // Resolution selected
+            else if (selected_item == 6) // Resolution selected
             {
                 if (selected_resolution_index > 0)
                 {
@@ -610,7 +623,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 6) // Cursor Blink selected
+            else if (selected_item == 7) // Cursor Blink selected
             {
                 if (selected_cursor_blink > 0)
                 {
@@ -619,7 +632,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 7) // Cursor Blink selected
+            else if (selected_item == 8) // Auto Repeat selected
             {
                 if (selected_auto_repeat > 0)
                 {
@@ -628,7 +641,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 8) // Repeat Delay
+            else if (selected_item == 9) // Repeat Delay
             {
                 if (selected_repeat_delay > 200)
                 {
@@ -637,7 +650,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 9) // Repeat Rate
+            else if (selected_item == 10) // Repeat Rate
             {
                 if (selected_repeat_rate > 10)
                 {
@@ -646,7 +659,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 10) // Send CRLF toggle
+            else if (selected_item == 11) // Send CRLF toggle
             {
                 if (selected_send_crlf > 0)
                 {
@@ -667,7 +680,16 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 1) // Keyboard layout selected
+            else if (selected_item == 1) // Switch Rx<>Tx
+            {
+                if (selected_switch_rxtx < 1)
+                {
+                    selected_switch_rxtx = 1;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
+            else if (selected_item == 2) // Keyboard layout selected
             {
                 if (selected_keyboard_index < num_keyboards - 1)
                 {
@@ -676,7 +698,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 2) // Foreground color selected
+            else if (selected_item == 3) // Foreground color selected
             {
                 if (selected_fg_color < num_colors - 1)
                 {
@@ -685,7 +707,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 3) // Background color selected
+            else if (selected_item == 4) // Background color selected
             {
                 if (selected_bg_color < num_colors - 1)
                 {
@@ -694,7 +716,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 4) // Font size selected
+            else if (selected_item == 5) // Font size selected
             {
                 unsigned int font_count = font_registry_get_count();
                 if (selected_font_size < font_count - 1)
@@ -704,7 +726,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 5) // Resolution selected
+            else if (selected_item == 6) // Resolution selected
             {
                 if (selected_resolution_index < num_resolutions - 1)
                 {
@@ -713,7 +735,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 6) // Cursor Blink selected
+            else if (selected_item == 7) // Cursor Blink selected
             {
                 if (selected_cursor_blink < 1)
                 {
@@ -722,7 +744,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 7) // Cursor Blink selected
+            else if (selected_item == 8) // Auto Repeat selected
             {
                 if (selected_auto_repeat < 1)
                 {
@@ -731,7 +753,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 8) // Repeat Delay
+            else if (selected_item == 9) // Repeat Delay
             {
                 if (selected_repeat_delay < 1000)
                 {
@@ -740,7 +762,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 9) // Repeat Rate
+            else if (selected_item == 10) // Repeat Rate
             {
                 if (selected_repeat_rate < 50)
                 {
@@ -749,7 +771,7 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
-            else if (selected_item == 10) // Send CRLF toggle
+            else if (selected_item == 11) // Send CRLF toggle
             {
                 if (selected_send_crlf < 1)
                 {
@@ -806,6 +828,7 @@ void setup_mode_handle_key(unsigned short key)
                 PiGfxConfig.keyboardRepeatDelay = selected_repeat_delay;
                 PiGfxConfig.keyboardRepeatRate = selected_repeat_rate;
                 PiGfxConfig.sendCRLF = selected_send_crlf ? 1 : 0;
+                PiGfxConfig.switchRxTx = selected_switch_rxtx ? 1 : 0;
                 
                 // Update the saved colors so they don't get overwritten on exit
                 saved_fg_color = available_colors[selected_fg_color];
@@ -831,6 +854,8 @@ void setup_mode_handle_key(unsigned short key)
 
                 // Re-initialize UART with new baudrate
                 uart_init(PiGfxConfig.uartBaudrate);
+                // Apply UART pin switch state immediately
+                switch_uart_pins();
                 
                 // Handle resolution change if needed
                 if (resolution_was_changed)
@@ -1035,250 +1060,271 @@ void setup_mode_draw(void)
         draw_int_at(content_row, value_col, available_baudrates[selected_baudrate_index]);
     }
     
-    // Draw keyboard layout label and value with selection highlighting
+    // Draw switch Rx<>Tx label and value
     if (selected_item == 1)
     {
-        // Selected item - black on white background
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 1, content_col, "Keyboard Layout", label_width);
-        
+        draw_text_at_with_bg(content_row + 1, content_col, "Switch Rx<>Tx", label_width);
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 1, value_col, available_keyboards[selected_keyboard_index], 8);
+        draw_text_at_with_bg(content_row + 1, value_col, selected_switch_rxtx ? "On " : "Off", 8);
     }
     else
     {
-        // Not selected - normal colors
         gfx_set_fg(WHITE);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 1, content_col, "Keyboard Layout");
-        
+        draw_text_at(content_row + 1, content_col, "Switch Rx<>Tx");
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 1, value_col, available_keyboards[selected_keyboard_index]);
+        draw_text_at(content_row + 1, value_col, selected_switch_rxtx ? "On" : "Off");
     }
-    
-    // Draw foreground color label and value with selection highlighting
+
+    // Draw keyboard layout label and value with selection highlighting
     if (selected_item == 2)
     {
         // Selected item - black on white background
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 2, content_col, "Foreground", label_width);
+    draw_text_at_with_bg(content_row + 2, content_col, "Keyboard Layout", label_width);
         
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 2, value_col, color_names[selected_fg_color], 8);
+    draw_text_at_with_bg(content_row + 2, value_col, available_keyboards[selected_keyboard_index], 8);
     }
     else
     {
         // Not selected - normal colors
         gfx_set_fg(WHITE);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 2, content_col, "Foreground");
+    draw_text_at(content_row + 2, content_col, "Keyboard Layout");
         
-        gfx_set_fg(available_colors[selected_fg_color]); // Show color in its own color
+        gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 2, value_col, color_names[selected_fg_color]);
+    draw_text_at(content_row + 2, value_col, available_keyboards[selected_keyboard_index]);
     }
     
-    // Draw background color label and value with selection highlighting
+    // Draw foreground color label and value with selection highlighting
     if (selected_item == 3)
     {
         // Selected item - black on white background
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 3, content_col, "Background", label_width);
+    draw_text_at_with_bg(content_row + 3, content_col, "Foreground", label_width);
         
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 3, value_col, color_names[selected_bg_color], 8);
+    draw_text_at_with_bg(content_row + 3, value_col, color_names[selected_fg_color], 8);
     }
     else
     {
         // Not selected - normal colors
         gfx_set_fg(WHITE);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 3, content_col, "Background");
+    draw_text_at(content_row + 3, content_col, "Foreground");
         
-        gfx_set_fg(WHITE);
-        gfx_set_bg(available_colors[selected_bg_color]); // Show color as background
-        draw_text_at(content_row + 3, value_col, color_names[selected_bg_color]);
+        gfx_set_fg(available_colors[selected_fg_color]); // Show color in its own color
+        gfx_set_bg(BLUE);
+    draw_text_at(content_row + 3, value_col, color_names[selected_fg_color]);
     }
     
-    // Draw font size label and value with selection highlighting
+    // Draw background color label and value with selection highlighting
     if (selected_item == 4)
     {
         // Selected item - black on white background
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 4, content_col, "Font Size", label_width);
+    draw_text_at_with_bg(content_row + 4, content_col, "Background", label_width);
         
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        
-        // Get font info from registry
-        const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
-        if (font_info != NULL && strlen(font_info->name) != 0)
-        {
-            draw_text_at_with_bg(content_row + 4, value_col, font_info->name, 12);
-        }
-        else
-        {
-            draw_text_at_with_bg(content_row + 4, value_col, "Unknown", 12);
-        }
+    draw_text_at_with_bg(content_row + 4, value_col, color_names[selected_bg_color], 8);
     }
     else
     {
         // Not selected - normal colors
         gfx_set_fg(WHITE);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 4, content_col, "Font Size");
+    draw_text_at(content_row + 4, content_col, "Background");
         
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-        
-        // Get font info from registry
-        const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
-        if (font_info != NULL && strlen(font_info->name) != 0)
-        {
-            draw_text_at(content_row + 4, value_col, font_info->name);
-        }
-        else
-        {
-            draw_text_at(content_row + 4, value_col, "Unknown");
-        }
+        gfx_set_fg(WHITE);
+        gfx_set_bg(available_colors[selected_bg_color]); // Show color as background
+    draw_text_at(content_row + 4, value_col, color_names[selected_bg_color]);
     }
     
-    // Draw resolution label and value with selection highlighting
+    // Draw font size label and value with selection highlighting
     if (selected_item == 5)
     {
         // Selected item - black on white background
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 5, content_col, "Resolution", label_width);
+      
+    draw_text_at_with_bg(content_row + 5, content_col, "Font Size", label_width);
         
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 5, value_col, available_resolutions[selected_resolution_index], 10);
+        
+        // Get font info from registry
+        const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
+        if (font_info != NULL && strlen(font_info->name) != 0)
+        {
+            draw_text_at_with_bg(content_row + 5, value_col, font_info->name, 12);
+        }
+        else
+        {
+            draw_text_at_with_bg(content_row + 5, value_col, "Unknown", 12);
+        }
     }
     else
     {
         // Not selected - normal colors
         gfx_set_fg(WHITE);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 5, content_col, "Resolution");
+    draw_text_at(content_row + 5, content_col, "Font Size");
         
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 5, value_col, available_resolutions[selected_resolution_index]);
+        
+        // Get font info from registry
+        const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
+        if (font_info != NULL && strlen(font_info->name) != 0)
+        {
+            draw_text_at(content_row + 5, value_col, font_info->name);
+        }
+        else
+        {
+            draw_text_at(content_row + 5, value_col, "Unknown");
+        }
     }
     
-    // Draw cursor blink label and value with selection highlighting
+    // Draw resolution label and value with selection highlighting
     if (selected_item == 6)
     {
         // Selected item - black on white background
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 6, content_col, "Cursor Blink", label_width);
+    draw_text_at_with_bg(content_row + 6, content_col, "Resolution", label_width);
+        
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 6, value_col, selected_cursor_blink ? "On " : "Off", 8);
+    draw_text_at_with_bg(content_row + 6, value_col, available_resolutions[selected_resolution_index], 10);
     }
     else
     {
         // Not selected - normal colors
         gfx_set_fg(WHITE);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 6, content_col, "Cursor Blink");
+    draw_text_at(content_row + 6, content_col, "Resolution");
+        
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 6, value_col, selected_cursor_blink ? "On" : "Off");
+    draw_text_at(content_row + 6, value_col, available_resolutions[selected_resolution_index]);
     }
-
-    // Draw auto repeat label and value with selection highlighting
+    
+    // Draw cursor blink label and value with selection highlighting
     if (selected_item == 7)
     {
+        // Selected item - black on white background
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 7, content_col, "Auto Repeat", label_width);
+    draw_text_at_with_bg(content_row + 7, content_col, "Cursor Blink", label_width);
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 7, value_col, selected_auto_repeat? "On" : "Off", 8);
+    draw_text_at_with_bg(content_row + 7, value_col, selected_cursor_blink ? "On " : "Off", 8);
     }
     else
     {
+        // Not selected - normal colors
         gfx_set_fg(WHITE);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 7, content_col, "Auto Repeat");
+    draw_text_at(content_row + 7, content_col, "Cursor Blink");
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 7, value_col, selected_auto_repeat ? "On" : "Off");
+    draw_text_at(content_row + 7, value_col, selected_cursor_blink ? "On" : "Off");
     }
 
-    // Draw repeat delay label and value with selection highlighting
+    // Draw auto repeat label and value with selection highlighting
     if (selected_item == 8)
     {
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 8, content_col, "Repeat Delay", label_width);
+    draw_text_at_with_bg(content_row + 8, content_col, "Auto Repeat", label_width);
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_int_at_with_bg(content_row + 8, value_col, selected_repeat_delay, 8);
-        draw_text_at_with_bg(content_row + 8, value_col + 6, "ms", 3);
+    draw_text_at_with_bg(content_row + 8, value_col, selected_auto_repeat? "On" : "Off", 8);
     }
     else
     {
         gfx_set_fg(WHITE);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 8, content_col, "Repeat Delay");
+    draw_text_at(content_row + 8, content_col, "Auto Repeat");
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
-        draw_int_at(content_row + 8, value_col, selected_repeat_delay);
-        draw_text_at(content_row + 8, value_col + 6, "ms");
+    draw_text_at(content_row + 8, value_col, selected_auto_repeat ? "On" : "Off");
     }
 
-    // Draw repeat rate label and value with selection highlighting
+    // Draw repeat delay label and value with selection highlighting
     if (selected_item == 9)
     {
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 9, content_col, "Repeat Rate", label_width);
+    draw_text_at_with_bg(content_row + 9, content_col, "Repeat Delay", label_width);
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_int_at_with_bg(content_row + 9, value_col, selected_repeat_rate, 8);
-        draw_text_at_with_bg(content_row + 9, value_col + 6, "Hz", 3);
+    draw_int_at_with_bg(content_row + 9, value_col, selected_repeat_delay, 8);
+    draw_text_at_with_bg(content_row + 9, value_col + 6, "ms", 3);
     }
     else
     {
         gfx_set_fg(WHITE);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 9, content_col, "Repeat Rate");
+    draw_text_at(content_row + 9, content_col, "Repeat Delay");
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
-        draw_int_at(content_row + 9, value_col, selected_repeat_rate);
-        draw_text_at(content_row + 9, value_col + 6, "Hz");
+    draw_int_at(content_row + 9, value_col, selected_repeat_delay);
+    draw_text_at(content_row + 9, value_col + 6, "ms");
     }
 
-    // Draw send CRLF label and value with selection highlighting
+    // Draw repeat rate label and value with selection highlighting
     if (selected_item == 10)
     {
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 10, content_col, "Send CRLF", label_width);
+    draw_text_at_with_bg(content_row + 10, content_col, "Repeat Rate", label_width);
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 10, value_col, selected_send_crlf ? "On " : "Off", 8);
+    draw_int_at_with_bg(content_row + 10, value_col, selected_repeat_rate, 8);
+    draw_text_at_with_bg(content_row + 10, value_col + 6, "Hz", 3);
     }
     else
     {
         gfx_set_fg(WHITE);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 10, content_col, "Send CRLF");
+    draw_text_at(content_row + 10, content_col, "Repeat Rate");
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
-        draw_text_at(content_row + 10, value_col, selected_send_crlf ? "On" : "Off");
+    draw_int_at(content_row + 10, value_col, selected_repeat_rate);
+    draw_text_at(content_row + 10, value_col + 6, "Hz");
+    }
+
+    // Draw send CRLF label and value with selection highlighting
+    if (selected_item == 11)
+    {
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+    draw_text_at_with_bg(content_row + 11, content_col, "Send CRLF", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+    draw_text_at_with_bg(content_row + 11, value_col, selected_send_crlf ? "On " : "Off", 8);
+    }
+    else
+    {
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+    draw_text_at(content_row + 11, content_col, "Send CRLF");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+    draw_text_at(content_row + 11, value_col, selected_send_crlf ? "On" : "Off");
     }
 
     // Draw instructions in 2-column layout near bottom, with safe spacing above border

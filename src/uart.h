@@ -15,5 +15,7 @@ extern void uart_init(unsigned int baudrate);
 extern void uart_write(const char ch );
 extern void uart_write_str(const char* data);
 extern void uart_dump_mem(unsigned char* start_addr, unsigned char* end_addr);
+// Set a short guard period (in microseconds) during which uart_write will wait before transmitting
+extern void uart_tx_set_guard_us(unsigned usec);
 
 #endif
