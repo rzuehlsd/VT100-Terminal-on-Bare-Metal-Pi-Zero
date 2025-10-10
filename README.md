@@ -11,7 +11,7 @@ We keep the original MIT license; see `LICENSE` in this repository for details.
 
 ## What’s different in this fork
 
-I changed the original code to create a replica of the DEC VT100 terminal, both in software and hardware. I used a 60% size 3D model of the VT100 terminal, which was reated by Megardi (https://www.instructables.com/23-Scale-VT100-Terminal-Reproduction/) for printing the case. 
+I changed the original code to create a replica of the DEC VT100 terminal, both in software and hardware. I used a 60% size 3D model of the VT100 terminal, which was created by Megardi (https://www.instructables.com/23-Scale-VT100-Terminal-Reproduction/) for printing the case. 
 
 The PiGFX implementation was a very good start for the VT100, but to implement my additional requirements I had to add some changes and on the way also fixed some glitches.
 
@@ -54,6 +54,42 @@ The following modifications and enhancements have been implemented:
   - Added a “Switch Rx<>Tx” toggle in the setup dialog and applied the switch immediately on save to switch Rx anf Tx through relais
   - Polished auto-repeat handling; repeat delay and rate are configurable in the setup dialog
   - Generate bell sound via software PWM with configurable sound level using a simple passive buzzer
+
+
+## Enhanced Build System
+
+### Unified Build System (2025)
+
+The font build system is described in link above. The main make file has been modified to use a varibale to control the build for different targets and also rebuilds the USB library:
+
+**Single RPI Variable Control:**
+- Use `make RPI=1` for Raspberry Pi 1
+- Use `make RPI=2` for Raspberry Pi 2  
+- Use `make RPI=3` for Raspberry Pi 3
+- Use `make RPI=4` for Raspberry Pi 4
+
+**Automatic Toolchain Selection:**
+- Pi 1-3: Automatically uses `arm-none-eabi-` toolchain
+- Pi 4: Automatically uses `aarch64-linux-gnu-` toolchain
+- No manual toolchain configuration required
+
+**Intelligent USB Library Management:**
+- Automatically builds uspi library for Pi 1-3
+- Skips uspi for Pi 4 (not required)
+- Automatic Config.mk regeneration when switching Pi versions
+- Proper cross-compilation with correct architectures
+
+**Build Information Display:**
+
+```
+Creating kernel.img for Raspberry Pi 1
+==========================================
+Build completed for Raspberry Pi 1
+Target: kernel
+Toolchain: arm-none-eabi-
+USPI: Included for Pi 1
+==========================================
+```
 
 
 ## Remarks on building the VT100 Case
