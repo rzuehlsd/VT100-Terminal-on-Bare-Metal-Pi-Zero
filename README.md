@@ -60,8 +60,6 @@ Remark: Setup dialog is entered by Print key.
 
 ## Enhanced Build System
 
-### Unified Build System (2025)
-
 The font build system is described in the link above. The main Makefile has been modified to use a variable to control the build for different targets and also rebuilds the USB library:
 
 **Single RPI Variable Control:**
