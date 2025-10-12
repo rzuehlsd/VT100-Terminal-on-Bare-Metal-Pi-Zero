@@ -393,8 +393,20 @@ unsigned char loadConfigFile()
     struct dirent * configfileentry = 0;
     while(1)
     {
-        // look for configfile
-        if (pigfx_strcmp(CONFIGFILENAME, direntry->name) == 0)
+        // look for configfile (case-insensitive on FAT)
+        const char* want = CONFIGFILENAME;
+        const char* have = direntry->name;
+        // Manual case-insensitive compare to avoid locale issues
+        unsigned ci_equal = 1;
+        while (*want || *have)
+        {
+            char a = *want++;
+            char b = *have++;
+            if (a >= 'A' && a <= 'Z') a = (char)(a - 'A' + 'a');
+            if (b >= 'A' && b <= 'Z') b = (char)(b - 'A' + 'a');
+            if (a != b) { ci_equal = 0; break; }
+        }
+        if (ci_equal)
         {
             // File found
             configfileentry = direntry;

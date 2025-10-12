@@ -219,12 +219,18 @@ void fInitKeyboard(char* layout)
     else
         REPEAT_RATE_USEC = 100000;
 
-    if      ((layout[0] == 'u') && (layout[1] == 'k')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_uk, sizeof(actKeyMap.m_KeyMap));
-    else if ((layout[0] == 'i') && (layout[1] == 't')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_it, sizeof(actKeyMap.m_KeyMap));
-    else if ((layout[0] == 'f') && (layout[1] == 'r')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_fr, sizeof(actKeyMap.m_KeyMap));
-    else if ((layout[0] == 'e') && (layout[1] == 's')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_es, sizeof(actKeyMap.m_KeyMap));
-    else if ((layout[0] == 'd') && (layout[1] == 'e')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_de, sizeof(actKeyMap.m_KeyMap));
-    else if ((layout[0] == 's') && (layout[1] == 'g')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_sg, sizeof(actKeyMap.m_KeyMap));
+    // Normalize to lowercase for case-insensitive comparison
+    char c0 = layout[0];
+    char c1 = layout[1];
+    if (c0 >= 'A' && c0 <= 'Z') c0 = (char)(c0 - 'A' + 'a');
+    if (c1 >= 'A' && c1 <= 'Z') c1 = (char)(c1 - 'A' + 'a');
+
+    if      ((c0 == 'u') && (c1 == 'k')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_uk, sizeof(actKeyMap.m_KeyMap));
+    else if ((c0 == 'i') && (c1 == 't')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_it, sizeof(actKeyMap.m_KeyMap));
+    else if ((c0 == 'f') && (c1 == 'r')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_fr, sizeof(actKeyMap.m_KeyMap));
+    else if ((c0 == 'e') && (c1 == 's')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_es, sizeof(actKeyMap.m_KeyMap));
+    else if ((c0 == 'd') && (c1 == 'e')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_de, sizeof(actKeyMap.m_KeyMap));
+    else if ((c0 == 's') && (c1 == 'g')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_sg, sizeof(actKeyMap.m_KeyMap));
     // all else is us
     else                                               pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_us, sizeof(actKeyMap.m_KeyMap));
 

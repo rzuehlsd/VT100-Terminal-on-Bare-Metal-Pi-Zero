@@ -685,9 +685,10 @@ void setup_mode_handle_key(unsigned short key)
             }
             else if (selected_item == 13) // Sound Level decrease
             {
-                if (selected_sound_level >= 5)
+                // Decrease in steps of 5, clamp at 0
+                if (selected_sound_level > 0)
                 {
-                    selected_sound_level -= 5;
+                    selected_sound_level = (selected_sound_level >= 5) ? (selected_sound_level - 5) : 0;
                     settings_changed = 1;
                     needs_redraw = 1;
                 }
@@ -815,9 +816,11 @@ void setup_mode_handle_key(unsigned short key)
             }
             else if (selected_item == 13) // Sound Level increase
             {
-                if (selected_sound_level <= 95)
+                // Increase in steps of 5, clamp at 100
+                if (selected_sound_level < 100)
                 {
-                    selected_sound_level += 5;
+                    unsigned int next = selected_sound_level + 5;
+                    selected_sound_level = (next > 100) ? 100 : next;
                     settings_changed = 1;
                     needs_redraw = 1;
                 }
@@ -1061,7 +1064,6 @@ void setup_mode_draw(void)
     
     // Calculate text positions in character cells
     unsigned int title_row = box_char_y + top_pad_rows; // first line inside box after top pad
-    unsigned int title_col = box_char_x + 2;            // slight left margin inside box
     unsigned int inner_left_col = box_char_x + 2;
     unsigned int inner_right_col = box_char_x + box_char_cols - 3; // -2 border pad, -1 to keep inside
     unsigned int content_row = title_row + title_rows + spacer_after_title; // first content row
@@ -1399,9 +1401,24 @@ void setup_mode_draw(void)
         draw_text_at_with_bg(content_row + 13, content_col, "Sound Level", label_width);
         gfx_set_fg(BLACK);
         gfx_set_bg(WHITE);
-        // Show as percentage with trailing percent sign
-        draw_int_at_with_bg(content_row + 13, value_col, selected_sound_level, 4);
-        draw_text_at_with_bg(content_row + 13, value_col + 3, "%", 2);
+        // Compose "<value>%" into a small buffer to render as a single cleared field
+        char sbuf[8]; // enough for "100%" + NUL
+        {
+            // Build number into tmp then append '%'
+            char numbuf[5];
+            char* p = numbuf + sizeof(numbuf) - 1;
+            *p = '\0';
+            unsigned int v = selected_sound_level;
+            if (v == 0) { *(--p) = '0'; }
+            else { while (v > 0) { *(--p) = '0' + (v % 10); v /= 10; } }
+            // Copy number into sbuf and append '%'
+            char* d = sbuf;
+            while (*p) { *d++ = *p++; }
+            *d++ = '%';
+            *d = '\0';
+        }
+        // Clear a field wide enough for up to "100%" (4 chars) plus one space
+        draw_text_at_with_bg(content_row + 13, value_col, sbuf, 5);
     }
     else
     {
@@ -1410,8 +1427,21 @@ void setup_mode_draw(void)
         draw_text_at(content_row + 13, content_col, "Sound Level");
         gfx_set_fg(GREEN);
         gfx_set_bg(BLUE);
-        draw_int_at(content_row + 13, value_col, selected_sound_level);
-        draw_text_at(content_row + 13, value_col + 3, "%");
+        // Compose and draw with background clearing to avoid leftover digits
+        char sbuf[8];
+        {
+            char numbuf[5];
+            char* p = numbuf + sizeof(numbuf) - 1;
+            *p = '\0';
+            unsigned int v = selected_sound_level;
+            if (v == 0) { *(--p) = '0'; }
+            else { while (v > 0) { *(--p) = '0' + (v % 10); v /= 10; } }
+            char* d = sbuf;
+            while (*p) { *d++ = *p++; }
+            *d++ = '%';
+            *d = '\0';
+        }
+        draw_text_at_with_bg(content_row + 13, value_col, sbuf, 5);
     }
 
     // Draw instructions in 2-column layout near bottom, with safe spacing above border

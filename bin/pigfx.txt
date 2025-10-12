@@ -5,7 +5,7 @@
 ;; ============================================================================
 
 ;; UART Communication
-baudrate = 115200             ; Baudrate for UART (300-115200)
+baudrate = 115200           ; Baudrate for UART (300-115200)
 
 ;; Input Configuration
 useUsbKeyboard = 1          ; Enable USB keyboard (Pi 1-3 only): 1=enabled, 0=PS/2 only
@@ -29,16 +29,16 @@ foregroundColor = 10        ; Default text color (0-255)
 backgroundColor = 0         ; Default background color (0-255)
 cursorBlink = 1             ; Enable or disable cursor blinking (1=enabled, 0=disabled)
 
-;; Fonts (0=8x16 System, 1=6x12 Spleen, 2=8x16 Spleen, 3=12x24 Spleen, 4=16x32 Spleen, 5=32x64 Spleen)
+;; Fonts (0=8x16 System, 1=8x14 System, 2=10x20 VT100, 3=10x20 VT220)
+;; check with fonts in binary_assets.s or buildin_fonts.inc to see all available fonts
 fontSelection = 3           ; Font index (0-5)
 
 ;; Resolution
-displayWidth = 800         ; Width: 640 or 1024
-displayHeight = 640         ; Height: 480 or 768
+displayWidth = 800          ; Width: 640, 800 or 1024
+displayHeight = 640         ; Height: 480, 640or 768
 
 ;; General Configuration
 disableGfxDMA = 1           ; Disable DMA acceleration (1=safer, 0=faster)
-disableCollision = 0        ; Disable sprite collision detection
 debugVerbosity = 2          ; Debug level: 0=errors+notices, 1=+warnings, 2=+debug
 
 
