@@ -63,11 +63,7 @@ extern void gfx_scroll_down( unsigned int npixels );
  */
 extern void gfx_scroll_up( unsigned int npixels );
 
-/*!
- * Renders a sprite to the framebuffer at the specified (x,y) location
- * This points to the current drawing mode function.
- */
-extern draw_putsprite_fun (*gfx_put_sprite);
+// Sprite API removed.
 
 /*!
  *  Terminal functions

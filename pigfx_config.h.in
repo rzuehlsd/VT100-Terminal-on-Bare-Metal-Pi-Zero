@@ -7,6 +7,9 @@
 #define FRAMEBUFFER_DEBUG       OFF             /* Log framebuffer operations to UART */
 #define HEARTBEAT_FREQUENCY     1               /* Status led blink frequency in Hz */
 
+/* Feature toggles */
+// Sprite support removed
+
 #define PIGFX_MAJVERSION        1               /* Major version number */
 #define PIGFX_MINVERSION        8               /* Minor version number */
 #define PIGFX_BUILDVERSION      3               /* Build version. */

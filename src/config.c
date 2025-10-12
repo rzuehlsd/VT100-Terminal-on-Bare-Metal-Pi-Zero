@@ -212,10 +212,7 @@ int inihandler(void* user, const char* section, const char* name, const char* va
     {
         set_boolean_config(name, value, &PiGfxConfig.disableGfxDMA);
     }
-    else if (pigfx_strcmp(name, "disableCollision") == 0)
-    {
-        set_boolean_config(name, value, &PiGfxConfig.disableCollision);
-    }
+    // disableCollision removed (sprite system no longer present)
     else if (pigfx_strcmp(name, "debugVerbosity") == 0)
     {
         set_range_config(name, value, &PiGfxConfig.debugVerbosity, 0, 2);
@@ -279,7 +276,7 @@ void setDefaultConfig()
     PiGfxConfig.displayWidth = 1024;     // Default display width
     PiGfxConfig.displayHeight = 768;     // Default display height
     PiGfxConfig.disableGfxDMA = 1;
-    PiGfxConfig.disableCollision = 0;
+    // disableCollision removed
     PiGfxConfig.debugVerbosity = 2;     // Default: all debug levels enabled
     PiGfxConfig.cursorBlink = 0;            // Default: blinking disabled
     PiGfxConfig.switchRxTx = 0;          // Default: normal UART operation
@@ -324,7 +321,7 @@ void printConfig()
     LogDebug("displayWidth           = %u\n", PiGfxConfig.displayWidth);
     LogDebug("displayHeight          = %u\n", PiGfxConfig.displayHeight);
     LogDebug("disableGfxDMA          = %u\n", PiGfxConfig.disableGfxDMA);
-    LogDebug("disableCollision       = %u\n", PiGfxConfig.disableCollision);
+    // disableCollision removed
     LogDebug("debugVerbosity         = %u\n", PiGfxConfig.debugVerbosity);
     LogDebug("cursorBlink            = %u\n", PiGfxConfig.cursorBlink);
     LogDebug("soundLevel             = %u\n", PiGfxConfig.soundLevel);

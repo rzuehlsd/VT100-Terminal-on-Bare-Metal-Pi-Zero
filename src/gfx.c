@@ -28,7 +28,6 @@
 #define PFB( X, Y ) ( ctx.pfb + (Y) * ctx.Pitch + (X) )
 
 #define MAXBITMAPS 128
-#define MAXSPRITES 256
 
 int __abs__( int a )
 {
@@ -38,32 +37,7 @@ int __abs__( int a )
 /** Function type to compute a glyph address in a font. */
 typedef unsigned char* font_fun(unsigned int c);
 
-typedef struct
-{
-    int x;
-    int y;
-} vector2d;
-
-typedef struct
-{
-    vector2d min;
-    vector2d max;
-} tAABB;
-
-// Sprites
-typedef struct
-{
-    unsigned char  active;
-    unsigned char  bitmapRef;
-    unsigned int   width;
-    unsigned int   height;
-    unsigned char  transparentcolor;
-    DRAWING_MODE   mode;
-    int            x;
-    int            y;
-    tAABB          colDetRect;
-    unsigned char* pBackground;
-} tSprite;
+// Sprite support removed
 
 /** Display properties.
  *  Holds relevant properties for the display routines. Members in this
@@ -111,9 +85,6 @@ typedef struct {
     } paletteloader;
 
     unsigned char* bitmap[MAXBITMAPS];
-
-    unsigned int lastUsedSprite;
-    tSprite sprite[MAXSPRITES];
 
     // Terminal variables
     struct
@@ -266,16 +237,7 @@ void gfx_compute_font()
 }
 
 
-//// Collision detection
-//// Concept taken from cute_c2
-unsigned char AABBtoAABBcollide(tAABB* pA, tAABB* pB)
-{
-    int d0 = pB->max.x+1 < pA->min.x;
-    int d1 = pA->max.x+1 < pB->min.x;
-    int d2 = pB->max.y+1 < pA->min.y;
-    int d3 = pA->max.y+1 < pB->min.y;
-    return !(d0 | d1 | d2 | d3);
-}
+// Sprite collision detection removed
 
 /** Sets the display variables. This is called by initialize_framebuffer when setting mode.
  * Default to 8x16 font if no other font was selected before.
@@ -398,266 +360,15 @@ void gfx_set_transparent_color( GFX_COL color )
 }
 
 
-// Sprite collision detection
-void gfx_check_collision(unsigned char own)
-{
-    if (PiGfxConfig.disableCollision) return;
+// Sprite collision detection removed
 
-    for (unsigned int i=0; i<=ctx.lastUsedSprite; i++)
-    {
-        if ((ctx.sprite[i].active == 0) || (i == own)) continue;
-        // check collision of own sprite with this sprite
-        if (AABBtoAABBcollide(&ctx.sprite[own].colDetRect, &ctx.sprite[i].colDetRect))
-        {
-            // collision detected
-            cout("\x1b[#");cout_d(own);cout(";");cout_d(i);cout("c");
-        }
-    }
-}
-
-/** Draw a sprite in normal mode.
- * The sprite pixels overwrite the existing background.
- * NB: Foreground and background color are not used by sprites.
- */
-void gfx_put_sprite_NORMAL( unsigned char* p_sprite, int x, int y )
-{
-    // Check Nul pointer
-    if (p_sprite == 0) return;
-    // Check start
-    if (x >= (int)ctx.W || y >= (int)ctx.H) return;
-    if (x<0 || y<0) return;
-
-    //unsigned int tact = time_microsec();
-
-    // Get framebuffer address and bitmap size
-    unsigned char* pf = PFB(x,y);
-    unsigned int *p_spr_32 = (unsigned int*)p_sprite;
-    unsigned int width  = *p_spr_32; p_spr_32++;
-    unsigned int height = *p_spr_32; p_spr_32++;
-
-    unsigned char* pspr = (unsigned char*)p_spr_32;
-
-    // limit bitmap size to screen
-    if (y+height > ctx.H) height = ctx.H - y;
-    unsigned int usedwidth = width;
-    if (x+width > ctx.W) usedwidth = ctx.W - x;
-
-    if (PiGfxConfig.disableGfxDMA)
-    {
-        for(unsigned int i=0; i<height; ++i )
-        {
-            veryfastmemcpy(pf, pspr, usedwidth);
-            pf += ctx.Pitch;
-            pspr += width;
-        }
-    }
-    else
-    {
-        dma_enqueue_operation( p_spr_32,
-                            pf,
-                            (((height-1) & 0xFFFF )<<16) | (usedwidth & 0xFFFF ),
-                            (((ctx.Pitch-usedwidth) & 0xFFFF)<<16 | ((width-usedwidth) & 0xFFFF)), /* bits 31:16 destination stride, 15:0 source stride */
-                            DMA_TI_DEST_INC | DMA_TI_2DMODE | DMA_TI_SRC_INC );
-        dma_execute_queue();
-    }
-    //cout("gfx_put_sprite_NORMAL took ");cout_d(time_microsec()- tact);cout(" DisableDMA=");cout_d(PiGfxConfig.disableGfxDMA);cout_endl();
-}
-/** Draw a sprite in XOR mode.
- * The sprite pixels are XORed with the existing background.
- * Interesting side effects:
- * - sprite pixel drawn over a black background (color 00) keep the original sprite color
- * - sprite color 0 pixel doesn't modify the existing background
- * NB: Foreground and background color are not used by sprites.
- */
-void gfx_put_sprite_XOR( unsigned char* p_sprite, int x, int y )
-{
-    // Check Nul pointer
-    if (p_sprite == 0) return;
-    // Check start
-    if (x >= (int)ctx.W || y >= (int)ctx.H) return;
-    if (x<0 || y<0) return;
-
-    //unsigned int tact = time_microsec();
-
-    unsigned char* pf = PFB(x,y);
-    unsigned int *p_spr_32 = (unsigned int*)p_sprite;
-    unsigned int width  = *p_spr_32; p_spr_32++;
-    unsigned int height = *p_spr_32; p_spr_32++;
-
-    unsigned int i,j;
-    unsigned char* pspr = (unsigned char*)p_spr_32;
-
-    // limit bitmap size to screen
-    if (y+height > ctx.H) height = ctx.H - y;
-    unsigned int usedwidth = width;
-    if (x+width > ctx.W) usedwidth = ctx.W - x;
-
-    for( i=0; i<height; ++i )
-    {
-        for( j=0; j<usedwidth; ++j )
-        {
-            unsigned char bkg = *pf;
-            unsigned char pix = *pspr++;
-            *pf++ = pix ^ bkg ;
-        }
-        pf += ctx.Pitch - usedwidth;
-        pspr += width - usedwidth;
-    }
-    //cout("gfx_put_sprite_XOR took ");cout_d(time_microsec()- tact);cout("DisableDMA=");cout_d(PiGfxConfig.disableGfxDMA);cout_endl();
-}
-/** Draw a transparent sprite. Pixels with the transparent color are not drawn,
- * leaving the existing background visible. By default, 00 is the transparent color.
- */
-void gfx_put_sprite_TRANSPARENT( unsigned char* p_sprite, int x, int y )
-{
-    // Check Nul pointer
-    if (p_sprite == 0) return;
-    // Check start
-    if (x >= (int)ctx.W || y >= (int)ctx.H) return;
-    if (x<0 || y<0) return;
-
-    //unsigned int tact = time_microsec();
-
-    unsigned char* pf = PFB(x,y);
-    unsigned int *p_spr_32 = (unsigned int*)p_sprite;
-    unsigned int width  = *p_spr_32; p_spr_32++;
-    unsigned int height = *p_spr_32; p_spr_32++;
-
-    unsigned int i,j;
-    unsigned char* pspr = (unsigned char*)p_spr_32;
-
-    // limit bitmap size to screen
-    if (y+height > ctx.H) height = ctx.H - y;
-    unsigned int usedwidth = width;
-    if (x+width > ctx.W) usedwidth = ctx.W - x;
-
-    for( i=0; i<height; ++i )
-    {
-        for( j=0; j<usedwidth; ++j )
-        {
-            unsigned char pix = *pspr++;
-            if (pix != ctx.transparentcolor) *pf = pix;
-            pf++;
-        }
-        pf += ctx.Pitch - usedwidth;
-        pspr += width - usedwidth;
-    }
-    //cout("gfx_put_sprite_TRANSPARENT took ");cout_d(time_microsec()- tact);cout(" DisableDMA=");cout_d(PiGfxConfig.disableGfxDMA);cout_endl();
-}
-
-// remove a sprite and restore previous background
-void gfx_remove_sprite(unsigned char idx)
-{
-    if (ctx.sprite[idx].active == 0) return;
-    if (ctx.sprite[idx].pBackground == 0) return;
-    gfx_put_sprite_NORMAL(ctx.sprite[idx].pBackground, ctx.sprite[idx].x, ctx.sprite[idx].y);
-    nmalloc_free(ctx.sprite[idx].pBackground);
-    ctx.sprite[idx].pBackground = 0;
-    ctx.sprite[idx].active = 0;
-
-    ctx.lastUsedSprite = 0;
-    for (unsigned int i=MAXSPRITES-1; i>0; i--)
-    {
-        if (ctx.sprite[i].active)
-        {
-            ctx.lastUsedSprite = i;
-            break;
-        }
-    }
-}
-
-// save background data before a sprite is drawn
-void gfx_save_background(tSprite* pSprite, unsigned char* pBitmap, unsigned int x, unsigned int y)
-{
-    // Check Nul pointer
-    if ((pSprite == 0) || (pBitmap == 0))  return;
-    // Check start
-    if (x >= ctx.W || y >= ctx.H) return;
-
-    //unsigned int tact = time_microsec();
-
-    // Get width and height
-    uint32_t* pW = (uint32_t*)pBitmap;
-    uint32_t* pH = pW+1;
-    pSprite->width = *pW;
-    pSprite->height = *pH;
-    // Alloc mem
-    pSprite->pBackground = nmalloc_malloc(8+(*pW)*(*pH));    // Header 8 bytes for x and y, then data
-    pW = (uint32_t*)pSprite->pBackground;
-    pH = pW+1;
-    // Write width and height to saved background
-    *pW = pSprite->width;
-    *pH = pSprite->height;
-    // Write pixel data to saved background
-    unsigned char* pScreen = PFB(x,y);
-    unsigned int i/*, j*/;
-    unsigned char* pSave = pSprite->pBackground+8;
-    unsigned int height = *pH;
-    unsigned int width = *pW;
-
-    // limit bitmap size to screen
-    if (y+height > ctx.H) height = ctx.H - y;
-    unsigned int usedwidth = width;
-    if (x+width > ctx.W) usedwidth = ctx.W - x;
-
-    if (PiGfxConfig.disableGfxDMA)
-    {
-        for( i=0; i<height; ++i )
-        {
-            veryfastmemcpy(pSave, pScreen, usedwidth);
-            pScreen += ctx.Pitch;
-            pSave += width;
-        }
-    }
-    else
-    {
-        dma_enqueue_operation( pScreen,
-                            pSave,
-                            (((height-1) & 0xFFFF )<<16) | (usedwidth & 0xFFFF ),
-                            (((width-usedwidth) & 0xFFFF)<<16 | ((ctx.Pitch-usedwidth) & 0xFFFF)), /* bits 31:16 destination stride, 15:0 source stride */
-                            DMA_TI_DEST_INC | DMA_TI_2DMODE | DMA_TI_SRC_INC );
-        dma_execute_queue();
-    }
-
-    //cout("gfx_save_background took ");cout_d(time_microsec()- tact);cout(" DisableDMA=");cout_d(PiGfxConfig.disableGfxDMA);cout_endl();
-}
-
-/** Draw a sprite in the current drawing mode.
- */
-draw_putsprite_fun (*gfx_put_sprite) = gfx_put_sprite_NORMAL;
-
-/** Correct sprite positions if screen is moved */
-void gfx_corr_sprite_pos(int dx, int dy)
-{
-    for (unsigned int i=0; i<=ctx.lastUsedSprite; i++)
-    {
-        if (ctx.sprite[i].active)
-        {
-            ctx.sprite[i].x += dx;
-            ctx.sprite[i].y += dy;
-            ctx.sprite[i].colDetRect.min.x += dx;
-            ctx.sprite[i].colDetRect.min.y += dy;
-            ctx.sprite[i].colDetRect.max.x += dx;
-            ctx.sprite[i].colDetRect.max.y += dy;
-        }
-    }
-}
+// Sprite helpers removed; keep a no-op position corrector for scroll calls
+static inline void gfx_corr_sprite_pos(int dx, int dy) { (void)dx; (void)dy; }
 
 /** Sets the whole display to background color. */
 void gfx_clear()
 {
-    for (unsigned int i=0; i<=ctx.lastUsedSprite; i++)
-    {
-        if (ctx.sprite[i].active)
-        {
-            if (ctx.sprite[i].pBackground)
-            {
-                nmalloc_free(ctx.sprite[i].pBackground);
-                ctx.sprite[i].pBackground = 0;
-            }
-            ctx.sprite[i].active = 0;
-        }
-    }
+    // Sprites removed: nothing to clear besides framebuffer
 
     if (PiGfxConfig.disableGfxDMA)
     {
@@ -1167,8 +878,7 @@ void gfx_putc_TRANSPARENT( unsigned int row, unsigned int col, unsigned char c )
  */
 draw_putc_fun (*gfx_putc) = &gfx_putc_NORMAL;
 
-/** Sets the drawing mode for sprites and characters.
- * For Sprites, transparent mode uses the transparent color (00 by default).
+/** Sets the drawing mode for character rendering (and affects bitmap tools where applicable).
  * @param mode the new drawing mode: drawingNORMAL, drawingXOR or drawingTRANSPARENT.
  */
 void gfx_set_drawing_mode( DRAWING_MODE mode )
@@ -1178,15 +888,12 @@ void gfx_set_drawing_mode( DRAWING_MODE mode )
     {
     case drawingNORMAL:
         gfx_putc = gfx_putc_NORMAL;
-        gfx_put_sprite = gfx_put_sprite_NORMAL;
         break;
     case drawingXOR:
         gfx_putc = gfx_putc_XOR;
-        gfx_put_sprite = gfx_put_sprite_XOR;
         break;
     case drawingTRANSPARENT:
         gfx_putc = gfx_putc_TRANSPARENT;
-        gfx_put_sprite = gfx_put_sprite_TRANSPARENT;
         break;
     }
 }
@@ -2017,115 +1724,28 @@ int state_fun_final_letter( char ch, scn_state *state )
                     // expects bitmap index, x, y
                     if (state->cmd_params[0] < MAXBITMAPS)
                     {
-                        gfx_put_sprite(ctx.bitmap[state->cmd_params[0]], state->cmd_params[1], state->cmd_params[2]);
-                    }
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-
-            case 's':
-                /* draw a sprite */
-                if (state->cmd_params_size == 4)
-                {
-                    // expects sprite index, bitmap ref, x, y
-                    if ((state->cmd_params[0] < MAXSPRITES) && (state->cmd_params[1] < MAXBITMAPS))
-                    {
-                        // If the sprite is active we must restore the background
-                        gfx_remove_sprite(state->cmd_params[0]);
-
-                        // Is the referenced bitmap available?
-                        if (ctx.bitmap[state->cmd_params[1]])
+                        unsigned char* bm = ctx.bitmap[state->cmd_params[0]];
+                        if (!bm) { retval = 0; goto back_to_normal; }
+                        // Inline blit for raw bitmap
+                        unsigned int *p32 = (unsigned int*)bm;
+                        unsigned int bw  = *p32++; // width
+                        unsigned int bh = *p32++;  // height
+                        unsigned char* src = (unsigned char*)p32;
+                        int x = state->cmd_params[1];
+                        int y = state->cmd_params[2];
+                        if (x >= 0 && y >= 0 && x < (int)ctx.W && y < (int)ctx.H)
                         {
-                            unsigned int* pW = (unsigned int*)ctx.bitmap[state->cmd_params[1]];
-                            unsigned int* pH = pW+1;
-                            gfx_save_background(&ctx.sprite[state->cmd_params[0]], ctx.bitmap[state->cmd_params[1]], state->cmd_params[2], state->cmd_params[3]);
-                            gfx_put_sprite(ctx.bitmap[state->cmd_params[1]], state->cmd_params[2], state->cmd_params[3]);
-
-                            // Save drawing mode and transparentcolor
-                            ctx.sprite[state->cmd_params[0]].mode = ctx.mode;
-                            ctx.sprite[state->cmd_params[0]].transparentcolor = ctx.transparentcolor;
-
-                            // Draw sprite
-                            ctx.sprite[state->cmd_params[0]].active = 1;
-                            ctx.sprite[state->cmd_params[0]].bitmapRef = state->cmd_params[1];
-                            ctx.sprite[state->cmd_params[0]].x = state->cmd_params[2];
-                            ctx.sprite[state->cmd_params[0]].y = state->cmd_params[3];
-                            ctx.sprite[state->cmd_params[0]].width = *pW;
-                            ctx.sprite[state->cmd_params[0]].height = *pH;
-
-                            if (state->cmd_params[0] > ctx.lastUsedSprite) ctx.lastUsedSprite = state->cmd_params[0];
-
-                            // Set collision detection rectangle
-                            ctx.sprite[state->cmd_params[0]].colDetRect.min.x = ctx.sprite[state->cmd_params[0]].x;
-                            ctx.sprite[state->cmd_params[0]].colDetRect.min.y = ctx.sprite[state->cmd_params[0]].y;
-                            ctx.sprite[state->cmd_params[0]].colDetRect.max.x = ctx.sprite[state->cmd_params[0]].x + *pW-1;
-                            ctx.sprite[state->cmd_params[0]].colDetRect.max.y = ctx.sprite[state->cmd_params[0]].y + *pH-1;
-
-                            gfx_check_collision(state->cmd_params[0]);
-
+                            if (y+bh > ctx.H) bh = ctx.H - y;
+                            unsigned int usedw = bw;
+                            if (x+(int)bw > (int)ctx.W) usedw = ctx.W - x;
+                            unsigned char* dst = PFB(x,y);
+                            for (unsigned int i=0;i<bh;i++)
+                            {
+                                veryfastmemcpy(dst, src, usedw);
+                                dst += ctx.Pitch;
+                                src += bw;
+                            }
                         }
-                    }
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-
-            case 'x':
-                /* remove a sprite */
-                if (state->cmd_params_size == 1)
-                {
-                    // expects sprite index
-                    if (state->cmd_params[0] < MAXBITMAPS)
-                    {
-                        gfx_remove_sprite(state->cmd_params[0]);
-                    }
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-
-            case 'm':
-                /* move a sprite to a new position */
-                if (state->cmd_params_size == 3)
-                {
-                    // expects sprite index, x, y
-                    if ((state->cmd_params[0] < MAXSPRITES) && (ctx.sprite[state->cmd_params[0]].active))
-                    {
-                        gfx_remove_sprite(state->cmd_params[0]);
-
-                        gfx_save_background(&ctx.sprite[state->cmd_params[0]], ctx.bitmap[ctx.sprite[state->cmd_params[0]].bitmapRef], state->cmd_params[1], state->cmd_params[2]);
-
-                        if (ctx.sprite[state->cmd_params[0]].mode == drawingNORMAL)
-                            gfx_put_sprite_NORMAL(ctx.bitmap[ctx.sprite[state->cmd_params[0]].bitmapRef], state->cmd_params[1], state->cmd_params[2]);
-                        else if (ctx.sprite[state->cmd_params[0]].mode == drawingXOR)
-                            gfx_put_sprite_XOR(ctx.bitmap[ctx.sprite[state->cmd_params[0]].bitmapRef], state->cmd_params[1], state->cmd_params[2]);
-                        else
-                        {
-                            unsigned char saveColor = ctx.transparentcolor;
-                            ctx.transparentcolor = ctx.sprite[state->cmd_params[0]].transparentcolor;
-                            gfx_put_sprite_TRANSPARENT(ctx.bitmap[ctx.sprite[state->cmd_params[0]].bitmapRef], state->cmd_params[1], state->cmd_params[2]);
-                            ctx.transparentcolor = saveColor;
-                        }
-
-                        unsigned int* pW = (unsigned int*)ctx.bitmap[ctx.sprite[state->cmd_params[0]].bitmapRef];
-                        unsigned int* pH = pW+1;
-
-                        ctx.sprite[state->cmd_params[0]].active = 1;
-                        ctx.sprite[state->cmd_params[0]].x = state->cmd_params[1];
-                        ctx.sprite[state->cmd_params[0]].y = state->cmd_params[2];
-                        ctx.sprite[state->cmd_params[0]].width = *pW;
-                        ctx.sprite[state->cmd_params[0]].height = *pH;
-
-                        if (state->cmd_params[0] > ctx.lastUsedSprite) ctx.lastUsedSprite = state->cmd_params[0];
-
-                        // Set collision detection rectangle
-                        ctx.sprite[state->cmd_params[0]].colDetRect.min.x = ctx.sprite[state->cmd_params[0]].x;
-                        ctx.sprite[state->cmd_params[0]].colDetRect.min.y = ctx.sprite[state->cmd_params[0]].y;
-                        ctx.sprite[state->cmd_params[0]].colDetRect.max.x = ctx.sprite[state->cmd_params[0]].x + *pW-1;
-                        ctx.sprite[state->cmd_params[0]].colDetRect.max.y = ctx.sprite[state->cmd_params[0]].y + *pH-1;
-
-                        gfx_check_collision(state->cmd_params[0]);
                     }
                 }
                 retval = 0;

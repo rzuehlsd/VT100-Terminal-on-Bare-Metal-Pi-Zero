@@ -42,7 +42,6 @@ typedef struct
     unsigned int displayWidth;          // Display width (640 or 1024)
     unsigned int displayHeight;         // Display height (480 or 768)
     unsigned int disableGfxDMA;         // Disable DMA for Gfx if 1
-    unsigned int disableCollision;      // Disable collision detection if 1
     unsigned int debugVerbosity;        // Debug verbosity level (0=errors+notices, 1=+warnings, 2=+debug)
     unsigned int cursorBlink;           // Cursor blinking: 1=enabled, 0=disabled
     unsigned int soundLevel;            // Sound level (duty cycle %) for beeps (0-100)

@@ -61,8 +61,8 @@ Remark: The setup dialog is entered by pressing the Print Screen key.
 
 The following modifications are on the list of open to‑dos:
 
-- [ ] Remove the sprite implementation from the code 
-- [ ] Remove feature to upload sprites and fonts
+- [x] Remove the sprite implementation from the code
+- [ ] Remove feature to upload fonts
 - [ ] Analyze code to remove dead code
 - [ ] Rearrange the include and file hierarchy for a more structured architecture
 - [ ] Add OpenSCAD file for back plate of terminal to hold the adapter board at the back and allow access to the connectors, power switch and sd card

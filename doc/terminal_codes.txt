@@ -23,7 +23,7 @@ Clearing Text
 <ESC>[J             Clear the screen from cursor
 <ESC>[0J            Clear the screen from cursor
 <ESC>[1J            Clear the screen until cursor position
-<ESC>[2J            Clear the screen and move the cursor to 0-0, defined sprites are removed, loaded bitmaps are kept
+<ESC>[2J            Clear the screen and move the cursor to 0-0. Loaded bitmaps are kept.
 
 Insert / Delete
 
@@ -51,9 +51,7 @@ Graphics
 <ESC>[#<idx>;<x>;<y>b                    Load raw bitmap to index 0-127 with width x and height y pixels. Expects x*y binary pixel bytes sent after this command.
 <ESC>[#<idx>;<x>;<y>B                    Load RLE compressed bitmap to index 0-127 with width x and height y pixels. Expects RLE compressed binary pixel data after this command, e.g. 0x10 0x20 draws color 16 for the next 32 pixels.
 <ESC>[#<idx>;<x>;<y>d                    Draw bitmap with index 0-127 at position x, y.
-<ESC>[#<idx>;<ref>;<x>;<y>s              Draw a sprite with index 0-255 from bitmap <ref> at position <x>, <y>.
-<ESC>[#<idx>x                            Remove sprite with index 0-255, restore background.
-<ESC>[#<idx>;<x>;<y>m                    Move sprite with index 0-255 to x,y, restore background.
+                                        [Sprite commands removed]
 
 Scrolling
 
@@ -81,9 +79,9 @@ Settings
 <ESC>[48;5;<n>m     Set background color to <n> (0-255)
 <ESC>[48;6;<n>m     Set background color to <n> (0-255) and save as default
 <ESC>[58;5;<n>m     Set transparent color to <n> (0-255)
-<ESC>[=0m           Reset color attributes (gray on black) and sets normal drawing (sprites and characters)
-<ESC>[=1m           Set XOR drawing (sprites and characters)
-<ESC>[=2m           Set transparent drawing (sprites and characters)
+<ESC>[=0m           Reset color attributes (gray on black) and set normal drawing (text/bitmaps)
+<ESC>[=1m           Set XOR drawing (text only)
+<ESC>[=2m           Set transparent drawing (text only)
 <ESC>[=0f           Set 8x8 font
 <ESC>[=1f           Set TRS-80 8x16 font
 <ESC>[=2f           Set TRS-80 8x24 font
@@ -97,6 +95,5 @@ Settings
                     Here's an example for color 0:red, 1:green, 2:blue -> <ESC>[=16;3pFF0000;FF00;FF;
                     
 Commands from PiGFX to the controller
-
-<ESC>[#<idx1>;<idx2>c                   Collision detected between sprite idx1 and sprite idx2.
+                                        [Sprite collision reporting removed]
 

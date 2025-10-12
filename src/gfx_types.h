@@ -11,12 +11,12 @@
 /** Color type */
 typedef unsigned char GFX_COL;
 
-/** Drawing modes for putc and putsprite */
+/** Drawing modes for text and bitmaps */
 typedef enum
 {
 	drawingNORMAL,			// foreground color on background color (normal text mode)
-	drawingXOR,				// pixel xored with background (text and sprites)
-	drawingTRANSPARENT,		// non null pixel drawn on background (text and sprites)
+	drawingXOR,				// pixel xored with background (text only)
+	drawingTRANSPARENT,		// non null pixel drawn on background (text only)
 } DRAWING_MODE;
 
 /** Standard color codes */
@@ -42,9 +42,6 @@ typedef enum
 
 // Function type for the functions drawing a character in each mode (normal, xor, transparent)
 typedef void draw_putc_fun( unsigned int row, unsigned int col, unsigned char c );
-
-// Function type for the functions drawing a sprite in each mode (normal, xor, transparent)
-typedef void draw_putsprite_fun( unsigned char* p_sprite, int x, int y );
 
 
 

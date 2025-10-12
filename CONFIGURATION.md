@@ -32,7 +32,7 @@ All settings available in the setup dialog (Print Screen key) can now be saved a
 
 #### [General] Section
 - `disableGfxDMA = 1` - Disable fast DMA memory access
-- `disableCollision = 0` - Disable sprite collision detection
+  
 - `debugVerbosity = 2` - **NEW:** Debug verbosity (0=errors+notices, 1=+warnings, 2=+debug)
 - `soundLevel = 50` - **NEW:** Beep loudness (PWM duty %, 0–100)
 
@@ -101,7 +101,6 @@ cursorBlink = 0
 
 [General]
 disableGfxDMA = 1
-disableCollision = 0
 debugVerbosity = 2
 soundLevel = 50             ; Beep loudness (0-100)
 ```
