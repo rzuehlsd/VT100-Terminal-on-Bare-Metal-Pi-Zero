@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## 2.0.1 - 2025-10-12
 
-- Minor documentation cleanups and removal of dead code comments after sprite removal.
+- Added doc/GRAPHICS_EXTENSIONS.md documenting graphics and palette escape sequences
+- Linked graphics doc from README.md
+- Fixed Setup “Sound Level” rendering (single cleared field, clamped 0–100)
+- Config: case-insensitive keyboard layout and case-insensitive `pigfx.txt` lookup
+- Minor documentation cleanups and removal of dead code comments after sprite removal
 
 ## 2.0.0 - 2025-10-12
 

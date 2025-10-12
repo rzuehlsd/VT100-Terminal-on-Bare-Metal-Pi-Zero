@@ -55,6 +55,36 @@ The following modifications and enhancements have been implemented:
   - Polished auto-repeat handling; repeat delay and rate are configurable in the setup dialog
   - Generate bell sound via software PWM with configurable sound level using a simple passive buzzer
 
+For terminal graphics and palette control sequences, see: doc/GRAPHICS_EXTENSIONS.md
+
+## Quick Start: Graphics over UART
+
+Prereq: Python 3 and pyserial on your host.
+
+Install dependencies (optional helper):
+
+```bash
+python3 -m pip install -r tools/requirements.txt
+```
+
+Examples using `tools/uart_send.py`:
+
+- Load a 32x32 binary bitmap into slot 0 and blit it at (10,10):
+
+```bash
+python3 tools/uart_send.py /dev/ttyUSB0 115200 load-bin 0 32 32 /path/to/bitmap.raw
+python3 tools/uart_send.py /dev/ttyUSB0 115200 blit 0 10 10
+```
+
+- Upload a simple RGB palette (hex) and select VGA palette:
+
+```bash
+python3 tools/uart_send.py /dev/ttyUSB0 115200 palette-upload 16 FF0000,00FF00,0000FF
+python3 tools/uart_send.py /dev/ttyUSB0 115200 palette-select 1
+```
+
+See `doc/GRAPHICS_EXTENSIONS.md` for the full set of escape sequences and details.
+
 Remark: The setup dialog is entered by pressing the Print Screen key.
 
 ## Still to do
@@ -72,17 +102,20 @@ The following modifications are on the list of open to‑dos:
 The font build system is described in the link above. The main Makefile has been modified to use a variable to control the build for different targets and also rebuilds the USB library:
 
 **Single RPI Variable Control:**
+
 - Use `make RPI=1` for Raspberry Pi 1
-- Use `make RPI=2` for Raspberry Pi 2  
+- Use `make RPI=2` for Raspberry Pi 2
 - Use `make RPI=3` for Raspberry Pi 3
 - Use `make RPI=4` for Raspberry Pi 4
 
 **Automatic Toolchain Selection:**
+
 - Pi 1-3: Automatically uses `arm-none-eabi-` toolchain
 - Pi 4: Automatically uses `aarch64-linux-gnu-` toolchain
 - No manual toolchain configuration required
 
 **Intelligent USB Library Management:**
+
 - Automatically builds uspi library for Pi 1-3
 - Skips uspi for Pi 4 (not required)
 - Automatic Config.mk regeneration when switching Pi versions
@@ -90,7 +123,7 @@ The font build system is described in the link above. The main Makefile has been
 
 **Build Information Display:**
 
-```
+```text
 Creating kernel.img for Raspberry Pi 1
 ==========================================
 Build completed for Raspberry Pi 1
@@ -107,9 +140,10 @@ The VT100 case was printed on a Bamboo Lab P1S 3D printer using the STL files pr
 
 I then applied a light‑grey filler to smooth the surface and prepare the case for painting. I painted the case in color RAL1015 "Oyster White" which, in my opinion, comes very close to the original color.
 
-<p align="center">
-<img src="images/Case_1.jpg" alt="Case initial" width="30%">  <img src="images/Case_2.jpg" alt="Case final" width="55%"> 
-</p>
+
+![Case initial](images/Case_1.jpg)
+
+![Case final](images/Case_2.jpg)
 
 
 ## Installing
@@ -131,7 +165,7 @@ Parts used:
 
 ## Upstream compatibility
 
-This project does not intend to be upstream compatible with the original PiGFX project! 
+This project does not intend to be upstream compatible with the original PiGFX project!
 I will add new features and reduce the code to the minimum to implement my requirements.
 
 ## License

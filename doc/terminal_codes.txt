@@ -1,36 +1,42 @@
+Note: Codes marked are classified by terminal generation:
+    \x1b[32m[VT100]\x1b[0m / \x1b[32m[ANSI]\x1b[0m = standard VT100/ANSI
+    \x1b[33m[VT102]\x1b[0m = VT102 additions
+    \x1b[36m[VT220]\x1b[0m = VT220 additions
+Unmarked entries are PiGFX extensions or later DEC/ANSI variants not in the original VT100.
+
 Cursor Control
 
-<ESC>[?25l          Cursor invisible
+<ESC>[?25l          Cursor invisible \x1b[36m[VT220]\x1b[0m
 <ESC>[?25b          Cursor blinking
-<ESC>[?25h          Cursor visible
-<ESC>[H             Move to 0-0
-<ESC>[f             Move to 0-0
+<ESC>[?25h          Cursor visible \x1b[36m[VT220]\x1b[0m
+<ESC>[H             Move to 0-0 [32m[VT100][0m
+<ESC>[f             Move to 0-0 [32m[VT100][0m
 <ESC>[s             Save the cursor position 
 <ESC>[u             Move cursor to previously saved position 
-<ESC>[<Row>;<Col>H  Move to <Row>,<Col>
-<ESC>[<Row>;<Col>f  Move to <Row>,<Col>
-<ESC>[<n>A          Move the cursor up <n> lines
-<ESC>[<n>B          Move the cursor down <n> lines
-<ESC>[<n>C          Move the cursor forward <n> characters
-<ESC>[<n>D          Move the cursor backward <n> characters
+<ESC>[<Row>;<Col>H  Move to <Row>,<Col> [32m[VT100][0m
+<ESC>[<Row>;<Col>f  Move to <Row>,<Col> [32m[VT100][0m
+<ESC>[<n>A          Move the cursor up <n> lines [32m[VT100][0m
+<ESC>[<n>B          Move the cursor down <n> lines [32m[VT100][0m
+<ESC>[<n>C          Move the cursor forward <n> characters [32m[VT100][0m
+<ESC>[<n>D          Move the cursor backward <n> characters [32m[VT100][0m
 
 Clearing Text
 
-<ESC>[K             Clear from cursor to the end of the line
-<ESC>[0K            Clear from cursor to the end of the line
-<ESC>[1K            Clear from the beginning of the current line to the cursor
-<ESC>[2K            Clear the whole line
-<ESC>[J             Clear the screen from cursor
-<ESC>[0J            Clear the screen from cursor
-<ESC>[1J            Clear the screen until cursor position
-<ESC>[2J            Clear the screen and move the cursor to 0-0. Loaded bitmaps are kept.
+<ESC>[K             Clear from cursor to the end of the line [32m[VT100][0m
+<ESC>[0K            Clear from cursor to the end of the line [32m[VT100][0m
+<ESC>[1K            Clear from the beginning of the current line to the cursor [32m[VT100][0m
+<ESC>[2K            Clear the whole line [32m[VT100][0m
+<ESC>[J             Clear the screen from cursor [32m[VT100][0m
+<ESC>[0J            Clear the screen from cursor [32m[VT100][0m
+<ESC>[1J            Clear the screen until cursor position [32m[VT100][0m
+<ESC>[2J            Clear the screen and move the cursor to 0-0. Loaded bitmaps are kept. [32m[VT100][0m
 
 Insert / Delete
 
-<ESC>[1@            Insert a blank character position (shift line to the right)
-<ESC>[1P            Delete a character position (shift line to the left)
-<ESC>[1L            Insert blank line at current row (shift screen down)
-<ESC>[1M            Delete the current line (shift screen up)
+<ESC>[1@            Insert a blank character position (shift line to the right) \x1b[33m[VT102]\x1b[0m
+<ESC>[1P            Delete a character position (shift line to the left) \x1b[33m[VT102]\x1b[0m
+<ESC>[1L            Insert blank line at current row (shift screen down) \x1b[33m[VT102]\x1b[0m
+<ESC>[1M            Delete the current line (shift screen up) \x1b[33m[VT102]\x1b[0m
  
 Graphics
 
@@ -62,18 +68,18 @@ Scrolling
  
 Settings
 
-<ESC>[m             Reset color attributes (gray on black)
-<ESC>[<a>;<b>;<c>m  Set display attributes (1 to 3 params, so <b> and <c> are optional)
-                    0 = Reset all attributes
+<ESC>[m             Reset color attributes (gray on black) [32m[VT100][0m
+<ESC>[<a>;<b>;<c>m  Set display attributes (1 to 3 params, so <b> and <c> are optional) [32m[VT100][0m
+                    0 = Reset all attributes [32m[VT100][0m
                     1 = increase intensity (only in 4 byte mode colors 0..7)
                     2 = decrease intensity (only in 4 byte mode colors 8..15)
-                    7 = Turn on reverse color
+                    7 = Turn on reverse color [32m[VT100][0m
                     22= shifts color from dim to bright (only in 4 byte mode 0..7)
                     27= Turn off reverse color 
-                    30 ... 37 set foreground color to palette color 0 ... 7
-                    40 ... 47 set background color to palette color 0 ... 7
-                    90 ... 97 set high intensity foreground color (palette color 8 ... 15)
-                    100 ... 107 set high intensity background color (palette color 8 ... 15) 
+                    30 ... 37 set foreground color to palette color 0 ... 7 \x1b[32m[ANSI]\x1b[0m
+                    40 ... 47 set background color to palette color 0 ... 7 \x1b[32m[ANSI]\x1b[0m
+                    90 ... 97 set high intensity foreground color (palette color 8 ... 15) \x1b[32m[ANSI]\x1b[0m
+                    100 ... 107 set high intensity background color (palette color 8 ... 15) \x1b[32m[ANSI]\x1b[0m 
 <ESC>[38;5;<n>m     Set foreground color to <n> (0-255)
 <ESC>[38;6;<n>m     Set foreground color to <n> (0-255) and save as default
 <ESC>[48;5;<n>m     Set background color to <n> (0-255)
@@ -96,4 +102,5 @@ Settings
                     
 Commands from PiGFX to the controller
                                         [Sprite collision reporting removed]
+See `terminal_codes.md`.
 
