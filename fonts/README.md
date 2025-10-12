@@ -20,13 +20,13 @@ The makefile will build the tool itself and then the available fonts (BIN from P
 
 ## Using the tool
 
-The tool will load the PNG file using ImageMagick, so you must check that the `convert` utility can be found from command line. To install ImageMagick, use MacPort or Brew
+The tool will load the PNG file using ImageMagick, so you must check that the `convert` utility can be found from command line. To install ImageMagick, use MacPorts or Homebrew.
 
-On a Mac, starting a program from the Finder doesn't gives it access to system path, so be sure to use a terminal command line before calling `make` or ImageMagick might not be found.
+On a Mac, starting a program from the Finder doesn't give it access to the system PATH, so be sure to use a terminal command line before calling `make` or ImageMagick might not be found.
 
 To get information about the tool, use `buildfont -?`.
 
-To build a BIN file from a PNG file use the following syntaxx:
+To build a BIN file from a PNG file use the following syntax:
 
 `buildfont -i <PNGpath> -o <BINpath> -w <fontwidth> -h <fontheight> [-c 0|1] [-q]`
 
@@ -34,8 +34,8 @@ Where :
 
 * `<PNGpath>` is the full or relative path to the PNG file
 * `<BINpath>` is the full or relative path to the file which the tool will create
-* `<fontwidth` is the pixel width of each character
-* `<fontheight`` is the number of lines of each character
+* `<fontwidth>` is the pixel width of each character
+* `<fontheight>` is the number of lines of each character
 * `-c 0` means the PNG displays black characters on any non-black color background
 * `-c 1` means the PNG displays any non-black color characters on black background 
 * `-q` is for quiet mode, by default the tool displays an ASCII rendering of each character.
@@ -49,9 +49,13 @@ Original program for the 8x8 font used in the original PiGfx by Filippo Bergamas
 Extension to other files and formats by Francis Piérot.
 
 8x8 font downloaded from:
-[http://uzebox.org/wiki/index.php?title=Font_Bitmaps]()
+[http://uzebox.org/wiki/index.php?title=Font_Bitmaps](http://uzebox.org/wiki/index.php?title=Font_Bitmaps)
 
 8x24 TRS-80 font made via screen copy of:
-[http://48k.ca/320char.html]()
+[http://48k.ca/320char.html](http://48k.ca/320char.html)
 
-8x16 TRS-80 Font photoshoped from 8x24. Minor artifacts: graphics characters (2x3 pixels as codes 128-191) are using 5 lines for top pixels, 6 lines for middle pixels and 5 lines for bottom pixels so they fill the 16 lines but the middle pixels are a little taller than the top and bottom. Some characters do not have separating empty bottom line(s) and hence will touch the top of some charecters below them.
+8x16 TRS-80 font photoshopped from 8x24. Minor artifacts: graphics characters (2x3 pixels as codes 128-191) are using 5 lines for top pixels, 6 lines for middle pixels and 5 lines for bottom pixels so they fill the 16 lines but the middle pixels are a little taller than the top and bottom. Some characters do not have separating empty bottom line(s) and hence will touch the top of some characters below them.
+
+10x20 VT220 font was created from png file found here:[https://vt100.net/dec/vt220/glyphs](https://vt100.net/dec/vt220/glyphs)
+
+10x20 VT100 font was based on a png file, but I currently have no reference :-(
