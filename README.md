@@ -9,11 +9,11 @@ Original project:
 
 We keep the original MIT license; see `LICENSE` in this repository for details.
 
-## What’s different in this fork
+## What’s different in this project
 
-I changed the original code to create a replica of the DEC VT100 terminal, both in software and hardware. I used a 60% scale 3D model of the VT100 terminal, which was created by Megardi (https://www.instructables.com/23-Scale-VT100-Terminal-Reproduction/) for printing the case. 
+I changed the original code with the intension to create a replica of the DEC VT100 terminal, both in software and hardware. I used a 60% scale 3D model of the VT100 terminal, which was created by Megardi (https://www.instructables.com/23-Scale-VT100-Terminal-Reproduction/) for printing the case. 
 
-The PiGFX implementation was a very good start for the VT100, but to implement my additional requirements I had to add some changes and on the way also fixed some glitches.
+The PiGFX implementation was a very good start for my VT100 software, but to implement my additional requirements I had to add some changes and on the way also fixed some glitches.
 
 I wanted to replicate the real feeling of a VT100 terminal, including fonts and bell. I did not intend to create a 100% emulation of a real VT100. I just wanted a bare‑metal implementation that runs on a Pi Zero, starts up within seconds, and gives me a "retro" feeling when playing with my vintage computer stuff. 
 
@@ -28,19 +28,19 @@ But if you feel you need a close replication of the original VT100, please refer
 
 ## Hardware
 
-The main reason for my additional software requirements was that I created an adapter board for a Pi Zero (any other Pi should also work). The board can be used to power the Pi and an 8" TFT display (I use one that only needs 5 VDC) from a 7.5 to 9 V DC or AC plug‑in power supply. The board also provides a DIN‑6 connector to connect directly to my MBC2‑Z80 board, an RS‑232 port, and a USB Type‑A connector to interface with standard USB keyboards. 
+The main reason for my additional software requirements was that I created an adapter board for a Pi Zero (any other Pi should also do). The board can be used to power the Pi and an 8" TFT display (I use one that only needs 5 VDC) from a 7.5 to 9 V DC or AC plug‑in power supply. The board also provides a DIN‑6 connector to connect directly to my MBC2‑Z80 board, an RS‑232 port, and a USB Type‑A connector to interface with standard USB keyboards. 
 
-I used an RS‑232 board that not only holds the DB9 connector but also an RS2232 chip. So I only needed to connect the four pins on the back to my board.
+I used an RS‑232 adapter (bought from Aliexpress) that not only holds the DB9 connector but also an RS3232 chip. So I only needed to connect the four pins on the back to my board.
 
-The cable you see going from the Pi to the board connects D+/D‑ to test points on the second USB connector on the Pi Zero (see https://maker-tutorials.com/raspberry-pi-zero-mit-usb-buchse-typ-a-erweitern-anloeten/).
+The cable you see going from the Pi to the board connects D+/D‑ from the USB-A connector to test points on the second USB connector on the Pi Zero (see https://maker-tutorials.com/raspberry-pi-zero-mit-usb-buchse-typ-a-erweitern-anloeten/). This was a convinient way to directly connect a USB keyboard to the Pi.
 
-I also implemented a relay to switch the TxD and RxD lines of the Pi Zero, as I discovered that real null‑modem cables are not easy to find. Finally, I added a simple buzzer to the board to simulate the 785 Hz bell tone of the VT100 via software PWM. The following picture shows the prototype of the board (without buzzer).
+I also added a relay to switch the TxD and RxD lines of the Pi Zero, as I discovered, that real null‑modem cables are not easy to find. Finally, I added a simple passive buzzer to the board to simulate the 785 Hz bell tone of the VT100 via software PWM. The following picture shows the prototype of the board (without buzzer).
 
 <p align="center">
 <img src="images/board.jpg" alt="Prototype" width="50%">  
 </p>
 
-The KiCad files are provided in the repository in the hardware directory. For a detailed description, see [Hardware README.md](hardware/README.md).
+The KiCad files are provided in the hardware directory of this repository. For a detailed description, see [Hardware README.md](hardware/README.md).
 
 ## List of Modifications
 
@@ -51,14 +51,23 @@ The following modifications and enhancements have been implemented:
 - Rearranging the build system and Makefile
 - Implemented Enhancements:
   - Dynamic switching between screen resolutions 640×480, 800×640, and 1024×768
-  - Added a “Switch Rx<>Tx” toggle in the setup dialog and applied the switch immediately on save to switch Rx and Tx through a relay
+  - Added a “Switch Rx<>Tx” toggle in the setup dialog and applied the setting immediately on save to switch Rx and Tx through a relay
   - Polished auto-repeat handling; repeat delay and rate are configurable in the setup dialog
   - Generate bell sound via software PWM with configurable sound level using a simple passive buzzer
 
-Remark: Setup dialog is entered by Print key.
+Remark: Setup dialog is entered by pressing Print key.
 
+## Still to do
 
-## Enhanced Build System
+The following modifications are on the list of open To Dos:
+
+- [ ] Remove the sprite implementation from the code 
+- [ ] Remove feature to upload sprites and fonts
+- [ ] Analyze code to remove dead code
+- [ ] Rearange the include and file hierarchy for a more structured architecture
+- [ ] Add OpenSCAD file for back plate of terminal to hold the adapter board at the back and allow access to the connectors, power switch and sd card
+
+## Building the Application
 
 The font build system is described in the link above. The main Makefile has been modified to use a variable to control the build for different targets and also rebuilds the USB library:
 
@@ -103,9 +112,27 @@ I then applied a light‑grey filler to smooth the surface and prepare the case 
 </p>
 
 
+## Installing
+
+To install the adapter board with the Pi zero a specific back plate has been designed which fits the layout of the connectors on the board. 
+The OpenSCAD file for the modified back plate can be cound in the hardware directory.
+
+In addition a sd card extender cable is used to provide access to the sd card at the back of the terminal through a small slot. The connection to the TFT controller is done using a very flexible miniHDMI to miniHDMI cable. The display controller is stick to the back of the display with dual sided tape, but be aware to only use very small strips on both side of the controller board. The tape is very, very sticky and I damaged the connection between controller and display trying to remove the controller from the back of the display!
+
+
+Parts used:
+
+- SD Card extension cable: https://de.aliexpress.com/item/4001200431510.html?spm=a2g0o.order_list.order_list_main.11.51de5c5fxcDiwo&gatewayAdapt=glo2deu
+- mini HDMI to miniHDMI cable: https://de.aliexpress.com/item/1005008622570470.html?spm=a2g0o.order_list.order_list_main.41.51de5c5fxcDiwo&gatewayAdapt=glo2d
+    Remark: Use the C1 - C1 option!
+- 8'' Display and controller: https://de.aliexpress.com/item/1005004162403387.html?spm=a2g0o.order_list.order_list_main.47.51de5c5fxcDiwo&gatewayAdapt=glo2deu
+- passive 5VD buzzer: https://de.aliexpress.com/item/1005008785167242.html?spm=a2g0o.order_list.order_list_main.15.37205c5f1Nn217&gatewayAdapt=glo2deu
+- RS232 adapter: https://de.aliexpress.com/item/1005008264187706.html?spm=a2g0o.order_list.order_list_main.137.37205c5f1Nn217&gatewayAdapt=glo2deu
+
 ## Upstream compatibility
 
-This fork tracks the upstream repository via a separate `upstream` remote. Where sensible, changes are kept minimal and localized to preserve compatibility with ongoing upstream development.
+This project does not intend to be upstream compatible with the original PiGFX project! 
+I will add new features and reduce the code to the minimum required to implement my requirements.
 
 ## License
 
