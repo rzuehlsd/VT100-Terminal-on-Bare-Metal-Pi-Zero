@@ -5,6 +5,8 @@ Legend:
 - 🟢 VT100/ANSI standard
 - 🟡 VT102 addition
 - 🔷 VT220 addition
+- 🔴 Not supported VT100 feature (defined by VT100 but not implemented in PiGFX)
+- 🟠 Not supported ANSI feature (defined by ANSI but not implemented in PiGFX)
 - Unmarked: PiGFX extensions or later/non-DEC variants
 
 Note: Sequences are shown using `<ESC>` for the 0x1B escape byte and CSI as `ESC[`.
@@ -25,6 +27,24 @@ Note: Sequences are shown using `<ESC>` for the 0x1B escape byte and CSI as `ESC
 - `<ESC>[s` — Save the cursor position
 - `<ESC>[u` — Move cursor to previously saved position
 
+### Unsupported VT100/ANSI — Cursor control
+
+- `<ESC>[E` — Cursor Next Line (CNL) 🟠
+- `<ESC>[F` — Cursor Preceding Line (CPL) 🟠
+- `<ESC>[G` — Cursor Horizontal Absolute (CHA) 🟠
+- `<ESC>[d` — Line Position Absolute (VPA) 🟠
+- `<ESC>[a` — Horizontal Position Relative (HPR) 🟠
+- `<ESC>[e` — Vertical Position Relative (VPR) 🟠
+- `<ESC>[I` — Cursor Horizontal Tab (CHT) 🟠
+- `<ESC>[Z` — Cursor Backward Tab (CBT) 🟠
+- `<ESC>[6n` — Device Status Report: request cursor position (CPR) 🔴
+- `ESC 7` / `ESC 8` — Save/restore cursor (DECSC/DECRC) 🔴
+- `<ESC>[S` — Scroll up (SU) 🟠
+- `<ESC>[T` — Scroll down (SD) 🟠
+- `<ESC>[<top>;<bottom>r` — Set scrolling region (DECSTBM) 🔴
+- `ESC H` — Set horizontal tab stop (HTS) 🔴
+- `<ESC>[g` — Tab Clear (TBC) 🔴
+
 ## Clearing text
 
 - `<ESC>[K` — Clear from cursor to the end of the line 🟢 VT100
@@ -36,12 +56,38 @@ Note: Sequences are shown using `<ESC>` for the 0x1B escape byte and CSI as `ESC
 - `<ESC>[1J` — Clear the screen until cursor position 🟢 VT100
 - `<ESC>[2J` — Clear the screen and move the cursor to 0,0. Loaded bitmaps are kept. 🟢 VT100
 
+### Unsupported VT100/ANSI — Clearing text
+
+- `<ESC>[X` — Erase Character (ECH) 🟠
+
 ## Insert / delete
 
 - `<ESC>[1@` — Insert a blank character position (shift line to the right) 🟡 VT102
 - `<ESC>[1P` — Delete a character position (shift line to the left) 🟡 VT102
 - `<ESC>[1L` — Insert blank line at current row (shift screen down) 🟡 VT102
 - `<ESC>[1M` — Delete the current line (shift screen up) 🟡 VT102
+
+### Unsupported VT100/ANSI — Insert/delete
+
+- Default parameter omission for ICH/DCH/IL/DL (no-arg form defaulting to 1) 🟠
+- Repeating by parameter value (>1) for ICH/DCH/IL/DL (only single position/line applied) 🟠
+
+### Unsupported VT100/ANSI — Settings and attributes
+
+- `3` — Italic on 🟠
+- `4` — Underline on 🔴
+- `5` — Slow blink on 🔴
+- `6` — Rapid blink on 🟠
+- `8` — Conceal 🟠
+- `9` — Crossed-out 🟠
+- `21` — Doubly underlined or bold off 🟠
+- `23` — Italic off 🟠
+- `24` — Underline off 🔴
+- `25` — Blink off 🔴
+- `28` — Reveal (conceal off) 🟠
+- `29` — Not crossed-out 🟠
+- `39` — Default foreground color 🟠
+- `49` — Default background color 🟠
 
 ## Graphics (PiGFX extensions)
 

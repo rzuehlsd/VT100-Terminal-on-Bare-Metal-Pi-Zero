@@ -87,6 +87,34 @@ See `doc/GRAPHICS_EXTENSIONS.md` for the full set of escape sequences and detail
 
 Remark: The setup dialog is entered by pressing the Print Screen key.
 
+## VT100 compatibility (at a glance)
+
+This project aims to feel like a DEC VT100, not to be a byte-perfect emulator. It implements a practical subset of VT100/ANSI plus a few VT220 and private PiGFX extensions.
+
+Supported highlights
+
+- Cursor movement: CUP/HVP (ESC[H / ESC[f] with row;col), and relative moves CUU/CUD/CUF/CUB (ESC[A/B/C/D)
+- Clearing: EL/ED variants (ESC[K/J with 0/1/2) including full screen clear to 0,0
+- Attributes (SGR): 0, 1, 2, 7, 22, 27; classic colors 30–37/40–47; bright colors 90–97/100–107
+- Save/restore position: CSI s/u (ESC[s / ESC[u])
+- Cursor visibility: DEC private 25h/25l (VT220), blinking toggle ?25b (PiGFX)
+- PiGFX extensions: graphics (ESC[#…]), palette control (ESC[=p), and ANSI.SYS-style mode/font/tab settings (ESC[=…)
+
+Not implemented (highlights)
+
+- VT100: DECSC/DECRC (ESC 7/ESC 8), DECSTBM scrolling region (ESC[`<top>`;`<bottom>`r), tab set/clear (ESC H / ESC[g), CPR (ESC[6n)
+- ANSI: CNL/CPL/CHA/VPA/HPR/VPR (line/column absolute/relative), CHT/CBT (tab forward/back), ECH (erase char), ICH/DCH/IL/DL parameter defaults and repeat counts
+- SGR attributes: italic (3/23), underline (4/24), blink (5/25), rapid blink (6), conceal/reveal (8/28), crossed-out (9/29), default fg/bg (39/49)
+
+Extended color model
+
+- 8-bit indexed color with built-in palettes (XTerm, VGA, C64, custom)
+- 38;5 / 48;5 for 0–255 indexed colors, 38;6 / 48;6 to set and store new defaults (PiGFX extension), 58;5 for transparent color
+
+Full matrix and exact sequences: see Terminal codes and compatibility in doc/terminal_codes.md.
+
+› File: doc/terminal_codes.md
+
 ## Still to do
 
 The following modifications are on the list of open to‑dos:
