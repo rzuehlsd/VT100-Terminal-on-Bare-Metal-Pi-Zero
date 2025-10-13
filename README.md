@@ -123,7 +123,7 @@ The following modifications are on the list of open to‑dos:
 - [ ] Remove feature to upload fonts
 - [ ] Analyze code to remove dead code
 - [ ] Rearrange the include and file hierarchy for a more structured architecture
-- [ ] Add OpenSCAD file for back plate of terminal to hold the adapter board at the back and allow access to the connectors, power switch and sd card
+- [x] Add OpenSCAD file for back plate of terminal to hold the adapter board at the back and allow access to the connectors, power switch and sd card
 
 ## Building the Application
 
@@ -179,7 +179,7 @@ To mount the adapter board inside the case the best option was to create a speci
 ## Installing
 
 To install the adapter board with the Pi Zero, a specific back plate has been designed which fits the layout of the connectors on the board.
-The OpenSCAD file for the modified back plate can be found in the hardware directory.
+The OpenSCAD file for the modified back plate can be found in the OpenScad directory.
 
 In addition, an SD card extender cable is used to provide access to the SD card at the back of the terminal through a small slot. The connection to the TFT controller is done using a very flexible mini HDMI to mini HDMI cable. The display controller is affixed to the back of the display with double‑sided tape, but be aware to only use very small strips on both sides of the controller board. The tape is very, very sticky and I damaged the connection between controller and display trying to remove the controller from the back of the display!
 
