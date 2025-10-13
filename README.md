@@ -173,6 +173,8 @@ I then applied a light‑grey filler to smooth the surface and prepare the case 
 
 ![Case final](images/Case_2.jpg)
 
+To mount the adapter board inside the case the best option was to create a specific back plate that holds all the openings for the connectors on the board and also provides supportsfor the SD card extension and adapter board.
+
 
 ## Installing
 
