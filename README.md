@@ -166,7 +166,7 @@ USPI: Included for Pi 1
 
 The VT100 case was printed on a Bamboo Lab P1S 3D printer using the STL files provided by Megardi. Printing took some time (about 15 hours in total). When I tried to glue the pieces together I discovered that the printed parts of the 3D model, at least in my experience, do not always fit very well together. It took a lot of filling and sanding to get the case in shape.
 
-I then applied a light‑grey filler to smooth the surface and prepare the case for painting. I painted the case in color RAL1015 "Oyster White" which, in my opinion, comes very close to the original color.
+I then applied a light‑grey filler to smooth the surface and prepare the case for painting. I painted the case in color RAL1013 "Oyster White" which, in my opinion, comes very close to the original color.
 
 
 ![Case initial](images/Case_1.jpg)
