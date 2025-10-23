@@ -1,7 +1,10 @@
 # VT100 Terminal on Bare-Metal Pi (based on PiGFX)
-
-This codebase is derived from PiGFX by Filippo Bergamasco.
-
+- Implemented Enhancements:
+  - Dynamic switching between screen resolutions 640×480, 800×640, and 1024×768
+  - Added a "Switch Rx<>Tx" toggle in the setup dialog and applied the setting immediately on save to switch Rx and Tx through a relay
+  - Polished auto-repeat handling; repeat delay and rate are configurable in the setup dialog
+  - Generate bell and Key Click sound via software PWM with configurable sound level using a simple passive buzzer
+ 
 Original project:
 
 - PiGFX by Filippo Bergamasco (MIT License)
@@ -85,7 +88,7 @@ python3 tools/uart_send.py /dev/ttyUSB0 115200 palette-select 1
 
 See `doc/GRAPHICS_EXTENSIONS.md` for the full set of escape sequences and details.
 
-Remark: The setup dialog is entered by pressing the Print Screen key.
+Remark: The setup dialog is entered by pressing the Print Screen key. The setup menu includes options for resolution, colors, fonts, keyboard settings, sound level, and key click sounds.
 
 ## VT100 compatibility (at a glance)
 

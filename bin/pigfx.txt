@@ -37,6 +37,10 @@ fontSelection = 3           ; Font index (0-5)
 displayWidth = 800          ; Width: 640, 800 or 1024
 displayHeight = 640         ; Height: 480, 640or 768
 
+;; Sound Configuration
+soundLevel = 50             ; Bell sound level (duty cycle %) 0-100
+keyClick = 1                ; Key click sound on keypress: 1=enabled, 0=disabled
+
 ;; General Configuration
 disableGfxDMA = 1           ; Disable DMA acceleration (1=safer, 0=faster)
 debugVerbosity = 2          ; Debug level: 0=errors+notices, 1=+warnings, 2=+debug

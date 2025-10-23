@@ -51,10 +51,13 @@ static unsigned int selected_send_crlf = 0;    // Default CRLF sending toggle
 static unsigned int selected_replace_lf_cr = 0; // New: Replace LF with CR toggle
 static unsigned int selected_repeat_delay = 500;
 static unsigned int selected_repeat_rate = 10;
-static const unsigned int num_setup_items = 14;  // Number of setup items (added Switch Rx<>Tx, Send CRLF, Replace LF->CR, Sound Level)
+static const unsigned int num_setup_items = 15;  // Number of setup items (added Switch Rx<>Tx, Send CRLF, Replace LF->CR, Sound Level, Key Click)
 
 // Sound level variable
 static unsigned int selected_sound_level = 0;  // Sound level (duty %) 0..100
+
+// Key click variable
+static unsigned int selected_key_click = 1;    // Key click enabled/disabled
 
 // Available baudrates
 static const unsigned int available_baudrates[] = {
@@ -409,6 +412,7 @@ void setup_mode_enter(void)
     selected_send_crlf = PiGfxConfig.sendCRLF ? 1 : 0;
     selected_replace_lf_cr = PiGfxConfig.replaceLFwithCR ? 1 : 0;
     selected_sound_level = PiGfxConfig.soundLevel; // initialize sound level
+    selected_key_click = PiGfxConfig.keyClick ? 1 : 0; // initialize key click
         
         // Reset the settings changed flag
         settings_changed = 0;
@@ -693,6 +697,15 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
+            else if (selected_item == 14) // Key Click toggle
+            {
+                if (selected_key_click > 0)
+                {
+                    selected_key_click = 0;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
             break;
             
         case KeyRight:
@@ -825,6 +838,15 @@ void setup_mode_handle_key(unsigned short key)
                     needs_redraw = 1;
                 }
             }
+            else if (selected_item == 14) // Key Click toggle
+            {
+                if (selected_key_click < 1)
+                {
+                    selected_key_click = 1;
+                    settings_changed = 1;
+                    needs_redraw = 1;
+                }
+            }
             break;
             
         case KeyEscape:
@@ -876,6 +898,7 @@ void setup_mode_handle_key(unsigned short key)
                 PiGfxConfig.replaceLFwithCR = selected_replace_lf_cr ? 1 : 0;
                 PiGfxConfig.switchRxTx = selected_switch_rxtx ? 1 : 0;
                 PiGfxConfig.soundLevel = selected_sound_level;
+                PiGfxConfig.keyClick = selected_key_click ? 1 : 0;
                 
                 // Update the saved colors so they don't get overwritten on exit
                 saved_fg_color = available_colors[selected_fg_color];
@@ -1442,6 +1465,26 @@ void setup_mode_draw(void)
             *d = '\0';
         }
         draw_text_at_with_bg(content_row + 13, value_col, sbuf, 5);
+    }
+
+    // Draw Key Click label and value with selection highlighting
+    if (selected_item == 14)
+    {
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 14, content_col, "Key Click", label_width);
+        gfx_set_fg(BLACK);
+        gfx_set_bg(WHITE);
+        draw_text_at_with_bg(content_row + 14, value_col, selected_key_click ? "On " : "Off", 8);
+    }
+    else
+    {
+        gfx_set_fg(WHITE);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 14, content_col, "Key Click");
+        gfx_set_fg(GREEN);
+        gfx_set_bg(BLUE);
+        draw_text_at(content_row + 14, value_col, selected_key_click ? "On" : "Off");
     }
 
     // Draw instructions in 2-column layout near bottom, with safe spacing above border

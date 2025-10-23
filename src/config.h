@@ -45,6 +45,7 @@ typedef struct
     unsigned int debugVerbosity;        // Debug verbosity level (0=errors+notices, 1=+warnings, 2=+debug)
     unsigned int cursorBlink;           // Cursor blinking: 1=enabled, 0=disabled
     unsigned int soundLevel;            // Sound level (duty cycle %) for beeps (0-100)
+    unsigned int keyClick;              // Enable keyclick sound on keypress (1=enabled, 0=disabled)
     char         keyboardLayout[3];     // Keyboard layout (de,uk,us, ...)
     unsigned char  hasChanged;          // Flag if values have changed and need to be applied
 } tPiGfxConfig;

@@ -18,6 +18,11 @@
 #include "timer.h"
 #include "ps2.h"
 #include "setup.h"
+#include "pwm.h"
+
+
+#define KLICK_DURATION 5  // Key click duration in ms
+
 
 // order must match TSpecialKey beginning at KeySpace
 static const char *s_KeyStrings[KeyMaxCode-KeySpace] =
@@ -407,6 +412,8 @@ void KeyEvent(unsigned short ucKeyCode, unsigned char ucModifiers)
             setup_mode_handle_key(key);
             break;  // Don't process other keys in setup mode
         }
+
+        // Normal key processing
         pKeyString = KeyToString (&actKeyMap, key, ucModifiers, buffer);
         if (pKeyString != 0)
         {
@@ -449,6 +456,9 @@ void KeyEvent(unsigned short ucKeyCode, unsigned char ucModifiers)
                 }
 
                 uart_write( ch );
+                if (PiGfxConfig.keyClick) {
+                    pwm800_start(50, KLICK_DURATION); // short click on keypress (if enabled)
+                }
                 ++c;
             }
         }

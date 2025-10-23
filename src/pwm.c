@@ -10,7 +10,7 @@
 #include "pwm.h"
 
 #define PWM_GPIO 12
-#define PWM_FREQ_HZ 785u
+#define PWM_FREQ_HZ 800u
 #define PWM_PERIOD_US (1000000u / PWM_FREQ_HZ) // 1250 us
 
 // Internal state

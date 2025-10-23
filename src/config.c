@@ -225,6 +225,10 @@ int inihandler(void* user, const char* section, const char* name, const char* va
     {
         set_range_config(name, value, &PiGfxConfig.soundLevel, 0, 100);
     }
+    else if (pigfx_strcmp(name, "keyClick") == 0)
+    {
+        set_boolean_config(name, value, &PiGfxConfig.keyClick);
+    }
     else if (pigfx_strcmp(name, "keyboardLayout") == 0)
     {
         pigfx_strncpy(PiGfxConfig.keyboardLayout, value, sizeof(PiGfxConfig.keyboardLayout));
@@ -281,6 +285,7 @@ void setDefaultConfig()
     PiGfxConfig.cursorBlink = 0;            // Default: blinking disabled
     PiGfxConfig.switchRxTx = 0;          // Default: normal UART operation
     PiGfxConfig.soundLevel = 50;         // Default sound level (duty %) for beep
+    PiGfxConfig.keyClick = 1;            // Default: keyclick enabled
     pigfx_strcpy(PiGfxConfig.keyboardLayout, "de");
 }
 
@@ -325,6 +330,7 @@ void printConfig()
     LogDebug("debugVerbosity         = %u\n", PiGfxConfig.debugVerbosity);
     LogDebug("cursorBlink            = %u\n", PiGfxConfig.cursorBlink);
     LogDebug("soundLevel             = %u\n", PiGfxConfig.soundLevel);
+    LogDebug("keyClick               = %u\n", PiGfxConfig.keyClick);
     LogDebug("keyboardLayout         = %s\n", PiGfxConfig.keyboardLayout);
     LogDebug("-------------------------------------------------\n");
 }
