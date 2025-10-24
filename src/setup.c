@@ -71,14 +71,12 @@ static const char* available_keyboards[] = {
 };
 static const unsigned int num_keyboards = sizeof(available_keyboards) / sizeof(available_keyboards[0]);
 
-// Available colors for foreground/background
+// Available colors for foreground/background - reduced to 4 colors only
 static const GFX_COL available_colors[] = {
-    BLACK, DARKRED, DARKGREEN, DARKYELLOW, DARKBLUE, DARKMAGENTA, DARKCYAN, GRAY,
-    DARKGRAY, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
+    BLACK, GREEN, YELLOW, WHITE
 };
 static const char* color_names[] = {
-    "Black", "DkRed", "DkGrn", "DkYel", "DkBlu", "DkMag", "DkCyn", "Gray",
-    "DkGry", "Red", "Green", "Yellow", "Blue", "Magent", "Cyan", "White"
+    "Black", "Green", "Yellow", "White"
 };
 static const unsigned int num_colors = sizeof(available_colors) / sizeof(available_colors[0]);
 
@@ -999,28 +997,167 @@ void setup_mode_handle_key(unsigned short key)
 }
 
 /**
+ * @brief Helper function to draw a menu item with proper highlighting
+ * 
+ * Draws a menu item label and value with appropriate colors based on selection state.
+ * Selected items use reverse colors (background becomes foreground and vice versa).
+ * 
+ * @param row Terminal row position
+ * @param content_col Column position for the label
+ * @param value_col Column position for the value
+ * @param label_width Width to clear for the label
+ * @param value_width Width to clear for the value
+ * @param label_text The label text to display
+ * @param value_text The value text to display
+ * @param is_selected Whether this item is currently selected
+ * @param normal_fg Normal foreground color
+ * @param normal_bg Normal background color
+ */
+static void draw_menu_item(unsigned int row, unsigned int content_col, unsigned int value_col,
+                          unsigned int label_width, unsigned int value_width,
+                          const char* label_text, const char* value_text,
+                          unsigned char is_selected, GFX_COL normal_fg, GFX_COL normal_bg)
+{
+    if (is_selected)
+    {
+        // Selected item - reverse colors
+        gfx_set_fg(normal_bg);
+        gfx_set_bg(normal_fg);
+        draw_text_at_with_bg(row, content_col, label_text, label_width);
+        draw_text_at_with_bg(row, value_col, value_text, value_width);
+    }
+    else
+    {
+        // Not selected - normal colors
+        gfx_set_fg(normal_fg);
+        gfx_set_bg(normal_bg);
+        draw_text_at(row, content_col, label_text);
+        draw_text_at(row, value_col, value_text);
+    }
+}
+
+/**
+ * @brief Helper function to draw a menu item with integer value
+ * 
+ * Similar to draw_menu_item but for integer values that need formatting.
+ * 
+ * @param row Terminal row position
+ * @param content_col Column position for the label
+ * @param value_col Column position for the value
+ * @param label_width Width to clear for the label
+ * @param value_width Width to clear for the value
+ * @param label_text The label text to display
+ * @param value The integer value to display
+ * @param suffix Optional suffix to append after the number (e.g., "ms", "Hz", "%")
+ * @param is_selected Whether this item is currently selected
+ * @param normal_fg Normal foreground color
+ * @param normal_bg Normal background color
+ */
+static void draw_menu_item_int(unsigned int row, unsigned int content_col, unsigned int value_col,
+                              unsigned int label_width, unsigned int value_width,
+                              const char* label_text, unsigned int value, const char* suffix,
+                              unsigned char is_selected, GFX_COL normal_fg, GFX_COL normal_bg)
+{
+    // Convert integer to string with optional suffix
+    char value_buffer[16];
+    char* p = value_buffer + sizeof(value_buffer) - 1;
+    *p = '\0';
+    
+    // Add suffix first if provided
+    if (suffix && *suffix)
+    {
+        const char* s = suffix;
+        while (*s) s++; // Find end of suffix
+        while (s > suffix) *(--p) = *(--s); // Copy suffix backwards
+    }
+    
+    // Add number
+    if (value == 0)
+    {
+        *(--p) = '0';
+    }
+    else
+    {
+        unsigned int temp = value;
+        while (temp > 0)
+        {
+            *(--p) = '0' + (temp % 10);
+            temp /= 10;
+        }
+    }
+    
+    draw_menu_item(row, content_col, value_col, label_width, value_width,
+                   label_text, p, is_selected, normal_fg, normal_bg);
+}
+
+/**
+ * @brief Helper function to draw color preview menu items
+ * 
+ * Special handling for color selection items that show color previews.
+ * 
+ * @param row Terminal row position
+ * @param content_col Column position for the label
+ * @param value_col Column position for the value
+ * @param label_width Width to clear for the label
+ * @param value_width Width to clear for the value
+ * @param label_text The label text to display
+ * @param color_index Index of the selected color
+ * @param is_foreground Whether this is foreground (true) or background (false) color
+ * @param is_selected Whether this item is currently selected
+ * @param normal_fg Normal foreground color
+ * @param normal_bg Normal background color
+ */
+static void draw_color_menu_item(unsigned int row, unsigned int content_col, unsigned int value_col,
+                                unsigned int label_width, unsigned int value_width,
+                                const char* label_text, unsigned int color_index, unsigned char is_foreground,
+                                unsigned char is_selected, GFX_COL normal_fg, GFX_COL normal_bg)
+{
+    if (is_selected)
+    {
+        // Selected item - reverse colors, no preview
+        gfx_set_fg(normal_bg);
+        gfx_set_bg(normal_fg);
+        draw_text_at_with_bg(row, content_col, label_text, label_width);
+        draw_text_at_with_bg(row, value_col, color_names[color_index], value_width);
+    }
+    else
+    {
+        // Not selected - show color preview
+        gfx_set_fg(normal_fg);
+        gfx_set_bg(normal_bg);
+        draw_text_at(row, content_col, label_text);
+        
+        if (is_foreground)
+        {
+            // Show color as foreground with normal background
+            gfx_set_fg(available_colors[color_index]);
+            gfx_set_bg(normal_bg);
+        }
+        else
+        {
+            // Show color as background with normal foreground
+            gfx_set_fg(normal_fg);
+            gfx_set_bg(available_colors[color_index]);
+        }
+        draw_text_at(row, value_col, color_names[color_index]);
+    }
+}
+
+/**
  * @brief Render the setup mode user interface
  * 
- * Draws the complete setup mode interface on the screen, including:
+ * Draws the complete setup mode interface on the screen using a clean two-color scheme
+ * that adapts to the user's current terminal colors. The interface includes:
  * - Configuration menu with all available options
- * - Current values for each configuration parameter
- * - Visual highlighting of the currently selected item
+ * - Current values for each configuration parameter  
+ * - Visual highlighting of the currently selected item (reverse colors)
  * - Instructions for navigation and control keys
- * - Real-time preview of color and font changes
+ * - Real-time preview of color changes
  * 
- * The interface layout includes:
- * - Title bar with "PiGFX Setup Mode"
- * - Menu items with current values (Baudrate, Keyboard, Colors, etc.)
- * - Selected item highlighted with different colors
- * - Help text showing available key commands
- * 
- * The function automatically adapts to different screen sizes and
- * positions the dialog centrally. It saves and restores background
- * colors to avoid interfering with preview colors.
- * 
- * @note Only draws if setup mode is active and needs_redraw flag is set
- * @note Resets needs_redraw flag after successful rendering
- * @note Uses current font for display (typically dialog font)
+ * The color scheme uses only two colors throughout:
+ * - Normal items: current foreground on current background
+ * - Selected items: current background on current foreground (reverse)
+ * - Color previews: actual colors for foreground/background selection
  */
 void setup_mode_draw(void)
 {
@@ -1031,34 +1168,33 @@ void setup_mode_draw(void)
     gfx_get_gfx_size(&screen_width, &screen_height);
     gfx_get_term_size(&term_rows, &term_cols);
     
-    // Fully clear the entire screen area in pixels to the original background color
-    // This avoids any terminal/grid rounding artifacts or leftover glyph pixels
-    GFX_COL prev_fg = gfx_get_fg();
-    GFX_COL prev_bg = gfx_get_bg();
-    gfx_set_fg(saved_bg_color);
+    // Save current colors and use consistent color scheme
+    GFX_COL normal_fg = saved_fg_color;  // Use saved colors from when setup started
+    GFX_COL normal_bg = saved_bg_color;
+    
+    // Fully clear the entire screen area in pixels to the background color
+    gfx_set_fg(normal_bg);
     gfx_fill_rect(0, 0, screen_width, screen_height);
-    gfx_set_fg(prev_fg);
-    gfx_set_bg(prev_bg);
     
     // Use character-cell aligned layout for crisp rendering
     const unsigned int font_px_w = 8;
     const unsigned int font_px_h = 16;
 
     // Content sizing in character cells
-    const unsigned int label_width = 23;       // columns for left labels (added 5-char gap before values)
-    const unsigned int value_width_max = 22;   // columns for right values (font names etc.)
-    const unsigned int content_width_cols = label_width + value_width_max; // total content width (label includes gap)
+    const unsigned int label_width = 23;       // columns for left labels (includes gap before values)
+    const unsigned int value_width = 8;        // columns for right values
+    const unsigned int content_width_cols = label_width + value_width;
 
     // Box sizing in character cells (inner padding of 2 cols on each side)
     const unsigned int min_box_cols = 48;      // ensure enough space for two instruction columns
     const unsigned int box_inner_cols = (content_width_cols + 4) < min_box_cols ? min_box_cols : (content_width_cols + 4);
-    unsigned int box_char_cols = box_inner_cols; // total columns of the dialog box
+    unsigned int box_char_cols = box_inner_cols;
 
     // Vertical sizing: top pad + title + spacer + items + spacer + instructions(2) + bottom pad
     const unsigned int top_pad_rows = 1;
     const unsigned int title_rows = 1;
     const unsigned int spacer_after_title = 1;
-    const unsigned int items_rows = num_setup_items; // one row per item
+    const unsigned int items_rows = num_setup_items;
     const unsigned int spacer_before_instructions = 1;
     const unsigned int instruction_rows = 2;
     const unsigned int bottom_pad_rows = 1;
@@ -1068,447 +1204,143 @@ void setup_mode_draw(void)
     unsigned int box_char_x = (term_cols > box_char_cols) ? ((term_cols - box_char_cols) / 2) : 0;
     unsigned int box_char_y = (term_rows > box_char_rows) ? ((term_rows - box_char_rows) / 2) : 0;
 
-    // Convert to pixels for drawing borders/background (aligns perfectly with cell grid)
+    // Convert to pixels for drawing borders/background
     unsigned int box_x = box_char_x * font_px_w;
     unsigned int box_y = box_char_y * font_px_h;
     unsigned int box_width = box_char_cols * font_px_w;
     unsigned int box_height = box_char_rows * font_px_h;
     
-    // Draw setup box border
-    gfx_set_fg(prev_fg);
+    // Draw setup box border using foreground color
+    gfx_set_fg(normal_fg);
     gfx_fill_rect(box_x, box_y, box_width, 2);                    // top border
     gfx_fill_rect(box_x, box_y + box_height - 2, box_width, 2);   // bottom border
     gfx_fill_rect(box_x, box_y, 2, box_height);                   // left border
     gfx_fill_rect(box_x + box_width - 2, box_y, 2, box_height);   // right border
     
-    // Fill box background
-    gfx_set_fg(prev_bg);
+    // Fill box background with background color
+    gfx_set_fg(normal_bg);
     gfx_fill_rect(box_x + 2, box_y + 2, box_width - 4, box_height - 4);
     
     // Calculate text positions in character cells
-    unsigned int title_row = box_char_y + top_pad_rows; // first line inside box after top pad
+    unsigned int title_row = box_char_y + top_pad_rows;
     unsigned int inner_left_col = box_char_x + 2;
-    unsigned int inner_right_col = box_char_x + box_char_cols - 3; // -2 border pad, -1 to keep inside
-    unsigned int content_row = title_row + title_rows + spacer_after_title; // first content row
+    unsigned int inner_right_col = box_char_x + box_char_cols - 3;
+    unsigned int content_row = title_row + title_rows + spacer_after_title;
 
     // Center the content area horizontally within inner box area
     unsigned int inner_width_cols = (box_char_cols - 4);
     unsigned int content_col = inner_left_col + (inner_width_cols > content_width_cols ? (inner_width_cols - content_width_cols) / 2 : 0);
-    unsigned int value_col = content_col + label_width;  // Start of value column (after 5-char gap)
+    unsigned int value_col = content_col + label_width;
     
-    // Draw title using direct character drawing - centered
-    gfx_set_fg(prev_fg);
-    gfx_set_bg(prev_bg);
-    // Center "Pi VT100 Setup" in the dialog box (13 characters)
-    const unsigned int title_len = 13;
+    // Draw title - centered
+    gfx_set_fg(normal_fg);
+    gfx_set_bg(normal_bg);
+    const unsigned int title_len = 13; // "Pi VT100 Setup"
     unsigned int title_center_col = box_char_x + (box_char_cols - title_len) / 2;
     draw_text_at(title_row, title_center_col, "Pi VT100 Setup");
     
-    int BLACK = prev_bg; // Background color
-    int WHITE = prev_fg; // Foreground color
-    int BLUE = BLACK;
-    int GREEN = WHITE;
-   
-
-    // Draw baud rate label and value with selection highlighting
-    if (selected_item == 0)
-    {
-        // Selected item - black on white background
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row, content_col, "Baud Rate", label_width);
-        
-        // Value also black on white background
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_int_at_with_bg(content_row, value_col, available_baudrates[selected_baudrate_index], 8);
-    }
-    else
-    {
-        // Not selected - normal colors
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-        draw_text_at(content_row, content_col, "Baud Rate");
-        
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-        draw_int_at(content_row, value_col, available_baudrates[selected_baudrate_index]);
-    }
+    // Draw all menu items using helper functions
+    unsigned int current_row = content_row;
     
-    // Draw switch Rx<>Tx label and value
-    if (selected_item == 1)
-    {
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 1, content_col, "Switch Rx<>Tx", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 1, value_col, selected_switch_rxtx ? "On " : "Off", 8);
-    }
-    else
-    {
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-        draw_text_at(content_row + 1, content_col, "Switch Rx<>Tx");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-        draw_text_at(content_row + 1, value_col, selected_switch_rxtx ? "On" : "Off");
-    }
-
-    // Draw keyboard layout label and value with selection highlighting
-    if (selected_item == 2)
-    {
-        // Selected item - black on white background
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 2, content_col, "Keyboard Layout", label_width);
-        
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 2, value_col, available_keyboards[selected_keyboard_index], 8);
-    }
-    else
-    {
-        // Not selected - normal colors
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 2, content_col, "Keyboard Layout");
-        
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 2, value_col, available_keyboards[selected_keyboard_index]);
-    }
+    // 0: Baud Rate
+    char baudrate_str[16];
+    char* p = baudrate_str + sizeof(baudrate_str) - 1;
+    *p = '\0';
+    unsigned int baud = available_baudrates[selected_baudrate_index];
+    if (baud == 0) { *(--p) = '0'; }
+    else { while (baud > 0) { *(--p) = '0' + (baud % 10); baud /= 10; } }
+    draw_menu_item(current_row++, content_col, value_col, label_width, value_width,
+                   "Baud Rate", p, (selected_item == 0), normal_fg, normal_bg);
     
-    // Draw foreground color label and value with selection highlighting
-    if (selected_item == 3)
-    {
-        // Selected item - black on white background
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 3, content_col, "Foreground", label_width);
-        
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 3, value_col, color_names[selected_fg_color], 8);
-    }
-    else
-    {
-        // Not selected - normal colors
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 3, content_col, "Foreground");
-        
-        gfx_set_fg(available_colors[selected_fg_color]); // Show color in its own color
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 3, value_col, color_names[selected_fg_color]);
-    }
+    // 1: Switch Rx<>Tx
+    draw_menu_item(current_row++, content_col, value_col, label_width, value_width,
+                   "Switch Rx<>Tx", selected_switch_rxtx ? "On" : "Off", 
+                   (selected_item == 1), normal_fg, normal_bg);
     
-    // Draw background color label and value with selection highlighting
-    if (selected_item == 4)
-    {
-        // Selected item - black on white background
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 4, content_col, "Background", label_width);
-        
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 4, value_col, color_names[selected_bg_color], 8);
-    }
-    else
-    {
-        // Not selected - normal colors
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 4, content_col, "Background");
-        
-        gfx_set_fg(WHITE);
-        gfx_set_bg(available_colors[selected_bg_color]); // Show color as background
-    draw_text_at(content_row + 4, value_col, color_names[selected_bg_color]);
-    }
+    // 2: Keyboard Layout
+    draw_menu_item(current_row++, content_col, value_col, label_width, value_width,
+                   "Keyboard Layout", available_keyboards[selected_keyboard_index], 
+                   (selected_item == 2), normal_fg, normal_bg);
     
-    // Draw font size label and value with selection highlighting
-    if (selected_item == 5)
-    {
-        // Selected item - black on white background
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-      
-    draw_text_at_with_bg(content_row + 5, content_col, "Font Size", label_width);
-        
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        
-        // Get font info from registry
-        const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
-        if (font_info != NULL && strlen(font_info->name) != 0)
-        {
-            draw_text_at_with_bg(content_row + 5, value_col, font_info->name, 12);
-        }
-        else
-        {
-            draw_text_at_with_bg(content_row + 5, value_col, "Unknown", 12);
-        }
-    }
-    else
-    {
-        // Not selected - normal colors
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 5, content_col, "Font Size");
-        
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-        
-        // Get font info from registry
-        const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
-        if (font_info != NULL && strlen(font_info->name) != 0)
-        {
-            draw_text_at(content_row + 5, value_col, font_info->name);
-        }
-        else
-        {
-            draw_text_at(content_row + 5, value_col, "Unknown");
-        }
-    }
+    // 3: Foreground Color (with preview)
+    draw_color_menu_item(current_row++, content_col, value_col, label_width, value_width,
+                        "Foreground", selected_fg_color, 1, 
+                        (selected_item == 3), normal_fg, normal_bg);
     
-    // Draw resolution label and value with selection highlighting
-    if (selected_item == 6)
-    {
-        // Selected item - black on white background
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 6, content_col, "Resolution", label_width);
-        
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 6, value_col, available_resolutions[selected_resolution_index], 10);
-    }
-    else
-    {
-        // Not selected - normal colors
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 6, content_col, "Resolution");
-        
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 6, value_col, available_resolutions[selected_resolution_index]);
-    }
+    // 4: Background Color (with preview)
+    draw_color_menu_item(current_row++, content_col, value_col, label_width, value_width,
+                        "Background", selected_bg_color, 0, 
+                        (selected_item == 4), normal_fg, normal_bg);
     
-    // Draw cursor blink label and value with selection highlighting
-    if (selected_item == 7)
-    {
-        // Selected item - black on white background
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 7, content_col, "Cursor Blink", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 7, value_col, selected_cursor_blink ? "On " : "Off", 8);
-    }
-    else
-    {
-        // Not selected - normal colors
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 7, content_col, "Cursor Blink");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 7, value_col, selected_cursor_blink ? "On" : "Off");
-    }
+    // 5: Font Size
+    const font_descriptor_t* font_info = font_registry_get_info(selected_font_size);
+    const char* font_name = (font_info != NULL && strlen(font_info->name) != 0) ? font_info->name : "Unknown";
+    draw_menu_item(current_row++, content_col, value_col, label_width, 12,
+                   "Font Size", font_name, (selected_item == 5), normal_fg, normal_bg);
+    
+    // 6: Resolution
+    draw_menu_item(current_row++, content_col, value_col, label_width, 10,
+                   "Resolution", available_resolutions[selected_resolution_index], 
+                   (selected_item == 6), normal_fg, normal_bg);
+    
+    // 7: Cursor Blink
+    draw_menu_item(current_row++, content_col, value_col, label_width, value_width,
+                   "Cursor Blink", selected_cursor_blink ? "On" : "Off", 
+                   (selected_item == 7), normal_fg, normal_bg);
+    
+    // 8: Auto Repeat
+    draw_menu_item(current_row++, content_col, value_col, label_width, value_width,
+                   "Auto Repeat", selected_auto_repeat ? "On" : "Off", 
+                   (selected_item == 8), normal_fg, normal_bg);
+    
+    // 9: Repeat Delay
+    draw_menu_item_int(current_row++, content_col, value_col, label_width, value_width,
+                      "Repeat Delay", selected_repeat_delay, "ms", 
+                      (selected_item == 9), normal_fg, normal_bg);
+    
+    // 10: Repeat Rate
+    draw_menu_item_int(current_row++, content_col, value_col, label_width, value_width,
+                      "Repeat Rate", selected_repeat_rate, "Hz", 
+                      (selected_item == 10), normal_fg, normal_bg);
+    
+    // 11: Send CRLF
+    draw_menu_item(current_row++, content_col, value_col, label_width, value_width,
+                   "Send CRLF", selected_send_crlf ? "On" : "Off", 
+                   (selected_item == 11), normal_fg, normal_bg);
+    
+    // 12: Replace LF with CR
+    draw_menu_item(current_row++, content_col, value_col, label_width, value_width,
+                   "Replace LF with CR", selected_replace_lf_cr ? "On" : "Off", 
+                   (selected_item == 12), normal_fg, normal_bg);
+    
+    // 13: Sound Level
+    draw_menu_item_int(current_row++, content_col, value_col, label_width, 5,
+                      "Sound Level", selected_sound_level, "%", 
+                      (selected_item == 13), normal_fg, normal_bg);
+    
+    // 14: Key Click
+    draw_menu_item(current_row++, content_col, value_col, label_width, value_width,
+                   "Key Click", selected_key_click ? "On" : "Off", 
+                   (selected_item == 14), normal_fg, normal_bg);
 
-    // Draw auto repeat label and value with selection highlighting
-    if (selected_item == 8)
-    {
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 8, content_col, "Auto Repeat", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 8, value_col, selected_auto_repeat? "On" : "Off", 8);
-    }
-    else
-    {
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 8, content_col, "Auto Repeat");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 8, value_col, selected_auto_repeat ? "On" : "Off");
-    }
-
-    // Draw repeat delay label and value with selection highlighting
-    if (selected_item == 9)
-    {
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 9, content_col, "Repeat Delay", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_int_at_with_bg(content_row + 9, value_col, selected_repeat_delay, 8);
-    draw_text_at_with_bg(content_row + 9, value_col + 6, "ms", 3);
-    }
-    else
-    {
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 9, content_col, "Repeat Delay");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-    draw_int_at(content_row + 9, value_col, selected_repeat_delay);
-    draw_text_at(content_row + 9, value_col + 6, "ms");
-    }
-
-    // Draw repeat rate label and value with selection highlighting
-    if (selected_item == 10)
-    {
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 10, content_col, "Repeat Rate", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_int_at_with_bg(content_row + 10, value_col, selected_repeat_rate, 8);
-    draw_text_at_with_bg(content_row + 10, value_col + 6, "Hz", 3);
-    }
-    else
-    {
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 10, content_col, "Repeat Rate");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-    draw_int_at(content_row + 10, value_col, selected_repeat_rate);
-    draw_text_at(content_row + 10, value_col + 6, "Hz");
-    }
-
-    // Draw send CRLF label and value with selection highlighting
-    if (selected_item == 11)
-    {
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 11, content_col, "Send CRLF", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-    draw_text_at_with_bg(content_row + 11, value_col, selected_send_crlf ? "On " : "Off", 8);
-    }
-    else
-    {
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 11, content_col, "Send CRLF");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-    draw_text_at(content_row + 11, value_col, selected_send_crlf ? "On" : "Off");
-    }
-
-    // Draw Replace LF with CR label and value with selection highlighting
-    if (selected_item == 12)
-    {
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 12, content_col, "Replace LF with CR", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 12, value_col, selected_replace_lf_cr ? "On " : "Off", 8);
-    }
-    else
-    {
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-        draw_text_at(content_row + 12, content_col, "Replace LF with CR");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-        draw_text_at(content_row + 12, value_col, selected_replace_lf_cr ? "On" : "Off");
-    }
-
-    // Draw Sound Level label and value with selection highlighting
-    if (selected_item == 13)
-    {
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 13, content_col, "Sound Level", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        // Compose "<value>%" into a small buffer to render as a single cleared field
-        char sbuf[8]; // enough for "100%" + NUL
-        {
-            // Build number into tmp then append '%'
-            char numbuf[5];
-            char* p = numbuf + sizeof(numbuf) - 1;
-            *p = '\0';
-            unsigned int v = selected_sound_level;
-            if (v == 0) { *(--p) = '0'; }
-            else { while (v > 0) { *(--p) = '0' + (v % 10); v /= 10; } }
-            // Copy number into sbuf and append '%'
-            char* d = sbuf;
-            while (*p) { *d++ = *p++; }
-            *d++ = '%';
-            *d = '\0';
-        }
-        // Clear a field wide enough for up to "100%" (4 chars) plus one space
-        draw_text_at_with_bg(content_row + 13, value_col, sbuf, 5);
-    }
-    else
-    {
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-        draw_text_at(content_row + 13, content_col, "Sound Level");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-        // Compose and draw with background clearing to avoid leftover digits
-        char sbuf[8];
-        {
-            char numbuf[5];
-            char* p = numbuf + sizeof(numbuf) - 1;
-            *p = '\0';
-            unsigned int v = selected_sound_level;
-            if (v == 0) { *(--p) = '0'; }
-            else { while (v > 0) { *(--p) = '0' + (v % 10); v /= 10; } }
-            char* d = sbuf;
-            while (*p) { *d++ = *p++; }
-            *d++ = '%';
-            *d = '\0';
-        }
-        draw_text_at_with_bg(content_row + 13, value_col, sbuf, 5);
-    }
-
-    // Draw Key Click label and value with selection highlighting
-    if (selected_item == 14)
-    {
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 14, content_col, "Key Click", label_width);
-        gfx_set_fg(BLACK);
-        gfx_set_bg(WHITE);
-        draw_text_at_with_bg(content_row + 14, value_col, selected_key_click ? "On " : "Off", 8);
-    }
-    else
-    {
-        gfx_set_fg(WHITE);
-        gfx_set_bg(BLUE);
-        draw_text_at(content_row + 14, content_col, "Key Click");
-        gfx_set_fg(GREEN);
-        gfx_set_bg(BLUE);
-        draw_text_at(content_row + 14, value_col, selected_key_click ? "On" : "Off");
-    }
-
-    // Draw instructions in 2-column layout near bottom, with safe spacing above border
+    // Draw instructions
     unsigned int instruction_row = content_row + items_rows + spacer_before_instructions;
-    gfx_set_fg(prev_fg);
-    gfx_set_bg(prev_bg);
+    gfx_set_fg(normal_fg);
+    gfx_set_bg(normal_bg);
 
-    // Left column instructions (aligned to inner left + small indent)
+    // Left column instructions
     unsigned int left_instruction_col = inner_left_col + 2;
     draw_text_at(instruction_row, left_instruction_col, "Up/Down: Select");
     draw_text_at(instruction_row + 1, left_instruction_col, "ESC: Exit");
 
-    // Right column instructions (aligned to inner right minus text width)
-    const unsigned int right_text_len_top = 19;   // strlen("Left/Right: Change")
-    const unsigned int right_text_len_bottom = 18; // strlen("Enter: Save & Exit")
-    unsigned int right_instruction_col_top = (inner_right_col + 1 > right_text_len_top) ? (inner_right_col + 1 - right_text_len_top) : inner_left_col + inner_width_cols / 2;
-    // Shift bottom instruction one character to the left for better visual alignment
-    unsigned int right_instruction_col_bottom = (inner_right_col + 1 > right_text_len_bottom + 1) ? (inner_right_col - right_text_len_bottom) : (right_instruction_col_top > 0 ? right_instruction_col_top - 1 : 0);
+    // Right column instructions
+    const unsigned int right_text_len_top = 19;    // "Left/Right: Change"
+    const unsigned int right_text_len_bottom = 18; // "Enter: Save & Exit"
+    unsigned int right_instruction_col_top = (inner_right_col + 1 > right_text_len_top) ? 
+        (inner_right_col + 1 - right_text_len_top) : inner_left_col + inner_width_cols / 2;
+    unsigned int right_instruction_col_bottom = (inner_right_col + 1 > right_text_len_bottom + 1) ? 
+        (inner_right_col - right_text_len_bottom) : (right_instruction_col_top > 0 ? right_instruction_col_top - 1 : 0);
+    
     draw_text_at(instruction_row, right_instruction_col_top, "Left/Right: Change");
     draw_text_at(instruction_row + 1, right_instruction_col_bottom, "Enter: Save & Exit");
 }
