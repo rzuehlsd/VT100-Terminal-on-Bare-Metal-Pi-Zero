@@ -405,7 +405,6 @@ void initialize_framebuffer(unsigned int width, unsigned int height, unsigned in
  * 2. Waits for initial UART data while polling timers and keyboards
  * 3. Enters the main processing loop that:
  *    - Reads characters from the UART buffer
- *    - Handles special modes (bitmap/palette loading)
  *    - Processes backspace echo skipping if enabled
  *    - Sends characters to the graphics terminal for display
  *    - Polls timers and keyboard handlers
@@ -438,7 +437,6 @@ void term_main_loop()
 
     display_system_banner();
 
-
     // Clear entire screen and position cursor at home
     gfx_term_putstring("\x1B[2J");
     gfx_term_putstring("\x07"); // BEL to signal ready
@@ -447,40 +445,29 @@ void term_main_loop()
 
     while (1)
     {
-          
         if (uart_buffer_start != uart_buffer_end)
         {
             strb[0] = *uart_buffer_start++;
             if (uart_buffer_start >= uart_buffer_limit)
                 uart_buffer_start = uart_buffer;
 
-            if (gfx_term_loading_bitmap())
+            // Process character directly - no bitmap/palette handling
+            if (PiGfxConfig.skipBackspaceEcho)
             {
-                gfx_term_load_bitmap(strb[0]);
-            }
-            else if (gfx_term_loading_palette())
-            {
-                gfx_term_load_palette(strb[0]);
-            }
-            else
-            {
-                if (PiGfxConfig.skipBackspaceEcho)
+                if (time_microsec() - last_backspace_t > 50000)
+                    backspace_n_skip = 0;
+
+                if (backspace_n_skip > 0)
                 {
-                    if (time_microsec() - last_backspace_t > 50000)
-                        backspace_n_skip = 0;
-
-                    if (backspace_n_skip > 0)
-                    {
-                        // LogDebug("Skip %c",strb[0]);
-                        strb[0] = 0; // Skip this char
-                        backspace_n_skip--;
-                        if (backspace_n_skip == 0)
-                            strb[0] = 0x7F; // Add backspace instead
-                    }
+                    // LogDebug("Skip %c",strb[0]);
+                    strb[0] = 0; // Skip this char
+                    backspace_n_skip--;
+                    if (backspace_n_skip == 0)
+                        strb[0] = 0x7F; // Add backspace instead
                 }
-
-                gfx_term_putstring(strb);
             }
+
+            gfx_term_putstring(strb);
         }
 
         uart_fill_queue(0);

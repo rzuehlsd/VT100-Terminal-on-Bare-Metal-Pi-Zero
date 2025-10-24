@@ -363,8 +363,6 @@ void gfx_set_transparent_color( GFX_COL color )
 // Sprite collision detection removed
 
 // Sprite helpers removed; keep a no-op position corrector for scroll calls
-static inline void gfx_corr_sprite_pos(int dx, int dy) { (void)dx; (void)dy; }
-
 /** Sets the whole display to background color. */
 void gfx_clear()
 {
@@ -398,44 +396,65 @@ void gfx_clear()
 /** move screen up, new bg pixels on bottom */
 void gfx_scroll_down( unsigned int npixels )
 {
-    unsigned int* pf_src = (unsigned int*)( ctx.pfb + ctx.Pitch*npixels);
-    unsigned int* pf_dst = (unsigned int*)ctx.pfb;
-    const unsigned int* const pfb_end = (unsigned int*)( ctx.pfb + ctx.size );
-
     if (PiGfxConfig.disableGfxDMA)
     {
-        while( pf_src < pfb_end )
-            *pf_dst++ = *pf_src++;
+        for (unsigned int row = 0; row < (ctx.H - npixels); row++)
+        {
+            unsigned char* src = PFB(0, row + npixels);
+            unsigned char* dst = PFB(0, row);
+            veryfastmemcpy(dst, src, ctx.W);
+        }
     }
     else
     {
-        unsigned int line_height = ctx.Pitch * npixels;
-        unsigned int pixelstocopy = ctx.size - line_height;
-
-        dma_memcpy_32(ctx.pfb + line_height, ctx.pfb, pixelstocopy);
-        pf_dst += pixelstocopy/4;
+        unsigned int bytes_to_copy = ctx.W * (ctx.H - npixels);
+        if (bytes_to_copy > 0)
+        {
+            dma_memcpy_32(PFB(0, npixels), PFB(0, 0), bytes_to_copy);
+        }
     }
 
-    // Fill with bg at the bottom
-    while( pf_dst < pfb_end )
-        *pf_dst++ = ctx.bg32;
-    gfx_corr_sprite_pos(0, -npixels);
+    for (unsigned int row = ctx.H - npixels; row < ctx.H; row++)
+    {
+        unsigned char* pf = PFB(0, row);
+        for (unsigned int col = 0; col < ctx.W; col++)
+        {
+            *pf++ = ctx.bg;
+        }
+    }
 }
 
-/** move screen down, new bg pixels on top */
 void gfx_scroll_up( unsigned int npixels )
 {
-    unsigned int* pf_dst = (unsigned int*)( ctx.pfb + ctx.size ) -1;
-    unsigned int* pf_src = (unsigned int*)( ctx.pfb + ctx.size - ctx.Pitch*npixels) -1;
-    const unsigned int* const pfb_end = (unsigned int*)( ctx.pfb );
+    if (PiGfxConfig.disableGfxDMA)
+    {
+        for (int row = ctx.H - 1; row >= (int)npixels; row--)
+        {
+            unsigned char* src = PFB(0, row - npixels);
+            unsigned char* dst = PFB(0, row);
+            veryfastmemcpy(dst, src, ctx.W);
+        }
+    }
+    else
+    {
+        unsigned int bytes_to_copy = ctx.W * (ctx.H - npixels);
+        if (bytes_to_copy > 0)
+        {
+            for (int row = ctx.H - 1; row >= (int)npixels; row--)
+            {
+                dma_memcpy_32(PFB(0, row - npixels), PFB(0, row), ctx.W);
+            }
+        }
+    }
 
-    while( pf_src >= pfb_end )
-        *pf_dst-- = *pf_src--;
-
-    // Fill with bg at the top
-    while( pf_dst >= pfb_end )
-        *pf_dst-- = ctx.bg32;
-    gfx_corr_sprite_pos(0, npixels);
+    for (unsigned int row = 0; row < npixels; row++)
+    {
+        unsigned char* pf = PFB(0, row);
+        for (unsigned int col = 0; col < ctx.W; col++)
+        {
+            *pf++ = ctx.bg;
+        }
+    }
 }
 
 /** move screen to the right, new bg pixels on the left */
@@ -458,10 +477,8 @@ void gfx_scroll_left( unsigned int npixels )
         for (unsigned int k=0; k<npixels; k++)
             *pfb_end++ = ctx.bg;
     }
-    gfx_corr_sprite_pos(npixels, 0);
 }
 
-/** move screen to the left, new bg pixels on the right */
 void gfx_scroll_right( unsigned int npixels )
 {
     if (npixels >= ctx.W) return;
@@ -478,7 +495,6 @@ void gfx_scroll_right( unsigned int npixels )
             *pfb_bg++ = ctx.bg;
         }
     }
-    gfx_corr_sprite_pos(-npixels, 0);
 }
 
 /** draw a bg filled rectangle: */
@@ -998,7 +1014,6 @@ void gfx_term_render_cursor()
         }
         ctx.cursor_buffer_ready = 1;
     }
-            // ...existing code...
 }
 
 /** shifts content from cursor 1 character to the right */
