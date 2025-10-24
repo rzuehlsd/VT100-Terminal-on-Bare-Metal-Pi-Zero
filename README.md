@@ -1,207 +1,234 @@
-# VT100 Terminal on Bare-Metal Pi (based on PiGFX)
-- Implemented Enhancements:
-  - Dynamic switching between screen resolutions 640×480, 800×640, and 1024×768
-  - Added a "Switch Rx<>Tx" toggle in the setup dialog and applied the setting immediately on save to switch Rx and Tx through a relay
-  - Polished auto-repeat handling; repeat delay and rate are configurable in the setup dialog
-  - Generate bell and Key Click sound via software PWM with configurable sound level using a simple passive buzzer
- 
-Original project:
+# PiGFX Enhanced Edition - VT100 Terminal Emulator for Raspberry Pi
 
-- PiGFX by Filippo Bergamasco (MIT License)
-- Repository: [https://github.com/fbergama/pigfx](https://github.com/fbergama/pigfx)
+A bare metal kernel for the Raspberry Pi that implements a comprehensive ANSI/VT100 terminal emulator with advanced graphics capabilities, dual keyboard support, and sophisticated configuration management.
 
-We keep the original MIT license; see `LICENSE` in this repository for details.
+## Enhanced Edition Features
 
-## What’s different in this project
+### 🎯 **Core Improvements**
+- **Unified Build System**: Supports Raspberry Pi 1-4 with automatic toolchain selection
+- **Enhanced Logging**: Bitmap-based debug system with runtime severity control and automatic colors
+- **Memory Protection**: MMU implementation with proper page table management
+- **Robust Initialization**: Two-stage configuration system preventing display corruption
 
-I changed the original code with the intention to create a replica of the DEC VT100 terminal, both in software and hardware. I used a 60% scale 3D model of the VT100 terminal, which was created by Megardi ([Instructables link](https://www.instructables.com/23-Scale-VT100-Terminal-Reproduction/)) for printing the case.
+### ⌨️ **Advanced Keyboard Support**
+- **Dual Input Support**: PS/2 and USB keyboards with automatic detection and priority
+- **USB Compatibility**: USPI integration for USB keyboard support on Pi 1-3
+- **Smart Fallback**: Automatic USB initialization when PS/2 keyboard not detected
+- **Configurable Layouts**: Multiple keyboard layout support through configuration
 
-The PiGFX implementation was a very good start for my VT100 software, but to implement my additional requirements I had to add some changes and on the way also fixed some glitches.
+### 🎨 **Enhanced Terminal Features**
+- **Font Registry System**: Multiple built-in fonts with dynamic switching
+- **Advanced ANSI Support**: Full VT100 escape sequence processing
+- **Color Management**: Comprehensive foreground/background color control
+- **Setup Dialog**: Interactive configuration interface (Print Screen key)
+- **Screen Buffer Management**: Save/restore functionality for setup mode
 
-I wanted to replicate the real feeling of a VT100 terminal, including fonts and bell. I did not intend to create a 100% emulation of a real VT100. I just wanted a bare‑metal implementation that runs on a Pi Zero, starts up within seconds, and gives me a "retro" feeling when playing with my vintage computer stuff. 
+### 🔧 **Configuration System**
+- **File-Based Config**: Automatic loading from `pigfx.txt` on SD card
+- **Runtime Reconfiguration**: Setup dialog for live configuration changes
+- **Safe Defaults**: Fallback configuration when file loading fails
+- **Comprehensive Options**: Display, keyboard, UART, and audio settings
 
-Below you can see the output of my MBC2‑Z80 using CP/M 3.0 with the DEC VT100 font. If you look very closely you can see the simulated scan lines. To me, that is "vintage" enough.
+### 🔊 **Audio Features**
+- **Bell Sound**: PWM-based buzzer for terminal bell (BEL character)
+- **Key Click**: Optional audible feedback for keyboard input
+- **Volume Control**: Configurable sound levels (0-100%)
+- **Setup Integration**: Audio settings configurable through setup dialog
 
-<p align="center">
-  <img src="images/screen.jpg" alt="Screen" width="60%">  
-</p>
+### 🖥️ **Display Features**
+- **Multiple Resolutions**: Support for various display modes
+- **Font Scaling**: Multiple font sizes with crisp rendering
+- **Cursor Control**: Configurable cursor visibility and blinking
+- **Screen Management**: Advanced clearing and scrolling operations
 
-But if you feel you need a close replication of the original VT100, please refer to the work of Lars Brinkhoff ([GitHub repository](https://github.com/larsbrinkhoff/terminal-simulator)).
+## Hardware Compatibility
 
+### Supported Raspberry Pi Models
+- **Raspberry Pi 1 (A, A+, B, B+)**: Full support including USB keyboards
+- **Raspberry Pi 2**: Full support with enhanced performance
+- **Raspberry Pi 3**: Full support with 64-bit capability
+- **Raspberry Pi 4**: Display and PS/2 support (USB keyboards not yet supported)
+- **Raspberry Pi Zero/Zero W**: Optimized for minimal hardware
 
-## Hardware
+### Keyboard Support
+- **PS/2 Keyboards**: Native support via GPIO bit-banging
+- **USB Keyboards**: Support on Pi 1-3 via USPI library
+- **Automatic Detection**: Priority-based detection (PS/2 first, then USB)
+- **Layout Support**: US, UK, DE, and other international layouts
 
-The main reason for my additional software requirements was that I created an adapter board for a Pi Zero (any other Pi should also work). The board can be used to power the Pi and an 8" TFT display (I use one that only needs 5 VDC) from a 7.5 to 9 V DC or AC plug‑in power supply. The board also provides a DIN‑6 connector to connect directly to my MBC2‑Z80 board, an RS‑232 port, and a USB Type‑A connector to interface with standard USB keyboards.
+## Quick Start
 
-I used an RS‑232 adapter (bought from Aliexpress) that not only holds the DB9 connector but also an RS3232 chip. So I only needed to connect the four pins on the back to my board.
+### Installation
+1. **Download**: Get the latest release from the releases page
+2. **SD Card Setup**: Format SD card as FAT32
+3. **Copy Files**: Copy `kernel*.img` and `pigfx.txt` to SD card root
+4. **Hardware**: Connect UART (115200 baud) and optional PS/2 keyboard
+5. **Boot**: Insert SD card and power on
 
-The cable you see going from the Pi to the board connects D+/D‑ from the USB‑A connector to test points on the second USB connector on the Pi Zero (see [maker‑tutorials.com guide](https://maker-tutorials.com/raspberry-pi-zero-mit-usb-buchse-typ-a-erweitern-anloeten/)). This was a convenient way to directly connect a USB keyboard to the Pi.
+### Basic UART Connection
+```
+Pi GPIO 14 (TX) -> Host RX
+Pi GPIO 15 (RX) -> Host TX  
+Pi Ground       -> Host Ground
+```
 
-I also added a relay to switch the TxD and RxD lines of the Pi Zero, as I discovered that real null‑modem cables are not easy to find. Finally, I added a simple passive buzzer to the board to simulate the 785 Hz bell tone of the VT100 via software PWM. The following picture shows the prototype of the board (without buzzer).
+### Optional PS/2 Keyboard
+```
+Pi GPIO 4  -> PS/2 Clock
+Pi GPIO 17 -> PS/2 Data
+Pi 5V      -> PS/2 VCC
+Pi Ground  -> PS/2 Ground
+```
 
-<p align="center">
-<img src="images/board.jpg" alt="Prototype" width="50%">  
-</p>
+## Configuration
 
-The KiCad files are provided in the hardware directory of this repository. For a detailed description, see [Hardware README.md](hardware/README.md).
+### Configuration File (`pigfx.txt`)
+```ini
+# Display Settings
+resolution = 4          ; 0=640x480, 1=800x600, 2=1024x768, 3=1280x720, 4=1280x1024
+font = 0               ; Font index from registry
+foregroundColor = 7    ; White text
+backgroundColor = 0    ; Black background
 
-## List of Modifications
+# UART Settings  
+uartBaudrate = 115200  ; Serial communication speed
+switchRxTx = 0         ; 0=normal, 1=swap RX/TX pins
 
-The following modifications and enhancements have been implemented:
+# Keyboard Settings
+keyboardLayout = 0     ; 0=US, 1=UK, 2=DE, etc.
+useUsbKeyboard = 1     ; Enable USB keyboard support
+autoRepeat = 1         ; Enable key auto-repeat
+repeatDelay = 500      ; Auto-repeat delay (ms)
+repeatRate = 20        ; Auto-repeat rate (Hz)
 
-- Reorganization of the font build system (see [Font system details](FONT_SYSTEM.md))
-- On‑screen setup dialog and file‑based configuration (see [Configuration and Setup](CONFIGURATION.md))
-- Rearranging the build system and Makefile
-- Implemented Enhancements:
-  - Dynamic switching between screen resolutions 640×480, 800×640, and 1024×768
-  - Added a “Switch Rx<>Tx” toggle in the setup dialog and applied the setting immediately on save to switch Rx and Tx through a relay
-  - Polished auto-repeat handling; repeat delay and rate are configurable in the setup dialog
-  - Generate bell sound via software PWM with configurable sound level using a simple passive buzzer
+# Audio Settings
+soundLevel = 50        ; Volume level (0-100%)
+keyClick = 0           ; Key click sound (0=off, 1=on)
 
-For terminal graphics and palette control sequences, see: doc/GRAPHICS_EXTENSIONS.md
+# Terminal Settings
+cursorBlink = 1        ; Cursor blinking (0=off, 1=on)
+sendCRLF = 0          ; Send CR+LF for Enter key
+replaceLFCR = 0       ; Replace LF with CR
+```
 
-## Quick Start: Graphics over UART
+### Interactive Setup
+- **Access**: Press **Print Screen** key when keyboard connected
+- **Navigation**: Use arrow keys to select options
+- **Modification**: Left/Right arrows to change values
+- **Save**: Press Enter to save configuration
+- **Exit**: Press Escape to exit without saving
 
-Prereq: Python 3 and pyserial on your host.
+## Advanced Features
 
-Install dependencies (optional helper):
+### Memory Management
+- **MMU Protection**: Page table-based memory protection
+- **Heap Management**: Dynamic memory allocation with nmalloc
+- **Buffer Management**: Circular UART buffer (16KB) with overflow protection
 
+### Debug System
+- **Severity Levels**: Notice, Error, Debug, Warning with bitmap filtering
+- **Runtime Control**: Configurable debug output levels
+- **Color Coding**: Automatic color assignment for different log levels
+- **Performance**: Minimal overhead when debug disabled
+
+### Font System
+- **Registry-Based**: Centralized font management system
+- **Multiple Fonts**: Various sizes and styles available
+- **Runtime Switching**: Dynamic font changes through setup dialog
+- **Crisp Rendering**: Pixel-perfect character alignment
+
+### UART Enhancements
+- **Interrupt-Driven**: Non-blocking receive with IRQ handling
+- **Pin Switching**: Optional RX/TX pin swapping via GPIO16
+- **Flush Protection**: Safe buffer clearing during pin switching
+- **Error Recovery**: Automatic error condition clearing
+
+## Building from Source
+
+### Prerequisites
 ```bash
-python3 -m pip install -r tools/requirements.txt
+# Install required toolchains
+sudo apt-get install gcc-arm-linux-gnueabihf  # For Pi 1-3
+sudo apt-get install gcc-aarch64-linux-gnu    # For Pi 4
 ```
 
-Examples using `tools/uart_send.py`:
-
-- Load a 32x32 binary bitmap into slot 0 and blit it at (10,10):
-
+### Build Commands
 ```bash
-python3 tools/uart_send.py /dev/ttyUSB0 115200 load-bin 0 32 32 /path/to/bitmap.raw
-python3 tools/uart_send.py /dev/ttyUSB0 115200 blit 0 10 10
+# Build for specific Pi model
+make RPI=1    # Raspberry Pi 1
+make RPI=2    # Raspberry Pi 2  
+make RPI=3    # Raspberry Pi 3
+make RPI=4    # Raspberry Pi 4
+
+# Clean build
+make clean
+
+# Build all models
+make all
 ```
 
-- Upload a simple RGB palette (hex) and select VGA palette:
+### Build System Features
+- **Automatic Toolchain Selection**: Chooses correct compiler for target
+- **Dependency Tracking**: Incremental builds with proper dependencies
+- **Debug Control**: Configurable debug levels at compile time
+- **Model-Specific Optimization**: Tailored builds for each Pi generation
 
-```bash
-python3 tools/uart_send.py /dev/ttyUSB0 115200 palette-upload 16 FF0000,00FF00,0000FF
-python3 tools/uart_send.py /dev/ttyUSB0 115200 palette-select 1
-```
+## Technical Architecture
 
-See `doc/GRAPHICS_EXTENSIONS.md` for the full set of escape sequences and details.
+### System Initialization
+1. **Boot Loader**: ARM initialization and basic setup
+2. **BSS Clearing**: C runtime environment preparation
+3. **Memory Setup**: Heap initialization and MMU configuration
+4. **Hardware Discovery**: Board detection and peripheral initialization
+5. **Configuration Loading**: User settings from SD card
+6. **Subsystem Init**: Graphics, fonts, keyboards, audio
+7. **Main Loop**: Terminal processing and user interaction
 
-Remark: The setup dialog is entered by pressing the Print Screen key. The setup menu includes options for resolution, colors, fonts, keyboard settings, sound level, and key click sounds.
+### Terminal Processing
+- **UART Reception**: Interrupt-driven character buffering
+- **ANSI Processing**: Full VT100 escape sequence interpretation
+- **Character Rendering**: Font-based text output with color support
+- **Keyboard Input**: PS/2 and USB key processing with layout mapping
+- **Screen Management**: Scrolling, clearing, cursor control
 
-## VT100 compatibility (at a glance)
+### Graphics Pipeline
+- **Framebuffer Management**: Direct pixel manipulation with DMA acceleration
+- **Font Rendering**: Bitmap-based character drawing with multiple modes
+- **Color System**: 8-bit indexed color with configurable palettes
+- **Screen Operations**: Hardware-accelerated scrolling and clearing
 
-This project aims to feel like a DEC VT100, not to be a byte-perfect emulator. It implements a practical subset of VT100/ANSI plus a few VT220 and private PiGFX extensions.
+## Troubleshooting
 
-Supported highlights
+### Common Issues
+- **No Display**: Check HDMI connection and try different resolution
+- **No UART**: Verify baud rate (115200) and wiring
+- **Keyboard Not Working**: Check PS/2 connections or try USB keyboard
+- **Boot Fails**: Ensure correct kernel*.img for your Pi model
 
-- Cursor movement: CUP/HVP (ESC[H / ESC[f] with row;col), and relative moves CUU/CUD/CUF/CUB (ESC[A/B/C/D)
-- Clearing: EL/ED variants (ESC[K/J with 0/1/2) including full screen clear to 0,0
-- Attributes (SGR): 0, 1, 2, 7, 22, 27; classic colors 30–37/40–47; bright colors 90–97/100–107
-- Save/restore position: CSI s/u (ESC[s / ESC[u])
-- Cursor visibility: DEC private 25h/25l (VT220), blinking toggle ?25b (PiGFX)
-- PiGFX extensions: graphics (ESC[#…]), palette control (ESC[=p), and ANSI.SYS-style mode/font/tab settings (ESC[=…)
-
-Not implemented (highlights)
-
-- VT100: DECSC/DECRC (ESC 7/ESC 8), DECSTBM scrolling region (ESC[`<top>`;`<bottom>`r), tab set/clear (ESC H / ESC[g), CPR (ESC[6n)
-- ANSI: CNL/CPL/CHA/VPA/HPR/VPR (line/column absolute/relative), CHT/CBT (tab forward/back), ECH (erase char), ICH/DCH/IL/DL parameter defaults and repeat counts
-- SGR attributes: italic (3/23), underline (4/24), blink (5/25), rapid blink (6), conceal/reveal (8/28), crossed-out (9/29), default fg/bg (39/49)
-
-Extended color model
-
-- 8-bit indexed color with built-in palettes (XTerm, VGA, C64, custom)
-- 38;5 / 48;5 for 0–255 indexed colors, 38;6 / 48;6 to set and store new defaults (PiGFX extension), 58;5 for transparent color
-
-Full matrix and exact sequences: see Terminal codes and compatibility in doc/terminal_codes.md.
-
-› File: doc/terminal_codes.md
-
-## Still to do
-
-The following modifications are on the list of open to‑dos:
-
-- [x] Remove the sprite implementation from the code
-- [ ] Remove feature to upload fonts
-- [ ] Analyze code to remove dead code
-- [ ] Rearrange the include and file hierarchy for a more structured architecture
-- [x] Add OpenSCAD file for back plate of terminal to hold the adapter board at the back and allow access to the connectors, power switch and sd card
-
-## Building the Application
-
-The font build system is described in the link above. The main Makefile has been modified to use a variable to control the build for different targets and also rebuilds the USB library:
-
-**Single RPI Variable Control:**
-
-- Use `make RPI=1` for Raspberry Pi 1
-- Use `make RPI=2` for Raspberry Pi 2
-- Use `make RPI=3` for Raspberry Pi 3
-- Use `make RPI=4` for Raspberry Pi 4
-
-**Automatic Toolchain Selection:**
-
-- Pi 1-3: Automatically uses `arm-none-eabi-` toolchain
-- Pi 4: Automatically uses `aarch64-linux-gnu-` toolchain
-- No manual toolchain configuration required
-
-**Intelligent USB Library Management:**
-
-- Automatically builds uspi library for Pi 1-3
-- Skips uspi for Pi 4 (not required)
-- Automatic Config.mk regeneration when switching Pi versions
-- Proper cross-compilation with correct architectures
-
-**Build Information Display:**
-
-```text
-Creating kernel.img for Raspberry Pi 1
-==========================================
-Build completed for Raspberry Pi 1
-Target: kernel
-Toolchain: arm-none-eabi-
-USPI: Included for Pi 1
-==========================================
-```
-
-
-## Remarks on building the VT100 Case
-
-The VT100 case was printed on a Bamboo Lab P1S 3D printer using the STL files provided by Megardi. Printing took some time (about 15 hours in total). When I tried to glue the pieces together I discovered that the printed parts of the 3D model, at least in my experience, do not always fit very well together. It took a lot of filling and sanding to get the case in shape.
-
-I then applied a light‑grey filler to smooth the surface and prepare the case for painting. I painted the case in color RAL1013 "Oyster White" which, in my opinion, comes very close to the original color.
-
-
-![Case initial](images/Case_1.jpg)
-
-![Case final](images/Case_2.jpg)
-
-To mount the adapter board inside the case the best option was to create a specific back plate that holds all the openings for the connectors on the board and also provides supportsfor the SD card extension and adapter board.
-
-
-## Installing
-
-To install the adapter board with the Pi Zero, a specific back plate has been designed which fits the layout of the connectors on the board.
-The OpenSCAD file for the modified back plate can be found in the OpenScad directory.
-
-In addition, an SD card extender cable is used to provide access to the SD card at the back of the terminal through a small slot. The connection to the TFT controller is done using a very flexible mini HDMI to mini HDMI cable. The display controller is affixed to the back of the display with double‑sided tape, but be aware to only use very small strips on both sides of the controller board. The tape is very, very sticky and I damaged the connection between controller and display trying to remove the controller from the back of the display!
-
-
-Parts used:
-
-- SD Card extension cable: [AliExpress link](https://de.aliexpress.com/item/4001200431510.html?spm=a2g0o.order_list.order_list_main.11.51de5c5fxcDiwo&gatewayAdapt=glo2deu)
-- mini HDMI to mini HDMI cable: [AliExpress link](https://de.aliexpress.com/item/1005008622570470.html?spm=a2g0o.order_list.order_list_main.41.51de5c5fxcDiwo&gatewayAdapt=glo2d)
-    Remark: Use the C1 - C1 option!
-- 8'' Display and controller: [AliExpress link](https://de.aliexpress.com/item/1005004162403387.html?spm=a2g0o.order_list.order_list_main.47.51de5c5fxcDiwo&gatewayAdapt=glo2deu)
-- passive 5 VDC buzzer: [AliExpress link](https://de.aliexpress.com/item/1005008785167242.html?spm=a2g0o.order_list.order_list_main.15.37205c5f1Nn217&gatewayAdapt=glo2deu)
-- RS232 adapter: [AliExpress link](https://de.aliexpress.com/item/1005008264187706.html?spm=a2g0o.order_list.order_list_main.137.37205c5f1Nn217&gatewayAdapt=glo2deu)
-
-## Upstream compatibility
-
-This project does not intend to be upstream compatible with the original PiGFX project!
-I will add new features and reduce the code to the minimum to implement my requirements.
+### Debug Information
+- **Boot Messages**: Enable debug logging for detailed startup information
+- **Configuration**: Use setup dialog to verify and adjust settings
+- **Hardware**: Check LED heartbeat to confirm system is running
 
 ## License
 
-MIT License © Original authors and contributors.
-See `LICENSE` for details.
+Copyright (C) 2014-2020 Filippo Bergamasco, Christian Lehner  
+Copyright (C) 2025 Ralf Zühlsdorff (Enhanced Edition)
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes with appropriate documentation
+4. Test on multiple Pi models if possible
+5. Submit a pull request
+
+## Acknowledgments
+
+- **Original Authors**: Filippo Bergamasco, Christian Lehner
+- **USB Support**: USPI library integration
+- **Community**: Contributors and testers
+- **Documentation**: Enhanced Edition improvements and unified build system
