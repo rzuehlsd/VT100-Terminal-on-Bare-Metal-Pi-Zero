@@ -1075,14 +1075,14 @@ void setup_mode_draw(void)
     unsigned int box_height = box_char_rows * font_px_h;
     
     // Draw setup box border
-    gfx_set_fg(WHITE);
+    gfx_set_fg(prev_fg);
     gfx_fill_rect(box_x, box_y, box_width, 2);                    // top border
     gfx_fill_rect(box_x, box_y + box_height - 2, box_width, 2);   // bottom border
     gfx_fill_rect(box_x, box_y, 2, box_height);                   // left border
     gfx_fill_rect(box_x + box_width - 2, box_y, 2, box_height);   // right border
     
     // Fill box background
-    gfx_set_fg(BLUE);
+    gfx_set_fg(prev_bg);
     gfx_fill_rect(box_x + 2, box_y + 2, box_width - 4, box_height - 4);
     
     // Calculate text positions in character cells
@@ -1097,13 +1097,19 @@ void setup_mode_draw(void)
     unsigned int value_col = content_col + label_width;  // Start of value column (after 5-char gap)
     
     // Draw title using direct character drawing - centered
-    gfx_set_fg(YELLOW);
-    gfx_set_bg(BLUE);
+    gfx_set_fg(prev_fg);
+    gfx_set_bg(prev_bg);
     // Center "Pi VT100 Setup" in the dialog box (13 characters)
     const unsigned int title_len = 13;
     unsigned int title_center_col = box_char_x + (box_char_cols - title_len) / 2;
     draw_text_at(title_row, title_center_col, "Pi VT100 Setup");
     
+    int BLACK = prev_bg; // Background color
+    int WHITE = prev_fg; // Foreground color
+    int BLUE = BLACK;
+    int GREEN = WHITE;
+   
+
     // Draw baud rate label and value with selection highlighting
     if (selected_item == 0)
     {
@@ -1489,8 +1495,8 @@ void setup_mode_draw(void)
 
     // Draw instructions in 2-column layout near bottom, with safe spacing above border
     unsigned int instruction_row = content_row + items_rows + spacer_before_instructions;
-    gfx_set_fg(CYAN);
-    gfx_set_bg(BLUE);
+    gfx_set_fg(prev_fg);
+    gfx_set_bg(prev_bg);
 
     // Left column instructions (aligned to inner left + small indent)
     unsigned int left_instruction_col = inner_left_col + 2;
