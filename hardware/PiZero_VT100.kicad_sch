@@ -6542,12 +6542,6 @@
 		(uuid "7aed22f7-4d7d-458e-a9be-4b44a1b1ed95")
 	)
 	(junction
-		(at 53.34 179.07)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "7ec53ecd-0307-4de8-ad95-9b776bc66ffa")
-	)
-	(junction
 		(at 203.2 82.55)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -6859,7 +6853,7 @@
 	)
 	(wire
 		(pts
-			(xy 40.64 165.1) (xy 40.64 161.29)
+			(xy 40.64 161.29) (xy 40.64 167.64)
 		)
 		(stroke
 			(width 0)
@@ -6906,6 +6900,16 @@
 			(type default)
 		)
 		(uuid "0a96b987-35ee-490a-a95a-60594c0a1b60")
+	)
+	(wire
+		(pts
+			(xy 40.64 167.64) (xy 25.4 167.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0aa0a8fa-44d2-402f-8707-a5021f935d54")
 	)
 	(wire
 		(pts
@@ -7186,16 +7190,6 @@
 			(type default)
 		)
 		(uuid "3f4e7486-5e4a-4289-b6dc-2aa5a0533617")
-	)
-	(wire
-		(pts
-			(xy 25.4 179.07) (xy 53.34 179.07)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3fab0709-4210-4184-8c97-1b963c6f4509")
 	)
 	(wire
 		(pts
@@ -7779,7 +7773,7 @@
 	)
 	(wire
 		(pts
-			(xy 25.4 165.1) (xy 25.4 179.07)
+			(xy 25.4 165.1) (xy 25.4 167.64)
 		)
 		(stroke
 			(width 0)
@@ -9984,69 +9978,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 40.64 165.1 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "333352d0-a819-47d0-a4b9-fd0d1ef04ff8")
-		(property "Reference" "#PWR011"
-			(at 40.64 171.45 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "GND"
-			(at 40.7543 169.4244 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 40.64 165.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 40.64 165.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 40.64 165.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "f9de9a1c-740b-4bf0-b002-0f6615d16b4c")
-		)
-		(instances
-			(project "PiZero_VT100"
-				(path "/e63e39d7-6ac0-4ffd-8aa3-1841a4541b55"
-					(reference "#PWR011")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R")
 		(at 73.66 106.68 180)
 		(unit 1)
@@ -10755,7 +10686,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Diode_THT:D_5W_P10.16mm_Horizontal"
+		(property "Footprint" "Diode_THT:D_A-405_P10.16mm_Horizontal"
 			(at 101.6 100.33 0)
 			(effects
 				(font
@@ -11353,7 +11284,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Fuse:Fuse_Littelfuse-LVR125"
+		(property "Footprint" "Fuse:Fuse_Littelfuse-LVR200"
 			(at 46.99 149.86 0)
 			(effects
 				(font
@@ -11422,7 +11353,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Diode_THT:D_A-405_P12.70mm_Horizontal"
+		(property "Footprint" "Diode_THT:D_A-405_P10.16mm_Horizontal"
 			(at 134.62 57.15 0)
 			(effects
 				(font

@@ -97,11 +97,11 @@ mirror ([1,0,0])
             }
             
             
-            // Power connector x = 8, y=0, w = 8, h = 9
-            rect_hole(7.5,0,9,9);
+            // Power connector x = 8, y=0, w = 9, h = 9
+            rect_hole(8,0,9,9);
             
             // DB9 Stecker x = 20, y = 0, w = 30, h = 17
-            rect_hole(19.5,0,31,17);
+            rect_hole(20,0,31,17);
 
             // Mini DIN6 x = 56.5, y = 0, w = 12.5, h =14
             rect_hole(56.5, 0, 12.5, 14);
@@ -110,13 +110,13 @@ mirror ([1,0,0])
             rect_hole(74, -2, 15, 7);
             
             // SD Card Slot  x = 80, y = 13.5, w = 20, h = 3.5
-            rect_hole(80, 13.5, 20, 3.5);
+            rect_hole(74, 13.5, 20, 3.5);
             
             // LED x = 94, y = 5, w = 2, h = 2
             round_hole(94, 5, 1,5);
             
             // ON/OFF Switch x = 5, y = 45, r = 3
-            round_hole(5,30,3);
+            round_hole(5,30,3.15);
         
     }
 

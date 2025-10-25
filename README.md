@@ -226,6 +226,26 @@ Contributions are welcome! Please:
 4. Test on multiple Pi models if possible
 5. Submit a pull request
 
+## Known Bugs
+
+### Display Frame Coverage Issue
+
+- **Resolution Affected**: 1024x768 resolution
+- **Symptom**: The first two characters on the left edge of the display are covered by the physical screen frame/bezel
+- **Impact**: Text beginning at column 0 may be partially or completely hidden from view
+- **Workaround**: Avoid placing critical information in the leftmost 2 character positions
+
+### Potential Solution
+
+A logical screen implementation with configurable offsets could resolve this issue:
+
+- **Logical Screen**: Define a standard terminal size (e.g., 80x25 characters)
+- **Physical Offset**: Apply X,Y pixel offsets to shift the logical screen away from covered areas
+- **Configuration**: Make offsets configurable per resolution/display type
+- **Backward Compatibility**: Maintain current behavior as default, enable offsets via configuration
+
+This would allow users to adjust the display positioning to accommodate different monitors and bezels while maintaining compatibility with existing terminal software expecting standard dimensions.
+
 ## Acknowledgments
 
 - **Original Authors**: Filippo Bergamasco, Christian Lehner
