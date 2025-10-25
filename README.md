@@ -129,7 +129,7 @@ I used a simple 8'' display from Aliexpress with 1024x768 pixels. The display ha
 
 In the pictures above I used the resolution 800x640 pixel. With 1024x768 the first 2 characters are civered by the screen bezel. 
 
-To connect the display to the Pi zero I used a flexible adapter cable miniHDMI to miniHDMI (C1-C1). 
+To connect the display to the Pi zero I used a flexible adapter cable miniHDMI to miniHDMI (C1-C1). I also installed a SD Card extension cable for easy acces to the sd card slot at the back of the case.
 
 Display:        https://de.aliexpress.com/item/1005004162403387.html?spm=a2g0o.order_list.order_list_main.64.759e5c5fCtHg3D&gatewayAdapt=glo2deu
 Cable:          https://de.aliexpress.com/item/1005008622570470.html?spm=a2g0o.order_list.order_list_main.59.7f095c5f7ZEnkL&gatewayAdapt=glo2deu
