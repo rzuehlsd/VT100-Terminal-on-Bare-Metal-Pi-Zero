@@ -71,6 +71,12 @@ The custom PCB provides:
 - RS232 DB9 connector to interface with host
 - Compact form factor for VT100 case integration
 
+Below you see the schematic of the adapter board. The KiCad project is located in directory hardware.
+
+<div align="center">
+  <img src="images/schematic_adapter_board.png" alt="adapter board schematic" />
+</div>
+
 The following picture shows the prototyp of the adapter board still with linear voltage regulator. Final version will hold a switching buck regulator to reduce heat.
 
 <div align="center">
@@ -78,13 +84,11 @@ The following picture shows the prototyp of the adapter board still with linear 
 </div>
 
 
-The cable on top of the picture going to the Pi zero connects the D+/D- pins of the USB connector at the back to two testpoints on the Pi. This allows the usage of a standard USB keyboard to pe connected to the Pi zero without additional adapter. For more details please see https://maker-tutorials.com/raspberry-pi-zero-mit-usb-buchse-typ-a-erweitern-anloeten/.
+The cable on top of the picture going to the Pi zero connects the D+/D- pins of the USB connector at the back to two testpoints on the Pi. This allows the usage of a standard USB keyboard to be connected to the Pi zero without additional adapter. For more details please see https://maker-tutorials.com/raspberry-pi-zero-mit-usb-buchse-typ-a-erweitern-anloeten/.
 
 As its very hard to find a real RS232 null modem cabe the signal relay (blue) is used to switch the Rx and Tx lines to simulate a null modem cable, if required.
-
-The resistors between Pi zero and relay are used to level shift the RxD signal to voltage levels below 3.3V.
-
-The connectors on the back besides the USB-A are a Mini DIN6 connector for a custom connection to an MBC2-Z80, a RS3232 connector module and a 5.5mm power connector.
+The resistors between Pi zero and relay are used to level shift the RxD signal (only signal that goes into the Pi) to voltage levels below 3.3V. 
+The connectors on the back besides the USB-A are a Mini DIN6 connector (for a custom connection to an MBC2-Z80), a RS232 connector module and a 5.5mm power connector.
 
 More information is given in directory hardware.
 
@@ -97,20 +101,26 @@ The 3D printable back plate features:
 - Cutouts for power, UART connections and sd card extension cable
 - Compatible with 60% VT100 replica cases
 
+This back cover fits into the opening at the back of the VT100 case and has supports to connect the pcb (holes have to be drilled manuall to allow for small adjustments). There is also a support to hold the SD card extension to allow to change the SD card at the back of the case. The other openings fit the connectors on the adapter board and allow mountig of a small ON/OFF switch.
+
 <div align="center">
   <img src="images/back_panel.png" alt="back cover with mounting support" />
 </div>
 
-This back cover fits into the openeing at the back of the VT100 case and has supports to connect the pcb (holes have to be drilled manuall to alow small adjustments). There is also a support to hold the sd card extension to allow changing the sd card at the back of the case. The openings fit the connectors on the adapter board plus and allow mountig of a small ON/OFF sitch.
+
+
+
 
 ## Quick Setup
 
 ### Hardware Assembly
 
-1. Install Raspberry Pi Zero on adapter board
-2. Mount assembly in VT100 case with modified back cover
-3. Connect PS/2 keyboard to adapter board
-4. Connect power supply
+1. Populate the adapter board starting with the smallest components
+2. Check installed submodules (e.g. power supply, )
+3. Install Raspberry Pi Zero on adapter board
+4. Mount assembly in VT100 case with modified back cover
+5. Connect PS/2 keyboard to adapter board
+6. Connect power supply
 
 ## Assembly of VT100 replica case
 

@@ -15,8 +15,6 @@ typedef unsigned char GFX_COL;
 typedef enum
 {
 	drawingNORMAL,			// foreground color on background color (normal text mode)
-	drawingXOR,				// pixel xored with background (text only)
-	drawingTRANSPARENT,		// non null pixel drawn on background (text only)
 } DRAWING_MODE;
 
 /** Standard color codes */

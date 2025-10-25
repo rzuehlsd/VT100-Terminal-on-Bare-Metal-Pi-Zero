@@ -55,8 +55,7 @@ typedef struct {
     unsigned char* pFirstFb;			/// First Framebuffer address
     unsigned char* pSecondFb;		    /// Second Framebuffer address (double buffering)
     unsigned int fb_yOffset;            /// y-Offset within the framebuffer for double buffering
-    DRAWING_MODE mode;					/// Drawing mode: normal, xor, transparent
-    unsigned char transparentcolor;		/// For transparent drawing mode
+    DRAWING_MODE mode;					/// Drawing mode: normal
 
     // bitmap handling
     struct
@@ -350,15 +349,6 @@ void gfx_get_gfx_size( unsigned int* width, unsigned int* height )
     *width = ctx.W;
     *height = ctx.H;
 }
-
-/** Sets the transparent color for transparent mode.
- *
- */
-void gfx_set_transparent_color( GFX_COL color )
-{
-    ctx.transparentcolor = color;
-}
-
 
 // Sprite collision detection removed
 
@@ -813,79 +803,6 @@ void gfx_putc_NORMAL( unsigned int row, unsigned int col, unsigned char c )
     }
 }
 
-/** Displays a character at a position, XORing it with current background.
- *  The pixels of the character are drawn by XORing the foreground color with existing background.
- *  The pixels OFF are ignored, leaving existing background untouched.
- *  NB: The background color is not used in this mode.
- *  NB: Characters with codes from 0 to 31 are displayed using current font and don't have any control effect.
- *	@param row the character line number (0 = top screen)
- *	@param col the character column (0 = left)
- *	@param c the character code from 0 to 255.
- */
-void gfx_putc_XOR( unsigned int row, unsigned int col, unsigned char c )
-{
-    if( col >= ctx.term.WIDTH )
-        return;
-    if( row >= ctx.term.HEIGHT )
-        return;
-
-    const unsigned int pixcol = col * ctx.term.FONTWIDTH;
-    const unsigned int pixrow = row * ctx.term.FONTHEIGHT;
-    const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;
-    register unsigned char* p_glyph = (unsigned char*)ctx.term.font_getglyph(c);
-    register unsigned char h = ctx.term.FONTHEIGHT;
-    register unsigned char* pf = (unsigned char*)PFB(pixcol, pixrow);
-    while( h-- )
-    {
-        unsigned int w = ctx.term.FONTWIDTH;
-        while( w-- )
-        {
-            register unsigned char gv = *p_glyph++;
-            if (gv)
-                *pf = ctx.fg ^ gv;
-            pf++;
-        }
-        pf += byte_stride;
-    }
-}
-
-/** Displays a character at a position in transparent mode.
- *  The pixels of the character are drawn with the foreground color.
- *  The pixels OFF are ignored, leaving existing background untouched.
- *  NB: The background color is not used in this mode.
- *  NB: The transparent color is not used for drawing characters.
- *  NB: Characters with codes from 0 to 31 are displayed using current font and don't have any control effect.
- *	@param row the character line number (0 = top screen)
- *	@param col the character column (0 = left)
- *	@param c the character code from 0 to 255.
- */
-void gfx_putc_TRANSPARENT( unsigned int row, unsigned int col, unsigned char c )
-{
-    if( col >= ctx.term.WIDTH )
-        return;
-    if( row >= ctx.term.HEIGHT )
-        return;
-
-    const unsigned int pixcol = col * ctx.term.FONTWIDTH;
-    const unsigned int pixrow = row * ctx.term.FONTHEIGHT;
-    const unsigned int byte_stride = ctx.Pitch - ctx.term.FONTWIDTH;
-    register unsigned char* p_glyph = (unsigned char*)ctx.term.font_getglyph(c);
-    register unsigned char h = ctx.term.FONTHEIGHT;
-    register unsigned char* pf = (unsigned char*)PFB(pixcol, pixrow);
-    while( h-- )
-    {
-        unsigned int w = ctx.term.FONTWIDTH;
-        while( w-- )
-        {
-            register unsigned char gv = *p_glyph++;
-            if (gv)
-                *pf = ctx.fg;
-            pf++;
-        }
-        pf += byte_stride;
-    }
-}
-
 /** Displays a character in current drawing mode. Characters with codes from 0 to 31
  *  are displayed using current font and don't have any control effect.
  *	@param row the character line number (0 = top screen)
@@ -894,24 +811,14 @@ void gfx_putc_TRANSPARENT( unsigned int row, unsigned int col, unsigned char c )
  */
 draw_putc_fun (*gfx_putc) = &gfx_putc_NORMAL;
 
-/** Sets the drawing mode for character rendering (and affects bitmap tools where applicable).
- * @param mode the new drawing mode: drawingNORMAL, drawingXOR or drawingTRANSPARENT.
+/** Sets the drawing mode for character rendering.
+ * @param mode the drawing mode: drawingNORMAL (only mode supported).
  */
 void gfx_set_drawing_mode( DRAWING_MODE mode )
 {
     ctx.mode = mode;
-    switch (mode)
-    {
-    case drawingNORMAL:
-        gfx_putc = gfx_putc_NORMAL;
-        break;
-    case drawingXOR:
-        gfx_putc = gfx_putc_XOR;
-        break;
-    case drawingTRANSPARENT:
-        gfx_putc = gfx_putc_TRANSPARENT;
-        break;
-    }
+    // Only normal mode is supported for VT100 compatibility
+    gfx_putc = gfx_putc_NORMAL;
 }
 
 /** Restore saved content under cursor.
@@ -1853,26 +1760,6 @@ int state_fun_final_letter( char ch, scn_state *state )
             goto back_to_normal;
             break;
 
-        case 'm': // ESC=0m normal mode, ESC=1m XOR, ESC=2m TRANSPARENT
-            if( state->cmd_params_size >= 1)
-            {
-                // parameter is the font number
-                switch (state->cmd_params[state->cmd_params_size - 1])
-                {
-                case 1:
-                    gfx_set_drawing_mode(drawingXOR);
-                    break;
-                case 2:
-                    gfx_set_drawing_mode(drawingTRANSPARENT);;
-                    break;
-                default:
-                    gfx_set_drawing_mode(drawingNORMAL);
-                    break;
-                }
-            }
-            goto back_to_normal;
-            break;
-
         case 't': // ESC=xxxt sets tabulation width
             if( state->cmd_params_size >= 1)
             {
@@ -2062,14 +1949,6 @@ int state_fun_final_letter( char ch, scn_state *state )
                     gfx_set_bg( state->cmd_params[2] );
                     gfx_set_default_bg(state->cmd_params[2]);
                 }
-                goto back_to_normal;
-            }
-            else if( state->cmd_params_size == 3 &&
-                state->cmd_params[0]==58    &&
-                state->cmd_params[1]==5 )
-            {
-                // esc[58;5;colm
-                gfx_set_transparent_color( state->cmd_params[2] );
                 goto back_to_normal;
             }
             else if (state->cmd_params_size == 0)

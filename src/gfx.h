@@ -106,21 +106,11 @@ extern void gfx_get_gfx_size( unsigned int* width, unsigned int* height );
 /*!
  * @brief Set the drawing mode for character rendering
  * 
- * Changes how characters are rendered (normal, XOR, transparent, etc.).
+ * Sets the character rendering mode to normal (only mode supported for VT100 compatibility).
  * 
- * @param mode The drawing mode to use for character rendering
+ * @param mode The drawing mode to use for character rendering (only drawingNORMAL supported)
  */
 extern void gfx_set_drawing_mode( DRAWING_MODE mode );
-
-/*!
- * @brief Set the transparent color for transparent drawing mode
- * 
- * Defines which color should be treated as transparent when using
- * transparent drawing mode.
- * 
- * @param color The color value to treat as transparent
- */
-extern void gfx_set_transparent_color( GFX_COL color );
 
 //==============================================================================
 // Basic Drawing Functions
