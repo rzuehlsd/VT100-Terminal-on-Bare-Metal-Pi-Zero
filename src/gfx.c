@@ -27,7 +27,7 @@
 #define MAX( v1, v2 ) ( ((v1) > (v2)) ? (v1) : (v2))
 #define PFB( X, Y ) ( ctx.pfb + (Y) * ctx.Pitch + (X) )
 
-#define MAXBITMAPS 128
+
 
 int __abs__( int a )
 {
@@ -56,34 +56,6 @@ typedef struct {
     unsigned char* pSecondFb;		    /// Second Framebuffer address (double buffering)
     unsigned int fb_yOffset;            /// y-Offset within the framebuffer for double buffering
     DRAWING_MODE mode;					/// Drawing mode: normal
-
-    // bitmap handling
-    struct
-    {
-        unsigned char  loading;
-        unsigned char  asciiMode;
-        unsigned char  asciiByte;
-        unsigned char  asciiBase;
-        unsigned short asciiRepeat;
-        unsigned char  rleCompressed;
-        unsigned char  index;
-        unsigned char  chars;
-        unsigned int   pixels;
-        unsigned int   actPos;
-    } bitmaploader;
-
-    // palette handling
-    struct
-    {
-        unsigned char loading;
-        unsigned char asciiBase;
-        unsigned char colorIdx;
-        unsigned int  color;
-        unsigned char nbColors;
-        unsigned int* pCustPal;
-    } paletteloader;
-
-    unsigned char* bitmap[MAXBITMAPS];
 
     // Terminal variables
     struct
@@ -280,8 +252,6 @@ void gfx_set_env( void* p_framebuffer, unsigned int width, unsigned int height, 
 
     // store reverse state to 'normal'
     ctx.reverse = 0;
-
-    ctx.paletteloader.pCustPal = fb_get_cust_pal_p();
 
     gfx_term_render_cursor();
 }
@@ -848,143 +818,6 @@ void gfx_term_render_cursor_newline()
         gfx_fill_rect( ctx.term.cursor_col * ctx.term.FONTWIDTH, ctx.term.cursor_row * ctx.term.FONTHEIGHT, ctx.term.FONTWIDTH, ctx.term.FONTHEIGHT );
 }
 
-// check if loading bitmap
-unsigned char gfx_term_loading_bitmap()
-{
-    return ctx.bitmaploader.loading;
-}
-
-// load bitmap data from serial
-void gfx_term_load_bitmap(char pixel)
-{
-    char* dest = 0;
-    unsigned char nbPixels, i;
-
-    if (ctx.bitmaploader.asciiMode)
-    {
-        // Convert data to binary
-        if (pixel == ';')
-        {
-            // process binary data
-            pixel = ctx.bitmaploader.asciiByte;
-            ctx.bitmaploader.asciiByte = 0;
-        }
-        else if ((ctx.bitmaploader.asciiBase == 10) && (pixel >= '0') && (pixel <= '9'))
-        {
-            ctx.bitmaploader.asciiByte = ctx.bitmaploader.asciiByte * 10 + pixel - '0';
-            return;
-        }
-        else if (ctx.bitmaploader.asciiBase == 16)
-        {
-            if ((pixel >= '0') && (pixel <= '9')) ctx.bitmaploader.asciiByte = ctx.bitmaploader.asciiByte * 16 + pixel - '0';
-            else if ((pixel >= 'A') && (pixel <= 'F')) ctx.bitmaploader.asciiByte = ctx.bitmaploader.asciiByte * 16 + pixel - 'A' + 10;
-            else if ((pixel >= 'a') && (pixel <= 'f')) ctx.bitmaploader.asciiByte = ctx.bitmaploader.asciiByte * 16 + pixel - 'a' + 10;
-            else
-            {
-                // syntax error
-                ctx.bitmaploader.loading = 0;
-            }
-            return;
-        }
-        else
-        {
-            // syntax error
-            ctx.bitmaploader.loading = 0;
-            return;
-        }
-
-    }
-
-    dest = (char*)ctx.bitmap[ctx.bitmaploader.index]+8+ctx.bitmaploader.actPos;
-    if (ctx.bitmaploader.rleCompressed)
-    {
-        if ((ctx.bitmaploader.chars & 1) == 0)    // pixel info
-        {
-            *dest = pixel;
-        }
-        else    // repeat
-        {
-            nbPixels = pixel;
-            pixel = *dest;
-
-            for (i=0;i<nbPixels;i++)
-            {
-                *dest++ = pixel;
-                ctx.bitmaploader.actPos++;
-                if (ctx.bitmaploader.actPos >= ctx.bitmaploader.pixels)
-                {
-                    // finished
-                    ctx.bitmaploader.loading = 0;
-#if RPI == 1
-                    CleanDataCache();
-#else
-                    CleanDataCacheRange((unsigned int)ctx.bitmap[ctx.bitmaploader.index], ctx.bitmaploader.pixels+8);
-#endif
-                    break;
-                }
-            }
-        }
-        ctx.bitmaploader.chars++;
-    }
-    else
-    {
-        *dest = pixel;
-        ctx.bitmaploader.actPos++;
-        if (ctx.bitmaploader.actPos >= ctx.bitmaploader.pixels)
-        {
-            // finished
-            ctx.bitmaploader.loading = 0;
-#if RPI == 1
-            CleanDataCache();
-#else
-            CleanDataCacheRange((unsigned int)ctx.bitmap[ctx.bitmaploader.index], ctx.bitmaploader.pixels+8);
-#endif
-        }
-    }
-}
-
-// check if loading palette
-unsigned char gfx_term_loading_palette()
-{
-    return ctx.paletteloader.loading;
-}
-
-// load palette data from serial
-void gfx_term_load_palette(char rgb)
-{
-    if (rgb == ';')
-    {
-        ctx.paletteloader.pCustPal[ctx.paletteloader.colorIdx++] = ctx.paletteloader.color;
-        ctx.paletteloader.color = 0;
-        if (ctx.paletteloader.colorIdx >= ctx.paletteloader.nbColors)
-        {
-            // finished
-            ctx.paletteloader.loading = 0;
-        }
-    }
-    else if ((ctx.paletteloader.asciiBase == 10) && (rgb >= '0') && (rgb <= '9'))
-    {
-        ctx.paletteloader.color = ctx.paletteloader.color * 10 + rgb - '0';
-    }
-    else if (ctx.paletteloader.asciiBase == 16)
-    {
-        if ((rgb >= '0') && (rgb <= '9')) ctx.paletteloader.color = ctx.paletteloader.color * 16 + rgb - '0';
-        else if ((rgb >= 'A') && (rgb <= 'F')) ctx.paletteloader.color = ctx.paletteloader.color * 16 + rgb - 'A' + 10;
-        else if ((rgb >= 'a') && (rgb <= 'f')) ctx.paletteloader.color = ctx.paletteloader.color * 16 + rgb - 'a' + 10;
-        else
-        {
-            // syntax error
-            ctx.paletteloader.loading = 0;
-        }
-    }
-    else
-    {
-        // syntax error
-        ctx.paletteloader.loading = 0;
-    }
-}
-
-
 void gfx_term_beep()
 {
     if(!pwm800_is_active())
@@ -1283,113 +1116,6 @@ int state_fun_final_letter( char ch, scn_state *state )
         // Non-standard graphic commands and additionam features
         switch( ch )
         {
-            case 'a':
-            case 'A':
-                // load a bitmap ASCII encoded
-                // expects bitmap index, x size, y size, encoding base (10 or 16)
-                // followed by x*y ASCII encoded color indexes for pixels (decimal or hex)
-                // A is RLE compressed
-                if (state->cmd_params_size == 4)
-                {
-                    if ((state->cmd_params[0] < MAXBITMAPS) && (state->cmd_params[1]) && (state->cmd_params[2]) && ((state->cmd_params[3] == 10) || (state->cmd_params[3] == 16)))
-                    {
-                        // release old data
-                        if (ctx.bitmap[state->cmd_params[0]]) nmalloc_free(ctx.bitmap[state->cmd_params[0]]);
-
-                        // alloc mem
-                        ctx.bitmap[state->cmd_params[0]] = nmalloc_malloc(8+state->cmd_params[1]*state->cmd_params[2]);    // Header 8 bytes for x and y, then data
-                        if (ctx.bitmap[state->cmd_params[0]])
-                        {
-                            ctx.bitmaploader.loading = 1;
-                            uint32_t* px = (uint32_t*)ctx.bitmap[state->cmd_params[0]];
-                            uint32_t* py = px+1;
-                            *px = state->cmd_params[1];
-                            *py = state->cmd_params[2];
-                            ctx.bitmaploader.pixels = state->cmd_params[1]*state->cmd_params[2];
-                            ctx.bitmaploader.actPos = 0;
-                            ctx.bitmaploader.index = state->cmd_params[0];
-                            if (ch == 'A') ctx.bitmaploader.rleCompressed = 1; else ctx.bitmaploader.rleCompressed = 0;
-                            ctx.bitmaploader.chars = 0;
-                            ctx.bitmaploader.asciiByte = 0;
-                            ctx.bitmaploader.asciiMode = 1;
-                            ctx.bitmaploader.asciiBase = state->cmd_params[3];
-                        }
-                    }
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-
-            case 'b':
-            case 'B':
-                // load a bitmap
-                // expects bitmap index, x size, y size
-                // followed by x*y bytes with color indexes for pixels
-                // B is RLE compressed
-                if (state->cmd_params_size == 3)
-                {
-                    if ((state->cmd_params[0] < MAXBITMAPS) && (state->cmd_params[1]) && (state->cmd_params[2]))
-                    {
-                        // release old data
-                        if (ctx.bitmap[state->cmd_params[0]]) nmalloc_free(ctx.bitmap[state->cmd_params[0]]);
-
-                        // alloc mem
-                        ctx.bitmap[state->cmd_params[0]] = nmalloc_malloc(8+state->cmd_params[1]*state->cmd_params[2]);    // Header 8 bytes for x and y, then data
-                        if (ctx.bitmap[state->cmd_params[0]])
-                        {
-                            ctx.bitmaploader.loading = 1;
-                            uint32_t* px = (uint32_t*)ctx.bitmap[state->cmd_params[0]];
-                            uint32_t* py = px+1;
-                            *px = state->cmd_params[1];
-                            *py = state->cmd_params[2];
-                            ctx.bitmaploader.pixels = state->cmd_params[1]*state->cmd_params[2];
-                            ctx.bitmaploader.actPos = 0;
-                            ctx.bitmaploader.index = state->cmd_params[0];
-                            if (ch == 'B') ctx.bitmaploader.rleCompressed = 1; else ctx.bitmaploader.rleCompressed = 0;
-                            ctx.bitmaploader.chars = 0;
-                            ctx.bitmaploader.asciiMode = 0;
-                        }
-                    }
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-
-            case 'd':
-                /* draw a bitmap */
-                if (state->cmd_params_size == 3)
-                {
-                    // expects bitmap index, x, y
-                    if (state->cmd_params[0] < MAXBITMAPS)
-                    {
-                        unsigned char* bm = ctx.bitmap[state->cmd_params[0]];
-                        if (!bm) { retval = 0; goto back_to_normal; }
-                        // Inline blit for raw bitmap
-                        unsigned int *p32 = (unsigned int*)bm;
-                        unsigned int bw  = *p32++; // width
-                        unsigned int bh = *p32++;  // height
-                        unsigned char* src = (unsigned char*)p32;
-                        int x = state->cmd_params[1];
-                        int y = state->cmd_params[2];
-                        if (x >= 0 && y >= 0 && x < (int)ctx.W && y < (int)ctx.H)
-                        {
-                            if (y+bh > ctx.H) bh = ctx.H - y;
-                            unsigned int usedw = bw;
-                            if (x+(int)bw > (int)ctx.W) usedw = ctx.W - x;
-                            unsigned char* dst = PFB(x,y);
-                            for (unsigned int i=0;i<bh;i++)
-                            {
-                                veryfastmemcpy(dst, src, usedw);
-                                dst += ctx.Pitch;
-                                src += bw;
-                            }
-                        }
-                    }
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-
             case '"':
                 /* scroll up */
                 if (state->cmd_params_size == 1)
@@ -1480,30 +1206,6 @@ int state_fun_final_letter( char ch, scn_state *state )
             if( state->cmd_params_size >= 1)
             {
                 gfx_term_set_tabulation(state->cmd_params[state->cmd_params_size - 1]);
-            }
-            goto back_to_normal;
-            break;
-
-
-        case 'p':
-            // ESC=xp Set palette
-            if( state->cmd_params_size == 1 )
-            {
-                fb_set_palette(state->cmd_params[0]);
-            }
-            else if ( state->cmd_params_size == 2 )
-            {
-                // 0=base, 1=nbrOfColors
-                if (((state->cmd_params[0] == 10) || (state->cmd_params[0] == 16))
-                    && (state->cmd_params[1] > 0)
-                    && (state->cmd_params[1] <= 256))
-                {
-                    ctx.paletteloader.loading = 1;
-                    ctx.paletteloader.asciiBase = state->cmd_params[0];
-                    ctx.paletteloader.colorIdx = 0;
-                    ctx.paletteloader.color = 0;
-                    ctx.paletteloader.nbColors = state->cmd_params[1];
-                }
             }
             goto back_to_normal;
             break;
