@@ -6435,7 +6435,7 @@
 		)
 		(uuid "e46420b9-6867-4b99-b773-d30e02189a32")
 	)
-	(text "Uout = 5,07V\n"
+	(text "Uout = 5,01V\n"
 		(exclude_from_sim no)
 		(at 165.608 150.876 0)
 		(effects
@@ -11132,7 +11132,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "10k"
+		(property "Value" "12k"
 			(at 149.86 158.7499 0)
 			(effects
 				(font
@@ -12378,7 +12378,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "3.2k"
+		(property "Value" "3,9k"
 			(at 149.86 172.7199 0)
 			(effects
 				(font
