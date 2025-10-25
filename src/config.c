@@ -40,6 +40,7 @@
  */
 static void set_boolean_config(const char* name, const char* value, unsigned int* config_field)
 {
+    (void)name; // Suppress unused parameter warning
     int tmpValue = atoi(value);
     if ((tmpValue == 0) || (tmpValue == 1)) {
         *config_field = tmpValue;
@@ -58,6 +59,7 @@ static void set_boolean_config(const char* name, const char* value, unsigned int
  */
 static void set_positive_config(const char* name, const char* value, unsigned int* config_field)
 {
+    (void)name; // Suppress unused parameter warning
     int tmpValue = atoi(value);
     if (tmpValue > 0) {
         *config_field = tmpValue;
@@ -79,6 +81,7 @@ static void set_positive_config(const char* name, const char* value, unsigned in
  */
 static void set_range_config(const char* name, const char* value, unsigned int* config_field, int min_val, int max_val)
 {
+    (void)name; // Suppress unused parameter warning
     int tmpValue = atoi(value);
     if ((tmpValue >= min_val) && (tmpValue <= max_val)) {
         *config_field = tmpValue;
@@ -100,6 +103,7 @@ static void set_range_config(const char* name, const char* value, unsigned int* 
  */
 static void set_specific_values_config(const char* name, const char* value, unsigned int* config_field, const int* valid_values, int count)
 {
+    (void)name; // Suppress unused parameter warning
     int tmpValue = atoi(value);
     for (int i = 0; i < count; i++) {
         if (tmpValue == valid_values[i]) {

@@ -510,235 +510,12 @@ void gfx_fill_rect( unsigned int x, unsigned int y, unsigned int width, unsigned
     }
 }
 
-/** TODO */
-void gfx_draw_circle(unsigned int x0, unsigned int y0, unsigned int rad)
-{
-    register unsigned char* pfb;
-    int f = 1 - rad;
-    int ddF_x = 0;
-    int ddF_y = -2 * rad;
-    int x = 0;
-    int y = rad;
-    int xdraw,ydraw;
-
-    //setPixel(x0, y0 + rad);
-    ydraw = y0+rad;
-    if (ydraw < (int)ctx.H)
-    {
-        pfb = PFB(x0,ydraw);
-        *pfb = ctx.fg;
-    }
-
-    //setPixel(x0, y0 - rad);
-    ydraw -= rad+rad;
-    if (ydraw >= 0)
-    {
-        pfb = PFB(x0,ydraw);
-        *pfb = ctx.fg;
-    }
-
-    //setPixel(x0 + rad, y0);
-    xdraw = x0+rad;
-    if (xdraw < (int)ctx.W)
-    {
-        pfb = PFB(xdraw,y0);
-        *pfb = ctx.fg;
-    }
-
-    //setPixel(x0 - rad, y0);
-    xdraw -= rad+rad;
-    if (xdraw >= 0)
-    {
-        pfb = PFB(xdraw,y0);
-        *pfb = ctx.fg;
-    }
-
-
-    while(x < y)
-    {
-        if(f >= 0)
-        {
-          y--;
-          ddF_y += 2;
-          f += ddF_y;
-        }
-        x++;
-        ddF_x += 2;
-        f += ddF_x + 1;
-
-        //setPixel(x0 + x, y0 + y);
-        xdraw = x0+x;
-        ydraw = y0+y;
-        if ((xdraw < (int)ctx.W) && (ydraw < (int)ctx.H))
-        {
-            pfb = PFB(xdraw,ydraw);
-            *pfb = ctx.fg;
-        }
-
-        //setPixel(x0 - x, y0 + y);
-        xdraw = x0-x;
-        if ((xdraw >= 0) && (ydraw < (int)ctx.H))
-        {
-            pfb = PFB(xdraw,ydraw);
-            *pfb = ctx.fg;
-        }
-
-        //setPixel(x0 + x, y0 - y);
-        xdraw = x0+x;
-        ydraw = y0-y;
-        if ((xdraw < (int)ctx.W) && (ydraw >= 0))
-        {
-            pfb = PFB(xdraw,ydraw);
-            *pfb = ctx.fg;
-        }
-
-        //setPixel(x0 - x, y0 - y);
-        xdraw = x0-x;
-        if ((xdraw >= 0) && (ydraw >= 0))
-        {
-            pfb = PFB(xdraw,ydraw);
-            *pfb = ctx.fg;
-        }
-
-        //setPixel(x0 + y, y0 + x);
-        xdraw = x0+y;
-        ydraw = y0+x;
-        if ((xdraw < (int)ctx.W) && (ydraw < (int)ctx.H))
-        {
-            pfb = PFB(xdraw,ydraw);
-            *pfb = ctx.fg;
-        }
-
-        //setPixel(x0 - y, y0 + x);
-        xdraw = x0-y;
-        if ((xdraw >= 0) && (ydraw < (int)ctx.H))
-        {
-            pfb = PFB(xdraw,ydraw);
-            *pfb = ctx.fg;
-        }
-
-        //setPixel(x0 + y, y0 - x);
-        xdraw = x0+y;
-        ydraw = y0-x;
-        if ((xdraw < (int)ctx.W) && (ydraw >= 0))
-        {
-            pfb = PFB(xdraw,ydraw);
-            *pfb = ctx.fg;
-        }
-
-        //setPixel(x0 - y, y0 - x);
-        xdraw = x0-y;
-        if ((xdraw >= 0) && (ydraw >= 0))
-        {
-            pfb = PFB(xdraw,ydraw);
-            *pfb = ctx.fg;
-        }
-    }
-}
-
-// Draw a horizontal line
-void gfx_draw_hor_line(int x0, int y0, unsigned int width)
-{
-    if ((y0 < 0) || (y0 >= (int)ctx.H)) return;
-    if (x0 >= (int)ctx.W) return;
-
-    int diff;
-
-    if (x0 < 0)
-    {
-        diff = 0-x0;
-        x0 = 0;
-        width-=diff;
-    }
-    if (x0+width >= ctx.W)
-    {
-        width = ctx.W-x0-1;
-    }
-
-    unsigned int i;
-    register unsigned char* pfb = PFB(x0,y0);
-    for (i=0;i<width;i++)
-    {
-        *pfb++ = ctx.fg;
-    }
-}
-
-// Draw a filled circle
-void gfx_draw_filled_circle(unsigned int x0, unsigned int y0, unsigned int rad)
-{
-    int xoff = 0;
-    int yoff = rad;
-    int balance = -rad;
-    int p0,p1,w0,w1;
-
-    while (xoff <= yoff)
-    {
-        p0 = x0 - xoff;
-        p1 = x0 - yoff;
-
-        w0 = xoff + xoff;
-        w1 = yoff + yoff;
-
-        gfx_draw_hor_line(p0, y0 + yoff, w0);
-        gfx_draw_hor_line(p0, y0 - yoff, w0);
-
-        gfx_draw_hor_line(p1, y0 + xoff, w1);
-        gfx_draw_hor_line(p1, y0 - xoff, w1);
-
-        balance += xoff+xoff+1;
-        xoff++;
-
-        if (balance>= 0)
-        {
-            yoff--;
-            balance -= yoff+yoff;
-        }
-    }
-}
-
 /** TODO: */
 void gfx_clear_rect( unsigned int x, unsigned int y, unsigned int width, unsigned int height )
 {
     gfx_swap_fg_bg();
     gfx_fill_rect(x,y,width,height);
     gfx_swap_fg_bg();
-}
-
-/** TODO: */
-void gfx_line( int x0, int y0, int x1, int y1 )
-{
-    x0 = MAX( MIN(x0, (int)ctx.W), 0 );
-    y0 = MAX( MIN(y0, (int)ctx.H), 0 );
-    x1 = MAX( MIN(x1, (int)ctx.W), 0 );
-    y1 = MAX( MIN(y1, (int)ctx.H), 0 );
-
-    register unsigned char* pfb;
-    int e2;
-    int dx =  __abs__(x1-x0);
-    int sx = x0<x1 ? 1 : -1;
-    int dy = -__abs__(y1-y0);
-    int sy = y0<y1 ? 1 : -1;
-    int err = dx+dy;  /* error value e_xy */
-
-    while (1)   /* loop */
-    {
-        // draw pixel
-        pfb = PFB(x0,y0);
-        *pfb = ctx.fg;
-
-        if ((x0==x1) && (y0==y1)) break;
-        e2 = 2*err;
-        if (e2 >= dy)
-        {
-            err += dy; /* e_xy+e_x > 0 */
-            x0 += sx;
-        }
-        if (e2 <= dx) /* e_xy+e_y < 0 */
-        {
-            err += dx;
-            y0 += sy;
-        }
-    }
 }
 
 /** Display a character at a position. The character is drawn using
@@ -1450,7 +1227,7 @@ void gfx_term_clear_screen_to_here()
 /** Sets font by type index (avoids dimension conflicts) */
 void gfx_term_set_font(int font_type)
 {
-    font_descriptor_t *fontInfo;
+    const font_descriptor_t *fontInfo;
     int font = font_registry_set_by_index(font_type);
     if (font < 0) return;
 
@@ -1458,7 +1235,7 @@ void gfx_term_set_font(int font_type)
 
     if (fontInfo != 0)
     {
-        ctx.term.FONT = fontInfo->data;
+        ctx.term.FONT = (unsigned char*)fontInfo->data;
         ctx.term.FONTWIDTH = fontInfo->width;
         ctx.term.FONTHEIGHT = fontInfo->height;
         ctx.term.font_getglyph = fontInfo->get_glyph;
@@ -1506,67 +1283,6 @@ int state_fun_final_letter( char ch, scn_state *state )
         // Non-standard graphic commands and additionam features
         switch( ch )
         {
-            case 'l':
-                /* render line */
-                if( state->cmd_params_size == 4 )
-                {
-                    gfx_line( state->cmd_params[0], state->cmd_params[1], state->cmd_params[2], state->cmd_params[3] );
-                }
-                retval = 0; // no terminal line break/scroll
-            goto back_to_normal;
-            break;
-            case 'r':
-                /* render a filled rectangle */
-                if( state->cmd_params_size == 4 )
-                {
-                    gfx_fill_rect( state->cmd_params[0], state->cmd_params[1], state->cmd_params[2], state->cmd_params[3] );
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-            case 'R':
-                /* render a rectangle */
-                if( state->cmd_params_size == 4 )
-                {
-                    // x0;y0;width;height;
-                    gfx_line( state->cmd_params[0], state->cmd_params[1], state->cmd_params[0]+state->cmd_params[2], state->cmd_params[1] ); // x0/y0 to x1/y0
-                    gfx_line( state->cmd_params[0], state->cmd_params[1], state->cmd_params[0], state->cmd_params[1]+state->cmd_params[3] ); // x0/y0 to x0/y1
-                    gfx_line( state->cmd_params[0]+state->cmd_params[2], state->cmd_params[1], state->cmd_params[0]+state->cmd_params[2], state->cmd_params[1]+state->cmd_params[3] ); // x1/y0 to x1/y1
-                    gfx_line( state->cmd_params[0], state->cmd_params[1]+state->cmd_params[3], state->cmd_params[0]+state->cmd_params[2], state->cmd_params[1]+state->cmd_params[3] ); // x0/y1 to x1/y1
-                }
-                retval = 0; // no terminal line break/scroll
-            goto back_to_normal;
-            break;
-            case 'C':
-                /* render a circle */
-                if (state->cmd_params_size == 3)
-                {
-                    gfx_draw_circle(state->cmd_params[0], state->cmd_params[1], state->cmd_params[2]);  // x, y, radius
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-            case 'c':
-                /* render a filled circle */
-                if (state->cmd_params_size == 3)
-                {
-                    gfx_draw_filled_circle(state->cmd_params[0], state->cmd_params[1], state->cmd_params[2]);  // x, y, radius
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-            case 'T':
-                /* render a triangle */
-                if (state->cmd_params_size == 6)
-                {
-                    gfx_line( state->cmd_params[0], state->cmd_params[1], state->cmd_params[2], state->cmd_params[3] );
-                    gfx_line( state->cmd_params[2], state->cmd_params[3], state->cmd_params[4], state->cmd_params[5] );
-                    gfx_line( state->cmd_params[4], state->cmd_params[5], state->cmd_params[0], state->cmd_params[1] );
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-
             case 'a':
             case 'A':
                 // load a bitmap ASCII encoded

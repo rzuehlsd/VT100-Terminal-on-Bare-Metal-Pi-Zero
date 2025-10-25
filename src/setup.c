@@ -168,16 +168,13 @@ static void draw_text_at_with_bg(unsigned int row, unsigned int col, const char*
 
 // Helper function to draw integer at specific position
 /**
- * @brief Draw integer value at specified terminal position
- * 
- * Converts an unsigned integer to string and displays it at the given
- * row and column position using current colors.
+ * @brief Draw an unsigned integer at specified terminal position
  * 
  * @param row Terminal row position (0-based)
  * @param col Terminal column position (0-based) 
  * @param value Unsigned integer value to display
  */
-static void draw_int_at(unsigned int row, unsigned int col, unsigned int value)
+static void __attribute__((unused)) draw_int_at(unsigned int row, unsigned int col, unsigned int value)
 {
     char buffer[16];
     // Simple integer to string conversion
@@ -213,7 +210,7 @@ static void draw_int_at(unsigned int row, unsigned int col, unsigned int value)
  * @param value Unsigned integer value to display
  * @param length Total field length to clear with spaces
  */
-static void draw_int_at_with_bg(unsigned int row, unsigned int col, unsigned int value, unsigned int length)
+static void __attribute__((unused)) draw_int_at_with_bg(unsigned int row, unsigned int col, unsigned int value, unsigned int length)
 {
     char buffer[16];
     // Simple integer to string conversion

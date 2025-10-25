@@ -136,18 +136,6 @@ extern void gfx_clear();
 extern void gfx_fill_rect( unsigned int x, unsigned int y, unsigned int width, unsigned int height );
 
 /*!
- * @brief Draw a line between two points
- * 
- * Renders a line from (x0,y0) to (x1,y1) using the current foreground color.
- * 
- * @param x0 Starting point X coordinate
- * @param y0 Starting point Y coordinate
- * @param x1 Ending point X coordinate
- * @param y1 Ending point Y coordinate
- */
-extern void gfx_line( int x0, int y0, int x1, int y1 );
-
-/*!
  * @brief Clear a rectangle with the background color
  * 
  * Fills a rectangular area with the current background color.

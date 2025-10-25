@@ -145,7 +145,7 @@ static void _heartbeat_timer_handler(__attribute__((unused)) unsigned hnd,
  * Safely clears the UART receive FIFO and the software circular buffer.
  * Masks the UART RX interrupt during the operation and restores it after.
  */
-static void uart_flush_rx(void)
+static void __attribute__((unused)) uart_flush_rx(void)
 {
     if (!pUART0_FR || !pUART0_DR || !pUART0_IMSC || !pUART0_ICR)
         return; // UART not initialized yet
