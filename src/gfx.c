@@ -98,61 +98,6 @@ typedef struct {
 
 } FRAMEBUFFER_CTX;
 
-/** Modes for ESC[=<mode>h - PC ANSI.SYS legacy */
-struct DISPLAY_MODE_DEFINITION
-{
-    unsigned int width;
-    unsigned int height;
-    unsigned int bpp; 		// NB: all are actually forced to 8 bpp
-};
-
-// Number of known modes
-#define LAST_MODE_NUMBER 20
-
-/**
- * Display Modes, as they were interpreted by ANSI.SYS on PC with a CGA, EGA or VGA card
- * There is a lot of work to be done :
- * - BPP is 8 for all so all modes are actually 256 colors/pixel and 1 byte per pixel
- * - invalid modes don't do anything
- * - mode 7 (line wrapping) is ignored
- * - only 320x200 and 640*480 seem to actually modify the resolution, other modes merely limit the area on screen.
- */
-static struct DISPLAY_MODE_DEFINITION ALL_MODES[LAST_MODE_NUMBER + 1] = {
-
-        // Resolution          Corresponding PC mode    PC card
-        //---------------------------------------------------
-
-        // Legacy CGA
-        {320,200,8},		// 0: text mono  40 x 25    (CGA)
-        {320,200,8},		// 1: text color 40 x 25    (CGA)
-        {640,480,8},		// 2: text mono  80 x 25    (CGA)
-        {640,480,8},		// 3: text color 80 x 25    (CGA)
-        {320,200,8},		// 4: 320 x 200 4 colors    (CGA)
-        {320,200,8},		// 5: 320 x 200 mono        (CGA)
-        {640,200,8},		// 6: 640 x 200 mono        (CGA)
-
-        // Special or non assigned
-        {0,0,0},			// 7: enable line wrapping
-        {0,0,0},			// 8:
-        {0,0,0},			// 9:
-        {0,0,0},			// 10:
-        {0,0,0},			// 11:
-        {0,0,0},			// 12:
-
-        // Legacy EGA
-        {320,200,8},		// 13: 320 x 200 16 colors  (EGA)
-        {640,200,8},		// 14: 640 x 200 16 colors  (EGA)
-        {640,350,8},		// 15: 640 x 350 mono       (EGA)
-        {640,350,8},		// 16: 640 x 350 16 colors  (EGA)
-
-        // Legacy VGA
-        {640,480,8},		// 17: 640 x 480 mono       (VGA)
-        {640,480,8},		// 18: 640 x 480 16 colors  (VGA)
-        {320,200,8},		// 19: 320 x 200 256 colors (MCGA)
-
-        {320,240,8},		// 20: 320 x 240 256 colors (Michael Abrash X-Mode)
-};
-
 /** Forward declaration for some state functions. */
 state_fun state_fun_finalletter;
 state_fun state_fun_read_digit;
@@ -1097,8 +1042,6 @@ void gfx_term_set_tabulation(int width)
  *  state->private_mode_char can hold a character in which case the process is not
  *  following ANSI or VT100 specifications:
  *
- *      ESC[# implements graphic commands and tests (prioritary)
- *      ESC[= implements settings change: mode (PC ANSI.SYS), font, tab width
  *      ESC[? implements some ANSI commands (save/restore cursor content)
  *
  *  Any other character will end the sequence.
@@ -1111,108 +1054,7 @@ void gfx_term_set_tabulation(int width)
 int state_fun_final_letter( char ch, scn_state *state )
 {
     int retval = 1;// handle line break and screen scroll by default
-    if( state->private_mode_char == '#' )
-    {
-        // Non-standard graphic commands and additionam features
-        switch( ch )
-        {
-            case '"':
-                /* scroll up */
-                if (state->cmd_params_size == 1)
-                {
-                    gfx_scroll_up(state->cmd_params[0]);
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-
-            case '_':
-                /* scroll down */
-                if (state->cmd_params_size == 1)
-                {
-                    gfx_scroll_down(state->cmd_params[0]);
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-
-            case '>':
-                /* scroll right */
-                if (state->cmd_params_size == 1)
-                {
-                    gfx_scroll_right(state->cmd_params[0]);
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-
-            case '<':
-                /* scroll left */
-                if (state->cmd_params_size == 1)
-                {
-                    gfx_scroll_left(state->cmd_params[0]);
-                }
-                retval = 0;
-            goto back_to_normal;
-            break;
-        }
-    }
-
-    if ( state->private_mode_char == '=' )
-    {
-        // ANSI.SYS style mode changing
-        switch( ch )
-        {
-        case 'h': // set resolution mode on last parameter, ignore previous
-            if( state->cmd_params_size >= 1)
-            {
-                // parameter is the mode index in global array
-                if (state->cmd_params[state->cmd_params_size - 1] <= LAST_MODE_NUMBER)
-                {
-                    struct DISPLAY_MODE_DEFINITION* p = & ALL_MODES[state->cmd_params[state->cmd_params_size-1]];
-                    if (p->width > 0)
-                    {
-                        initialize_framebuffer( p->width, p->height, p->bpp);
-                    }
-                }
-            }
-            goto back_to_normal;
-            break;
-
-        case 'f': // ESC=0f choose 8x8 font, ESC=1f for 8x16, ESC=2f for 8x24
-            if( state->cmd_params_size >= 1)
-            {
-                // parameter is the font number
-                switch (state->cmd_params[state->cmd_params_size - 1])
-                {
-                case 0:
-                    gfx_term_set_font(0);
-                    break;
-                case 1:
-                    gfx_term_set_font(1);
-                    break;
-                case 2:
-                    gfx_term_set_font(2);
-                    break;
-                default:
-                    // ignore
-                    break;
-                }
-            }
-            goto back_to_normal;
-            break;
-
-        case 't': // ESC=xxxt sets tabulation width
-            if( state->cmd_params_size >= 1)
-            {
-                gfx_term_set_tabulation(state->cmd_params[state->cmd_params_size - 1]);
-            }
-            goto back_to_normal;
-            break;
-
-        } // switch last letter after '=' and parameters
-    } // private mode = '='
-
+    
     // General 'ESC[' ANSI/VT100 commands
     switch( ch )
     {
