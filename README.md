@@ -6,9 +6,9 @@ A VT100 terminal emulator for Raspberry Pi Zero based on PiGFX by Filippo Bergam
 
 Main motivation was that I wanted a terminal emulation for my VT100 replica. Emulation should start within seconds, so a bare metal implementation on a Pi zero seems to be the way to go. I found the PIGFX implementation by Fillippo Bergamasco and used that as a starting point for my modifications. 
 
-<div align="center">
-  <img src="images/VT100-org.jpeg" alt="VT100 original" />
-</div>
+Below you see the original VT100 terminal (the color has turned to yellow over the years) and my 60% replica.
+
+| <img src="images/VT100-org.jpeg" alt="VT100 original" width="300"/> | <img src="images/IMG_1095.jpeg" alt="60% replica" width="315"/> |
 
 ## Requirements
 
@@ -77,6 +77,18 @@ The following picture shows the prototyp of the adapter board still with linear 
   <img src="images/board.jpg" alt="adapter board prototype" />
 </div>
 
+
+The cable on top of the picture going to the Pi zero connects the D+/D- pins of the USB connector at the back to two testpoints on the Pi. This allows the usage of a standard USB keyboard to pe connected to the Pi zero without additional adapter. For more details please see https://maker-tutorials.com/raspberry-pi-zero-mit-usb-buchse-typ-a-erweitern-anloeten/.
+
+As its very hard to find a real RS232 null modem cabe the signal relay (blue) is used to switch the Rx and Tx lines to simulate a null modem cable, if required.
+
+The resistors between Pi zero and relay are used to level shift the RxD signal to voltage levels below 3.3V.
+
+The connectors on the back besides the USB-A are a Mini DIN6 connector for a custom connection to an MBC2-Z80, a RS3232 connector module and a 5.5mm power connector.
+
+More information is given in directory hardware.
+
+
 ### Modified Back Cover
 
 The 3D printable back plate features:
@@ -88,6 +100,8 @@ The 3D printable back plate features:
 <div align="center">
   <img src="images/back_panel.png" alt="back cover with mounting support" />
 </div>
+
+This back cover fits into the openeing at the back of the VT100 case and has supports to connect the pcb (holes have to be drilled manuall to alow small adjustments). There is also a support to hold the sd card extension to allow changing the sd card at the back of the case. The openings fit the connectors on the adapter board plus and allow mountig of a small ON/OFF sitch.
 
 ## Quick Setup
 
@@ -106,11 +120,20 @@ Here are some pictures of the assembly process:
 
 <div align="center">
 
-| <img src="images/Case_1.jpg" alt="Case assembly step 1" width="225"/> | <img src="images/Case_2.jpg" alt="Case assembly step 2" width="310"/> |
-| <img src="images/IMG_1095.jpeg" alt="Case assembly step 3" width="300"/> | <img src="images/screen.jpg" alt="Finished terminal screen" width="300"/> |
+<img src="images/Case_1.jpg" alt="Case assembly step 1" width="225"/>  <img src="images/Case_2.jpg" alt="Case assembly step 2" width="310"/> 
+<img src="images/IMG_1095.jpeg" alt="Case assembly step 3" width="300"/> <img src="images/screen.jpg" alt="Finished terminal screen" width="300"/> 
 
 </div>
 
+I used a simple 8'' display from Aliexpress with 1024x768 pixels. The display had no brightness regulation (neither per HDMI nor external). For the future I would recomend to use a controller with brightness control, if possible through software.
+
+In the pictures above I used the resolution 800x640 pixel. With 1024x768 the first 2 characters are civered by the screen bezel. 
+
+To connect the display to the Pi zero I used a flexible adapter cable miniHDMI to miniHDMI (C1-C1). 
+
+Display:        https://de.aliexpress.com/item/1005004162403387.html?spm=a2g0o.order_list.order_list_main.64.759e5c5fCtHg3D&gatewayAdapt=glo2deu
+Cable:          https://de.aliexpress.com/item/1005008622570470.html?spm=a2g0o.order_list.order_list_main.59.7f095c5f7ZEnkL&gatewayAdapt=glo2deu
+SD Card Extension:  https://de.aliexpress.com/item/4001200431510.html?spm=a2g0o.order_list.order_list_main.87.759e5c5fCtHg3D&gatewayAdapt=glo2deu
 
 
 ### Software Installation
