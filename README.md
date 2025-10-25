@@ -1,254 +1,141 @@
-# PiGFX Enhanced Edition - VT100 Terminal Emulator for Raspberry Pi
+# PiZero VT100 Terminal - Enhanced Edition
 
-A bare metal kernel for the Raspberry Pi that implements a comprehensive ANSI/VT100 terminal emulator with advanced graphics capabilities, dual keyboard support, and sophisticated configuration management.
+A VT100 terminal emulator for Raspberry Pi Zero based on PiGFX by Filippo Bergamasco, enhanced for use with a custom 60% VT100 replica case and adapter board.
 
-## Enhanced Edition Features
+## What's Different from Original PiGFX
 
-### 🎯 **Core Improvements**
-- **Unified Build System**: Supports Raspberry Pi 1-4 with automatic toolchain selection
-- **Enhanced Logging**: Bitmap-based debug system with runtime severity control and automatic colors
-- **Memory Protection**: MMU implementation with proper page table management
-- **Robust Initialization**: Two-stage configuration system preventing display corruption
+This enhanced version includes several improvements over the original PiGFX by Filippo Bergamasco:
 
-### ⌨️ **Advanced Keyboard Support**
-- **Dual Input Support**: PS/2 and USB keyboards with automatic detection and priority
-- **USB Compatibility**: USPI integration for USB keyboard support on Pi 1-3
-- **Smart Fallback**: Automatic USB initialization when PS/2 keyboard not detected
-- **Configurable Layouts**: Multiple keyboard layout support through configuration
+### Hardware Integration
 
-### 🎨 **Enhanced Terminal Features**
-- **Font Registry System**: Multiple built-in fonts with dynamic switching
-- **Advanced ANSI Support**: Full VT100 escape sequence processing
-- **Color Management**: Comprehensive foreground/background color control
-- **Setup Dialog**: Interactive configuration interface (Print Screen key)
-- **Screen Buffer Management**: Save/restore functionality for setup mode
+- **Custom Adapter Board**: PCB design for Raspberry Pi Zero integration into VT100 case
+- **Modified Back Cover**: 3D printable back plate designed for 60% VT100 replica case
+- **Optimized Pin Layout**: Connector placement adapted for compact VT100 housing
 
-### 🔧 **Configuration System**
-- **File-Based Config**: Automatic loading from `pigfx.txt` on SD card
-- **Runtime Reconfiguration**: Setup dialog for live configuration changes
-- **Safe Defaults**: Fallback configuration when file loading fails
-- **Comprehensive Options**: Display, keyboard, UART, and audio settings
+### Software Enhancements
 
-### 🔊 **Audio Features**
-- **Bell Sound**: PWM-based buzzer for terminal bell (BEL character)
-- **Key Click**: Optional audible feedback for keyboard input
-- **Volume Control**: Configurable sound levels (0-100%)
-- **Setup Integration**: Audio settings configurable through setup dialog
+- **Improved Configuration System**: Enhanced `pigfx.txt` file parsing with better error handling
+- **Setup Dialog**: Interactive configuration menu accessible via Print Screen key
+- **Font Registry**: Multiple built-in fonts with dynamic switching capability
+- **Enhanced Keyboard Support**: Better PS/2 keyboard compatibility and layout options
+- **Audio Features**: PWM-based bell sound and optional key click feedback
+- **Debug System**: Improved logging with configurable verbosity levels
 
-### 🖥️ **Display Features**
-- **Multiple Resolutions**: Support for various display modes
-- **Font Scaling**: Multiple font sizes with crisp rendering
-- **Cursor Control**: Configurable cursor visibility and blinking
-- **Screen Management**: Advanced clearing and scrolling operations
+### Configuration Features
 
-## Hardware Compatibility
+- **Runtime Configuration**: Live settings changes through setup dialog
+- **Extended Options**: Additional UART, keyboard, and display settings
+- **Safe Defaults**: Fallback configuration when SD card config unavailable
+- **Layout Support**: Multiple keyboard layouts (US, UK, DE, etc.)
 
-### Supported Raspberry Pi Models
-- **Raspberry Pi 1 (A, A+, B, B+)**: Full support including USB keyboards
-- **Raspberry Pi 2**: Full support with enhanced performance
-- **Raspberry Pi 3**: Full support with 64-bit capability
-- **Raspberry Pi 4**: Display and PS/2 support (USB keyboards not yet supported)
-- **Raspberry Pi Zero/Zero W**: Optimized for minimal hardware
+## Hardware Components
 
-### Keyboard Support
-- **PS/2 Keyboards**: Native support via GPIO bit-banging
-- **USB Keyboards**: Support on Pi 1-3 via USPI library
-- **Automatic Detection**: Priority-based detection (PS/2 first, then USB)
-- **Layout Support**: US, UK, DE, and other international layouts
+### Adapter Board
 
-## Quick Start
+The custom PCB provides:
 
-### Installation
-1. **Download**: Get the latest release from the releases page
-2. **SD Card Setup**: Format SD card as FAT32
-3. **Copy Files**: Copy `kernel*.img` and `pigfx.txt` to SD card root
-4. **Hardware**: Connect UART (115200 baud) and optional PS/2 keyboard
-5. **Boot**: Insert SD card and power on
+- Raspberry Pi Zero mounting and connections
+- PS/2 keyboard connector
+- UART breakout for debugging
+- Power regulation and protection
+- Compact form factor for VT100 case integration
 
-### Basic UART Connection
-```
-Pi GPIO 14 (TX) -> Host RX
-Pi GPIO 15 (RX) -> Host TX  
-Pi Ground       -> Host Ground
-```
+### Modified Back Cover
 
-### Optional PS/2 Keyboard
-```
-Pi GPIO 4  -> PS/2 Clock
-Pi GPIO 17 -> PS/2 Data
-Pi 5V      -> PS/2 VCC
-Pi Ground  -> PS/2 Ground
-```
+The 3D printable back plate features:
 
-## Configuration
+- Mounting points for Raspberry Pi Zero
+- Cutouts for power and UART connections
+- Ventilation for thermal management
+- Compatible with 60% VT100 replica cases
 
-### Configuration File (`pigfx.txt`)
+## Quick Setup
+
+### Hardware Assembly
+
+1. Install Raspberry Pi Zero on adapter board
+2. Mount assembly in VT100 case with modified back cover
+3. Connect PS/2 keyboard to adapter board
+4. Connect power supply
+
+### Software Installation
+
+1. Format SD card as FAT32
+2. Copy `kernel.img` and `pigfx.txt` to SD card root
+3. Insert SD card and power on
+4. Connect UART at 115200 baud for terminal access
+
+### Configuration
+
+- **Interactive Setup**: Press Print Screen key when keyboard connected
+- **File Configuration**: Edit `pigfx.txt` on SD card for persistent settings
+- **Default Settings**: System works out-of-box with reasonable defaults
+
+## Basic Configuration (`pigfx.txt`)
+
 ```ini
 # Display Settings
-resolution = 4          ; 0=640x480, 1=800x600, 2=1024x768, 3=1280x720, 4=1280x1024
-font = 0               ; Font index from registry
-foregroundColor = 7    ; White text
-backgroundColor = 0    ; Black background
+displayWidth = 1024
+displayHeight = 768
+fontSelection = 2
+foregroundColor = 10
+backgroundColor = 0
 
-# UART Settings  
-uartBaudrate = 115200  ; Serial communication speed
-switchRxTx = 0         ; 0=normal, 1=swap RX/TX pins
+# UART Settings
+baudrate = 115200
+switchRxTx = 0
 
 # Keyboard Settings
-keyboardLayout = 0     ; 0=US, 1=UK, 2=DE, etc.
-useUsbKeyboard = 1     ; Enable USB keyboard support
-autoRepeat = 1         ; Enable key auto-repeat
-repeatDelay = 500      ; Auto-repeat delay (ms)
-repeatRate = 20        ; Auto-repeat rate (Hz)
+keyboardLayout = us
+useUsbKeyboard = 1
+keyboardAutorepeat = 1
 
 # Audio Settings
-soundLevel = 50        ; Volume level (0-100%)
-keyClick = 0           ; Key click sound (0=off, 1=on)
-
-# Terminal Settings
-cursorBlink = 1        ; Cursor blinking (0=off, 1=on)
-sendCRLF = 0          ; Send CR+LF for Enter key
-replaceLFCR = 0       ; Replace LF with CR
+soundLevel = 50
+keyClick = 1
 ```
-
-### Interactive Setup
-- **Access**: Press **Print Screen** key when keyboard connected
-- **Navigation**: Use arrow keys to select options
-- **Modification**: Left/Right arrows to change values
-- **Save**: Press Enter to save configuration
-- **Exit**: Press Escape to exit without saving
-
-## Advanced Features
-
-### Memory Management
-- **MMU Protection**: Page table-based memory protection
-- **Heap Management**: Dynamic memory allocation with nmalloc
-- **Buffer Management**: Circular UART buffer (16KB) with overflow protection
-
-### Debug System
-- **Severity Levels**: Notice, Error, Debug, Warning with bitmap filtering
-- **Runtime Control**: Configurable debug output levels
-- **Color Coding**: Automatic color assignment for different log levels
-- **Performance**: Minimal overhead when debug disabled
-
-### Font System
-- **Registry-Based**: Centralized font management system
-- **Multiple Fonts**: Various sizes and styles available
-- **Runtime Switching**: Dynamic font changes through setup dialog
-- **Crisp Rendering**: Pixel-perfect character alignment
-
-### UART Enhancements
-- **Interrupt-Driven**: Non-blocking receive with IRQ handling
-- **Pin Switching**: Optional RX/TX pin swapping via GPIO16
-- **Flush Protection**: Safe buffer clearing during pin switching
-- **Error Recovery**: Automatic error condition clearing
 
 ## Building from Source
 
-### Prerequisites
 ```bash
-# Install required toolchains
-sudo apt-get install gcc-arm-linux-gnueabihf  # For Pi 1-3
-sudo apt-get install gcc-aarch64-linux-gnu    # For Pi 4
-```
-
-### Build Commands
-```bash
-# Build for specific Pi model
-make RPI=1    # Raspberry Pi 1
-make RPI=2    # Raspberry Pi 2  
-make RPI=3    # Raspberry Pi 3
-make RPI=4    # Raspberry Pi 4
+# Build for Raspberry Pi Zero
+make RPI=1
 
 # Clean build
 make clean
-
-# Build all models
-make all
 ```
 
-### Build System Features
-- **Automatic Toolchain Selection**: Chooses correct compiler for target
-- **Dependency Tracking**: Incremental builds with proper dependencies
-- **Debug Control**: Configurable debug levels at compile time
-- **Model-Specific Optimization**: Tailored builds for each Pi generation
+## Known Issues
 
-## Technical Architecture
+### Display Frame Coverage
 
-### System Initialization
-1. **Boot Loader**: ARM initialization and basic setup
-2. **BSS Clearing**: C runtime environment preparation
-3. **Memory Setup**: Heap initialization and MMU configuration
-4. **Hardware Discovery**: Board detection and peripheral initialization
-5. **Configuration Loading**: User settings from SD card
-6. **Subsystem Init**: Graphics, fonts, keyboards, audio
-7. **Main Loop**: Terminal processing and user interaction
+- **1024x768 Resolution**: First two characters may be covered by screen bezel
+- **Workaround**: Avoid critical text in leftmost positions
+- **Future Fix**: Logical screen offset implementation planned
 
-### Terminal Processing
-- **UART Reception**: Interrupt-driven character buffering
-- **ANSI Processing**: Full VT100 escape sequence interpretation
-- **Character Rendering**: Font-based text output with color support
-- **Keyboard Input**: PS/2 and USB key processing with layout mapping
-- **Screen Management**: Scrolling, clearing, cursor control
+## Hardware Files
 
-### Graphics Pipeline
-- **Framebuffer Management**: Direct pixel manipulation with DMA acceleration
-- **Font Rendering**: Bitmap-based character drawing with multiple modes
-- **Color System**: 8-bit indexed color with configurable palettes
-- **Screen Operations**: Hardware-accelerated scrolling and clearing
+- **PCB Design**: Located in `/hardware` directory (KiCad format)
+- **3D Models**: OpenSCAD files for back cover modifications in `/OpenScad`
+- **Assembly Guide**: See `/doc` for detailed assembly instructions
 
-## Troubleshooting
+## Original Project
 
-### Common Issues
-- **No Display**: Check HDMI connection and try different resolution
-- **No UART**: Verify baud rate (115200) and wiring
-- **Keyboard Not Working**: Check PS/2 connections or try USB keyboard
-- **Boot Fails**: Ensure correct kernel*.img for your Pi model
-
-### Debug Information
-- **Boot Messages**: Enable debug logging for detailed startup information
-- **Configuration**: Use setup dialog to verify and adjust settings
-- **Hardware**: Check LED heartbeat to confirm system is running
+This project is based on [PiGFX](https://github.com/fbergama/pigfx) by Filippo Bergamasco.
+The original project provides the core VT100 terminal emulation and graphics capabilities.
 
 ## License
 
-Copyright (C) 2014-2020 Filippo Bergamasco, Christian Lehner  
+Copyright (C) 2014-2020 Filippo Bergamasco (Original PiGFX)  
 Copyright (C) 2025 Ralf Zühlsdorff (Enhanced Edition)
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Licensed under the MIT License - see LICENSE file for details.
 
 ## Contributing
 
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes with appropriate documentation
-4. Test on multiple Pi models if possible
-5. Submit a pull request
+Contributions welcome for:
 
-## Known Bugs
-
-### Display Frame Coverage Issue
-
-- **Resolution Affected**: 1024x768 resolution
-- **Symptom**: The first two characters on the left edge of the display are covered by the physical screen frame/bezel
-- **Impact**: Text beginning at column 0 may be partially or completely hidden from view
-- **Workaround**: Avoid placing critical information in the leftmost 2 character positions
-
-### Potential Solution
-
-A logical screen implementation with configurable offsets could resolve this issue:
-
-- **Logical Screen**: Define a standard terminal size (e.g., 80x25 characters)
-- **Physical Offset**: Apply X,Y pixel offsets to shift the logical screen away from covered areas
-- **Configuration**: Make offsets configurable per resolution/display type
-- **Backward Compatibility**: Maintain current behavior as default, enable offsets via configuration
-
-This would allow users to adjust the display positioning to accommodate different monitors and bezels while maintaining compatibility with existing terminal software expecting standard dimensions.
-
-## Acknowledgments
-
-- **Original Authors**: Filippo Bergamasco, Christian Lehner
-- **USB Support**: USPI library integration
-- **Community**: Contributors and testers
-- **Documentation**: Enhanced Edition improvements and unified build system
+- Hardware design improvements
+- Software feature enhancements  
+- Documentation updates
+- Testing on different Pi models
