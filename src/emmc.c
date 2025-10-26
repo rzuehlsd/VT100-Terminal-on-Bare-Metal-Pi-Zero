@@ -1078,7 +1078,7 @@ static void sd_issue_command_int(struct emmc_block_dev *dev, uint32_t cmd_reg, u
                 ee_printf("SD: SDMA transfer complete");
 #endif
                 // Transfer the data to the user buffer
-                pigfx_memcpy(dev->buf, (const void *)SDMA_BUFFER, dev->block_size);
+                pivt100_memcpy(dev->buf, (const void *)SDMA_BUFFER, dev->block_size);
             }
             else
             {
@@ -1511,7 +1511,7 @@ int sd_card_init(struct block_device **dev)
         return -1;
     }
 
-	pigfx_memset(ret, 0, sizeof(struct emmc_block_dev));
+	pivt100_memset(ret, 0, sizeof(struct emmc_block_dev));
 	ret->bd.driver_name = driver_name;
 	ret->bd.device_name = device_name;
 	ret->bd.block_size = 512;

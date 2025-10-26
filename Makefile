@@ -36,7 +36,7 @@ TARGET = kernel8-64
 endif
 
 ## Important!!! asm.o must be the first object to be linked!
-OOB = asm.o exceptionstub.o synchronize.o mmu.o pigfx.o uart.o \
+OOB = asm.o exceptionstub.o synchronize.o mmu.o pivt100.o uart.o \
 	irq.o utils.o gpio.o mbox.o prop.o board.o actled.o framebuffer.o \
 	console.o gfx.o dma.o nmalloc.o uspios_wrapper.o ee_printf.o stupid_timer.o \
 	block.o emmc.o c_utils.o mbr.o fat.o config.o ini.o ps2.o keyboard.o setup.o \
@@ -57,7 +57,7 @@ else
 LIBUSPI=uspi/lib/libuspi.a
 endif
 
-all: uspi pigfx.elf pigfx.hex kernel 
+all: uspi pivt100.elf pivt100.hex kernel 
 	@echo "=========================================="
 	@echo "Build completed for Raspberry Pi $(RPI)"
 	@echo "Target: $(TARGET)"
@@ -103,23 +103,23 @@ endif
 .PHONY: FORCE
 FORCE:
 
-$(SRC_DIR)/pigfx_config.h: pigfx_config.h.in 
-	@sed 's/\$$VERSION\$$/$(BUILD_VERSION)/g' pigfx_config.h.in > $(SRC_DIR)/pigfx_config.h
-	@echo "Creating pigfx_config.h"
+$(SRC_DIR)/pivt100_config.h: pivt100_config.h.in 
+	@sed 's/\$$VERSION\$$/$(BUILD_VERSION)/g' pivt100_config.h.in > $(SRC_DIR)/pivt100_config.h
+	@echo "Creating pivt100_config.h"
 
-run: pigfx.elf
+run: pivt100.elf
 	./launch_qemu.bash
 
-kernel: pigfx.img
+kernel: pivt100.img
 	@echo "Creating kernel.img for Raspberry Pi $(RPI)"
-	@cp pigfx.img bin/kernel.img
+	@cp pivt100.img bin/kernel.img
 
 
-debug: pigfx.elf
+debug: pivt100.elf
 	cd JTAG && ./run_gdb.sh
 
-dump: pigfx.elf
-	@$(ARMGNU)-objdump --disassemble-zeroes -D pigfx.elf > pigfx.dump
+dump: pivt100.elf
+	@$(ARMGNU)-objdump --disassemble-zeroes -D pivt100.elf > pivt100.dump
 	@echo "OBJDUMP $<"
 
 $(BUILD_DIR)/%.o : $(SRC_DIR)/%.c 
@@ -142,13 +142,13 @@ $(BUILD_DIR)/%.o : $(SRC_DIR)/%.s
 	@$(ARMGNU)-objcopy $< -O binary $@
 	@echo "OBJCOPY $< -> $@"
 
-pigfx.elf : $(SRC_DIR)/pigfx_config.h $(OBJS) $(LIBUSPI)
+pivt100.elf : $(SRC_DIR)/pivt100_config.h $(OBJS) $(LIBUSPI)
 	@$(ARMGNU)-ld $(OBJS) $(LIBGCC) $(LIBUSPI) -T memmap -o $@
 	@echo "LD $@"
 
 
 .PHONY clean :
-	rm -f $(SRC_DIR)/pigfx_config.h
+	rm -f $(SRC_DIR)/pivt100_config.h
 	rm -f $(BUILD_DIR)/*.o
 	rm -f *.hex
 	rm -f *.elf
@@ -169,7 +169,7 @@ cleanall: clean
 
 # Help target to show available commands
 help:
-	@echo "PiGFX Enhanced Edition - Available Make Targets:"
+	@echo "PiVT100 Enhanced Edition - Available Make Targets:"
 	@echo ""
 	@echo "Building:"
 	@echo "  make RPI=1    - Build for Raspberry Pi 1 (default)"

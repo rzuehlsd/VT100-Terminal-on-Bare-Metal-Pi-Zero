@@ -1,5 +1,5 @@
-#ifndef _PIGFX_UTILS_H_
-#define _PIGFX_UTILS_H_
+#ifndef _PIVT100_UTILS_H_
+#define _PIVT100_UTILS_H_
 
 #include <stdint.h>
 #include "block.h"

@@ -218,14 +218,14 @@ static FILE *fat_fopen(struct fs *fs, struct dirent *path, const char *mode)
 		return (FILE *)0;
 	}
 
-	if(pigfx_strcmp(mode, "r"))
+	        if(pivt100_strcmp(mode, "r"))
 	{
         // other than r
 		return (FILE *)0;
 	}
 
 	struct vfs_file *ret = (struct vfs_file *)nmalloc_malloc(sizeof(struct vfs_file));
-	pigfx_memset(ret, 0, sizeof(struct vfs_file));
+	pivt100_memset(ret, 0, sizeof(struct vfs_file));
 	ret->fs = fs;
 	ret->pos = 0;
 	ret->opaque = path->opaque;
@@ -305,7 +305,7 @@ int fat_init(struct block_device *parent, struct fs **fs)
 		total_sectors = read_word((unsigned char*)&bs->total_sectors_32, 0);
 
 	struct fat_fs *ret = (struct fat_fs *)nmalloc_malloc(sizeof(struct fat_fs));
-	pigfx_memset(ret, 0, sizeof(struct fat_fs));
+	pivt100_memset(ret, 0, sizeof(struct fat_fs));
 	ret->b.fopen = fat_fopen;
 	ret->b.fread = fat_fread;
 	ret->b.fclose = fat_fclose;
@@ -348,7 +348,7 @@ int fat_init(struct block_device *parent, struct fs **fs)
 	if(ret->fat_type == FAT32)
 	{
 		// FAT32
-		pigfx_strncpy(ret->vol_label, bs->ext.fat32.volume_label, 11);
+		pivt100_strncpy(ret->vol_label, bs->ext.fat32.volume_label, 11);
 		ret->vol_label[11] = 0;
 		ee_printf("FAT: volume label: %s\n", ret->vol_label);
 
@@ -370,7 +370,7 @@ int fat_init(struct block_device *parent, struct fs **fs)
 	{
 		// FAT12/16
 
-		pigfx_strncpy(ret->vol_label, bs->ext.fat16.volume_label, 11);
+		pivt100_strncpy(ret->vol_label, bs->ext.fat16.volume_label, 11);
 		ret->vol_label[11] = 0;
 #ifdef FAT_DEBUG
 		ee_printf("FAT: volume label: %s\n", ret->vol_label);
@@ -472,7 +472,7 @@ struct dirent *fat_read_directory(struct fs *fs, char **name)
 		while(cur_dir)
 		{
             ee_printf("name1: %s, name2: %s\n", *name, cur_dir->name);
-			if(!pigfx_strcmp(*name, cur_dir->name))
+			if(!pivt100_strcmp(*name, cur_dir->name))
 			{
 				if(!cur_dir->is_dir)
 				{
@@ -585,7 +585,7 @@ struct dirent *fat_read_dir(struct fat_fs *fs, struct dirent *d)
 
 			// Else read it
 			struct dirent *de = (struct dirent *)nmalloc_malloc(sizeof(struct dirent));
-			pigfx_memset(de, 0, sizeof(struct dirent));
+			pivt100_memset(de, 0, sizeof(struct dirent));
 			if(ret == (void *)0)
 				ret = de;
 			if(prev != (void *)0)

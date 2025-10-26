@@ -10,7 +10,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define CONFIGFILENAME     "pigfx.txt"
+#define CONFIGFILENAME     "pivt100.txt"
 
 #define errOK           0
 #define errSDCARDINIT   1
@@ -48,9 +48,9 @@ typedef struct
     unsigned int keyClick;              // Enable keyclick sound on keypress (1=enabled, 0=disabled)
     char         keyboardLayout[3];     // Keyboard layout (de,uk,us, ...)
     unsigned char  hasChanged;          // Flag if values have changed and need to be applied
-} tPiGfxConfig;
+} tPiVT100Config;
 
-extern tPiGfxConfig PiGfxConfig;
+extern tPiVT100Config PiVT100Config;
 
 
 // Initialize configuration with default values

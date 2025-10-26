@@ -40,7 +40,7 @@ typedef struct {
 /* Strip whitespace chars off end of given string, in place. Return s. */
 static char* rstrip(char* s)
 {
-    char* p = s + pigfx_strlen(s);
+    char* p = s + pivt100_strlen(s);
     while (p > s && isspace((unsigned char)(*--p)))
         *p = '\0';
     return s;
@@ -77,7 +77,7 @@ static char* find_chars_or_comment(const char* s, const char* chars)
 /* Version of strncpy that ensures dest (size bytes) is null-terminated. */
 static char* strncpy0(char* dest, const char* src, size_t size)
 {
-    pigfx_strncpy(dest, src, size - 1);
+    pivt100_strncpy(dest, src, size - 1);
     dest[size - 1] = '\0';
     return dest;
 }
@@ -108,8 +108,8 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
     int lineno = 0;
     int error = 0;
     
-    pigfx_memset(section, 0, sizeof(section));
-    pigfx_memset(prev_name, 0, sizeof(prev_name));
+    pivt100_memset(section, 0, sizeof(section));
+    pivt100_memset(prev_name, 0, sizeof(prev_name));
 
 #if !INI_USE_STACK
     line = (char*)malloc(INI_INITIAL_ALLOC);
@@ -127,7 +127,7 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
     /* Scan through stream line by line */
     while (reader(line, (int)max_line, stream) != NULL) {
 #if INI_ALLOW_REALLOC && !INI_USE_STACK
-        offset = pigfx_strlen(line);
+        offset = pivt100_strlen(line);
         while (offset == max_line - 1 && line[offset - 1] != '\n') {
             max_line *= 2;
             if (max_line > INI_MAX_LINE)
@@ -142,7 +142,7 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
                 break;
             if (max_line >= INI_MAX_LINE)
                 break;
-            offset += pigfx_strlen(line + offset);
+            offset += pivt100_strlen(line + offset);
         }
 #endif
 
@@ -284,7 +284,7 @@ int ini_parse_string(const char* string, ini_handler handler, void* user) {
     ini_parse_string_ctx ctx;
 
     ctx.ptr = string;
-    ctx.num_left = pigfx_strlen(string);
+    ctx.num_left = pivt100_strlen(string);
     return ini_parse_stream((ini_reader)ini_reader_string, &ctx, handler,
                             user);
 }

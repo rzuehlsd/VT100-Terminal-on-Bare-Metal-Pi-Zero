@@ -20,7 +20,7 @@
 // - Unified build system supporting Pi 1-4 with automatic toolchain selection
 // - Enhanced logging system with runtime debug control and automatic colors
 // - USPI compatibility layer for USB keyboard support
-// - Automatic configuration loading from pigfx.txt on SD card
+// - Automatic configuration loading from pivt100.txt on SD card
 // - Safe initialization sequence preventing display corruption
 // - Full ANSI terminal emulation with graphics extensions
 //
@@ -30,7 +30,7 @@
 //
 
 #include "peri.h"
-#include "pigfx_config.h"
+#include "pivt100_config.h"
 #include "uart.h"
 #include "utils.h"
 #include "c_utils.h"
@@ -91,7 +91,7 @@ volatile char *uart_buffer_start;
 volatile char *uart_buffer_end;
 volatile char *uart_buffer_limit;
 
-tPiGfxConfig PiGfxConfig;
+tPiVT100Config PiVT100Config;
 
 extern unsigned int pheap_space;
 extern unsigned int heap_sz;
@@ -134,7 +134,7 @@ static void _heartbeat_timer_handler(__attribute__((unused)) unsigned hnd,
 /*
  * @brief Function to toggle the pin GPIO16 to switch the UART pins (TX->RX, RX->TX)
  * Default state is TX=GPIO14, RX=GPIO15
- * If PiGfxConfig.switchRxTx is set to 1, set GPIO16 to HIGH to switch pins
+ * If PiVT100Config.switchRxTx is set to 1, set GPIO16 to HIGH to switch pins
  * If set back to 0, set GPIO 16 to LOW to switch back to default
  */
 #define SWITCH_RXTX 16
@@ -199,7 +199,7 @@ void switch_uart_pins()
         *pUART0_IMSC = 0;
     W32(UART0_CR, prev_cr & ~(1 << 9)); // Clear RXE
 
-    if (PiGfxConfig.switchRxTx)
+    if (PiVT100Config.switchRxTx)
     {
         // Drive GPIO16 high to activate the external UART switch
         gpio_select(SWITCH_RXTX, GPIO_OUTPUT);
@@ -234,7 +234,7 @@ void switch_uart_pins()
         *pUART0_IMSC = prev_imsc;
 
     // If we just switched Off (normal wiring), give TX a short guard so the host sees the first chars reliably
-    if (!PiGfxConfig.switchRxTx)
+    if (!PiVT100Config.switchRxTx)
     {
         extern void uart_tx_set_guard_us(unsigned usec);
         uart_tx_set_guard_us(20000); // ~20ms guard ensures line is fully stable before first TX
@@ -419,7 +419,7 @@ void initialize_framebuffer(unsigned int width, unsigned int height, unsigned in
 
 void term_main_loop()
 {
-    LogDebug("Waiting for UART data (%d baud).\n", PiGfxConfig.uartBaudrate);
+    LogDebug("Waiting for UART data (%d baud).\n", PiVT100Config.uartBaudrate);
 
     /**/
     while (uart_buffer_start == uart_buffer_end)
@@ -452,7 +452,7 @@ void term_main_loop()
                 uart_buffer_start = uart_buffer;
 
             // Process character directly - no bitmap/palette handling
-            if (PiGfxConfig.skipBackspaceEcho)
+            if (PiVT100Config.skipBackspaceEcho)
             {
                 if (time_microsec() - last_backspace_t > 50000)
                     backspace_n_skip = 0;
@@ -502,7 +502,7 @@ void term_main_loop()
  * @note PS/2 keyboard takes priority over USB keyboard
  * @note USB keyboard support is only available on Raspberry Pi models < 4
  * @note USB keyboard initialization requires USPi library
- * @note Keyboard layout is configured from PiGfxConfig.keyboardLayout
+ * @note Keyboard layout is configured from PiVT100Config.keyboardLayout
  *
  * @see initPS2() for PS/2 initialization details
  * @see USPiInitialize() for USB subsystem initialization
@@ -513,7 +513,7 @@ void init_keyboard(void)
     if (initPS2() == 0)
     {
         ps2KeyboardFound = 1;
-        fInitKeyboard(PiGfxConfig.keyboardLayout);
+        fInitKeyboard(PiVT100Config.keyboardLayout);
         LogNotice("PS/2 keyboard found.\n");
     }
     else
@@ -522,7 +522,7 @@ void init_keyboard(void)
     }
 
 #if RPI < 4
-    if ((PiGfxConfig.useUsbKeyboard) && (ps2KeyboardFound == 0))
+    if ((PiVT100Config.useUsbKeyboard) && (ps2KeyboardFound == 0))
     {
         LogDebug("Initializing USB:\n");
 
@@ -533,7 +533,7 @@ void init_keyboard(void)
 
             if (USPiKeyboardAvailable())
             {
-                fInitKeyboard(PiGfxConfig.keyboardLayout);
+                fInitKeyboard(PiVT100Config.keyboardLayout);
                 USPiKeyboardRegisterKeyStatusHandlerRaw(KeyStatusHandlerRaw);
                 usbKeyboardFound = 1;
                 LogNotice("USB keyboard found.\n");
@@ -548,7 +548,7 @@ void init_keyboard(void)
             LogError("USB initialization failed.\n");
         }
     }
-    else if (!PiGfxConfig.useUsbKeyboard)
+    else if (!PiVT100Config.useUsbKeyboard)
     {
         LogDebug("USB keyboard disabled in config.\n");
     }
@@ -578,7 +578,7 @@ void init_keyboard(void)
  * - Sets up font registry with built-in fonts
  *
  * PHASE 3 - User Specific Initialization:
- * - Attempts to load user settings from pigfx.txt
+ * - Attempts to load user settings from pivt100.txt
  * - if loading fails, applies default configuration
  * - Prints loaded configuration to debug log
  * - Applies user configuration to display and system settings

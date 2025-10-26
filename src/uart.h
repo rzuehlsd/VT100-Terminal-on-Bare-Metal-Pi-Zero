@@ -7,8 +7,8 @@
 // the additional support of some primitive graphics functions.
 // Copyright (C) 2014-2020 Filippo Bergamasco, Christian Lehner
 
-#ifndef _PIGFX_UART_H_
-#define _PIGFX_UART_H_
+#ifndef _PIVT100_UART_H_
+#define _PIVT100_UART_H_
 
 
 extern void uart_init(unsigned int baudrate);

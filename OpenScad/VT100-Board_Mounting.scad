@@ -93,7 +93,7 @@ mirror ([1,0,0])
             lasche(95, -6, 15, 3, 10);
                 
             // Lasche für SD Card
-            lasche(72, 11, 36, 1.5, 10);
+            lasche(72, 15, 36, 2, 10);
             }
             
             
@@ -110,7 +110,7 @@ mirror ([1,0,0])
             rect_hole(74, -2, 15, 7);
             
             // SD Card Slot  x = 80, y = 13.5, w = 20, h = 3.5
-            rect_hole(74, 13.5, 20, 3.5);
+            rect_hole(80, 17.5, 20, 3.5);
             
             // LED x = 94, y = 5, w = 2, h = 2
             round_hole(94, 5, 1,5);

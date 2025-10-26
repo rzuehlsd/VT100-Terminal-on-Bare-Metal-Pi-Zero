@@ -7,7 +7,7 @@
 // the additional support of some primitive graphics functions.
 // Copyright (C) 2014-2020 Filippo Bergamasco, Christian Lehner
 
-#include "pigfx_config.h"
+#include "pivt100_config.h"
 #include "framebuffer.h"
 #include "console.h"
 #include "utils.h"

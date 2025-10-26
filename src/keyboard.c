@@ -105,7 +105,7 @@ void RepeatKey(unsigned hnd, void* pParam, void *pContext)
     {
         KeyEvent(p->ucLastPhyCode, p->ucModifiers);
         // Use config value as repeat frequency in Hz, but clamp to sane bounds
-        unsigned rate_hz = (PiGfxConfig.keyboardRepeatRate > 0) ? PiGfxConfig.keyboardRepeatRate : 10;
+        unsigned rate_hz = (PiVT100Config.keyboardRepeatRate > 0) ? PiVT100Config.keyboardRepeatRate : 10;
         if (rate_hz < 10) rate_hz = 10;
         if (rate_hz > 50) rate_hz = 50;
         p->repeatTimerHnd = attach_timer_handler(rate_hz, RepeatKey, p, 0);
@@ -165,7 +165,7 @@ void KeyStatusHandlerRaw(unsigned char ucModifiers, const unsigned char RawKeys[
                 actKeyMap.repeatTimerHnd = 0;
             }
             // Use config value directly for initial repeat delay (ms to Hz conversion)
-            unsigned int delay_ms = PiGfxConfig.keyboardRepeatDelay;
+            unsigned int delay_ms = PiVT100Config.keyboardRepeatDelay;
             if (delay_ms < 200) delay_ms = 200;           // clamp to sane min
             if (delay_ms > 1000) delay_ms = 1000;         // clamp to sane max
             unsigned delay_hz = (delay_ms > 0) ? (1000u / delay_ms) : 2u; // e.g. 500ms -> 2 Hz
@@ -211,16 +211,16 @@ void fInitKeyboard(char* layout)
 
 
     // Set global autorepeat setting from config
-    autorepeat_globally_enabled = PiGfxConfig.keyboardAutorepeat;
+    autorepeat_globally_enabled = PiVT100Config.keyboardAutorepeat;
 
     // Set repeat delay and rate from config (if present)
-    if (PiGfxConfig.keyboardRepeatDelay > 0)
-        REPEAT_DELAY_USEC = PiGfxConfig.keyboardRepeatDelay * 1000;
+    if (PiVT100Config.keyboardRepeatDelay > 0)
+        REPEAT_DELAY_USEC = PiVT100Config.keyboardRepeatDelay * 1000;
     else
         REPEAT_DELAY_USEC = 500000;
 
-    if (PiGfxConfig.keyboardRepeatRate > 0)
-        REPEAT_RATE_USEC = 1000000 / PiGfxConfig.keyboardRepeatRate;
+    if (PiVT100Config.keyboardRepeatRate > 0)
+        REPEAT_RATE_USEC = 1000000 / PiVT100Config.keyboardRepeatRate;
     else
         REPEAT_RATE_USEC = 100000;
 
@@ -230,14 +230,14 @@ void fInitKeyboard(char* layout)
     if (c0 >= 'A' && c0 <= 'Z') c0 = (char)(c0 - 'A' + 'a');
     if (c1 >= 'A' && c1 <= 'Z') c1 = (char)(c1 - 'A' + 'a');
 
-    if      ((c0 == 'u') && (c1 == 'k')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_uk, sizeof(actKeyMap.m_KeyMap));
-    else if ((c0 == 'i') && (c1 == 't')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_it, sizeof(actKeyMap.m_KeyMap));
-    else if ((c0 == 'f') && (c1 == 'r')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_fr, sizeof(actKeyMap.m_KeyMap));
-    else if ((c0 == 'e') && (c1 == 's')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_es, sizeof(actKeyMap.m_KeyMap));
-    else if ((c0 == 'd') && (c1 == 'e')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_de, sizeof(actKeyMap.m_KeyMap));
-    else if ((c0 == 's') && (c1 == 'g')) pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_sg, sizeof(actKeyMap.m_KeyMap));
+    if      ((c0 == 'u') && (c1 == 'k')) pivt100_memcpy(&actKeyMap.m_KeyMap, keyMap_uk, sizeof(actKeyMap.m_KeyMap));
+    else if ((c0 == 'i') && (c1 == 't')) pivt100_memcpy(&actKeyMap.m_KeyMap, keyMap_it, sizeof(actKeyMap.m_KeyMap));
+    else if ((c0 == 'f') && (c1 == 'r')) pivt100_memcpy(&actKeyMap.m_KeyMap, keyMap_fr, sizeof(actKeyMap.m_KeyMap));
+    else if ((c0 == 'e') && (c1 == 's')) pivt100_memcpy(&actKeyMap.m_KeyMap, keyMap_es, sizeof(actKeyMap.m_KeyMap));
+    else if ((c0 == 'd') && (c1 == 'e')) pivt100_memcpy(&actKeyMap.m_KeyMap, keyMap_de, sizeof(actKeyMap.m_KeyMap));
+    else if ((c0 == 's') && (c1 == 'g')) pivt100_memcpy(&actKeyMap.m_KeyMap, keyMap_sg, sizeof(actKeyMap.m_KeyMap));
     // all else is us
-    else                                               pigfx_memcpy(&actKeyMap.m_KeyMap, keyMap_us, sizeof(actKeyMap.m_KeyMap));
+    else                                               pivt100_memcpy(&actKeyMap.m_KeyMap, keyMap_us, sizeof(actKeyMap.m_KeyMap));
 
 }
 
@@ -424,7 +424,7 @@ void KeyEvent(unsigned short ucKeyCode, unsigned char ucModifiers)
             {
                 char ch = *c;
 
-                if ((PiGfxConfig.sendCRLF) && (ch == 10))
+                if ((PiVT100Config.sendCRLF) && (ch == 10))
                 {
                     // Send CR first
                     uart_write( CR );
@@ -436,27 +436,27 @@ void KeyEvent(unsigned short ucKeyCode, unsigned char ucModifiers)
                         ;
                 }
 
-                if ((PiGfxConfig.replaceLFwithCR) && (ch == 10))
+                if ((PiVT100Config.replaceLFwithCR) && (ch == 10))
                 {
                     ch = CR;
                 }
 
-                if ((PiGfxConfig.swapDelWithBackspace) && (ch == 0x7F))
+                if ((PiVT100Config.swapDelWithBackspace) && (ch == 0x7F))
                 {
                     ch = 0x8;
                 }
 
-                if ((PiGfxConfig.backspaceEcho) && (ch == 0x8))
+                if ((PiVT100Config.backspaceEcho) && (ch == 0x8))
                     gfx_term_putstring( "\x7F" );
 
-                if ((PiGfxConfig.skipBackspaceEcho) && (ch == 0x7F))
+                if ((PiVT100Config.skipBackspaceEcho) && (ch == 0x7F))
                 {
                     backspace_n_skip = 2;
                     last_backspace_t = time_microsec();
                 }
 
                 uart_write( ch );
-                if (PiGfxConfig.keyClick) {
+                if (PiVT100Config.keyClick) {
                     pwm800_start(50, KLICK_DURATION); // short click on keypress (if enabled)
                 }
                 ++c;

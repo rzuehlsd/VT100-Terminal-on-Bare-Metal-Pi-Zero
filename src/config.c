@@ -118,7 +118,7 @@ static void set_specific_values_config(const char* name, const char* value, unsi
  * 
  * This function is called by the INI parser for each key-value pair found
  * in the configuration file. It maps configuration parameter names to their
- * corresponding fields in the PiGfxConfig structure and applies appropriate
+ * corresponding fields in the PiVT100Config structure and applies appropriate
  * validation for each parameter type.
  * 
  * Supported configuration parameters:
@@ -137,7 +137,7 @@ static void set_specific_values_config(const char* name, const char* value, unsi
  * @param value Configuration parameter value as string
  * @return Always returns 0 (continue parsing)
  * 
- * @note Sets PiGfxConfig.hasChanged = 1 after any parameter is processed
+ * @note Sets PiVT100Config.hasChanged = 1 after any parameter is processed
  * @note Invalid values for any parameter are silently ignored
  */
 int inihandler(void* user, const char* section, const char* name, const char* value)
@@ -145,100 +145,100 @@ int inihandler(void* user, const char* section, const char* name, const char* va
     (void)user;
     (void)section;      // we don't care about the section
 
-    if (pigfx_strcmp(name, "baudrate") == 0)
+    if (pivt100_strcmp(name, "baudrate") == 0)
     {
-        set_positive_config(name, value, &PiGfxConfig.uartBaudrate);
+        set_positive_config(name, value, &PiVT100Config.uartBaudrate);
     }
-    else if (pigfx_strcmp(name, "switchRxTx") == 0)
+    else if (pivt100_strcmp(name, "switchRxTx") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.switchRxTx);
+        set_boolean_config(name, value, &PiVT100Config.switchRxTx);
     }
-    else if (pigfx_strcmp(name, "useUsbKeyboard") == 0)
+    else if (pivt100_strcmp(name, "useUsbKeyboard") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.useUsbKeyboard);
+        set_boolean_config(name, value, &PiVT100Config.useUsbKeyboard);
     }
-    else if (pigfx_strcmp(name, "sendCRLF") == 0)
+    else if (pivt100_strcmp(name, "sendCRLF") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.sendCRLF);
+        set_boolean_config(name, value, &PiVT100Config.sendCRLF);
     }
-    else if (pigfx_strcmp(name, "replaceLFwithCR") == 0)
+    else if (pivt100_strcmp(name, "replaceLFwithCR") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.replaceLFwithCR);
+        set_boolean_config(name, value, &PiVT100Config.replaceLFwithCR);
     }
-    else if (pigfx_strcmp(name, "backspaceEcho") == 0)
+    else if (pivt100_strcmp(name, "backspaceEcho") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.backspaceEcho);
+        set_boolean_config(name, value, &PiVT100Config.backspaceEcho);
     }
-    else if (pigfx_strcmp(name, "skipBackspaceEcho") == 0)
+    else if (pivt100_strcmp(name, "skipBackspaceEcho") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.skipBackspaceEcho);
+        set_boolean_config(name, value, &PiVT100Config.skipBackspaceEcho);
     }
-    else if (pigfx_strcmp(name, "swapDelWithBackspace") == 0)
+    else if (pivt100_strcmp(name, "swapDelWithBackspace") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.swapDelWithBackspace);
+        set_boolean_config(name, value, &PiVT100Config.swapDelWithBackspace);
     }
-    else if (pigfx_strcmp(name, "keyboardAutorepeat") == 0)
+    else if (pivt100_strcmp(name, "keyboardAutorepeat") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.keyboardAutorepeat);
+        set_boolean_config(name, value, &PiVT100Config.keyboardAutorepeat);
     }
-    else if (pigfx_strcmp(name, "keyboardRepeatDelay") == 0)
+    else if (pivt100_strcmp(name, "keyboardRepeatDelay") == 0)
     {
-        set_positive_config(name, value, &PiGfxConfig.keyboardRepeatDelay);
+        set_positive_config(name, value, &PiVT100Config.keyboardRepeatDelay);
     }
-    else if (pigfx_strcmp(name, "keyboardRepeatRate") == 0)
+    else if (pivt100_strcmp(name, "keyboardRepeatRate") == 0)
     {
-        set_positive_config(name, value, &PiGfxConfig.keyboardRepeatRate);
+        set_positive_config(name, value, &PiVT100Config.keyboardRepeatRate);
     }
-    else if (pigfx_strcmp(name, "foregroundColor") == 0)
+    else if (pivt100_strcmp(name, "foregroundColor") == 0)
     {
-        set_range_config(name, value, &PiGfxConfig.foregroundColor, 0, 255);
+        set_range_config(name, value, &PiVT100Config.foregroundColor, 0, 255);
     }
-    else if (pigfx_strcmp(name, "backgroundColor") == 0)
+    else if (pivt100_strcmp(name, "backgroundColor") == 0)
     {
-        set_range_config(name, value, &PiGfxConfig.backgroundColor, 0, 255);
+        set_range_config(name, value, &PiVT100Config.backgroundColor, 0, 255);
     }
-    else if (pigfx_strcmp(name, "fontSelection") == 0)
+    else if (pivt100_strcmp(name, "fontSelection") == 0)
     {
         int tmpValue = atoi(value);
-        if (tmpValue >= 0) PiGfxConfig.fontSelection = tmpValue;  // Let font registry validate the range
+        if (tmpValue >= 0) PiVT100Config.fontSelection = tmpValue;  // Let font registry validate the range
     }
-    else if (pigfx_strcmp(name, "displayWidth") == 0)
+    else if (pivt100_strcmp(name, "displayWidth") == 0)
     {
         static const int valid_widths[] = {640, 800, 1024};
-        set_specific_values_config(name, value, &PiGfxConfig.displayWidth, valid_widths, 3);
+        set_specific_values_config(name, value, &PiVT100Config.displayWidth, valid_widths, 3);
     }
-    else if (pigfx_strcmp(name, "displayHeight") == 0)
+    else if (pivt100_strcmp(name, "displayHeight") == 0)
     {
         static const int valid_heights[] = {480, 640, 768};
-        set_specific_values_config(name, value, &PiGfxConfig.displayHeight, valid_heights, 3);
+        set_specific_values_config(name, value, &PiVT100Config.displayHeight, valid_heights, 3);
     }
-    else if (pigfx_strcmp(name, "disableGfxDMA") == 0)
+    else if (pivt100_strcmp(name, "disableGfxDMA") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.disableGfxDMA);
+        set_boolean_config(name, value, &PiVT100Config.disableGfxDMA);
     }
     // disableCollision removed (sprite system no longer present)
-    else if (pigfx_strcmp(name, "debugVerbosity") == 0)
+    else if (pivt100_strcmp(name, "debugVerbosity") == 0)
     {
-        set_range_config(name, value, &PiGfxConfig.debugVerbosity, 0, 2);
+        set_range_config(name, value, &PiVT100Config.debugVerbosity, 0, 2);
     }
-    else if (pigfx_strcmp(name, "cursorBlink") == 0)
+    else if (pivt100_strcmp(name, "cursorBlink") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.cursorBlink);
+        set_boolean_config(name, value, &PiVT100Config.cursorBlink);
     }
-    else if (pigfx_strcmp(name, "soundLevel") == 0)
+    else if (pivt100_strcmp(name, "soundLevel") == 0)
     {
-        set_range_config(name, value, &PiGfxConfig.soundLevel, 0, 100);
+        set_range_config(name, value, &PiVT100Config.soundLevel, 0, 100);
     }
-    else if (pigfx_strcmp(name, "keyClick") == 0)
+    else if (pivt100_strcmp(name, "keyClick") == 0)
     {
-        set_boolean_config(name, value, &PiGfxConfig.keyClick);
+        set_boolean_config(name, value, &PiVT100Config.keyClick);
     }
-    else if (pigfx_strcmp(name, "keyboardLayout") == 0)
+    else if (pivt100_strcmp(name, "keyboardLayout") == 0)
     {
-        pigfx_strncpy(PiGfxConfig.keyboardLayout, value, sizeof(PiGfxConfig.keyboardLayout));
+        pivt100_strncpy(PiVT100Config.keyboardLayout, value, sizeof(PiVT100Config.keyboardLayout));
     }
 
-    PiGfxConfig.hasChanged = 1;
+    PiVT100Config.hasChanged = 1;
     return 0;
 }
 
@@ -247,7 +247,7 @@ int inihandler(void* user, const char* section, const char* name, const char* va
 /**
  * @brief Initialize configuration with default values
  * 
- * Sets all configuration parameters in PiGfxConfig to their default values.
+ * Sets all configuration parameters in PiVT100Config to their default values.
  * This function is called during system initialization or when no configuration
  * file is found on the SD card.
  * 
@@ -260,37 +260,37 @@ int inihandler(void* user, const char* section, const char* name, const char* va
  * - Keyboard layout: German ("de")
  * - Debug verbosity: errors and notices only
  * 
- * @note Sets PiGfxConfig.hasChanged = 1 to trigger configuration application
+ * @note Sets PiVT100Config.hasChanged = 1 to trigger configuration application
  * @note Clears the entire structure before setting values
  */
 void setDefaultConfig()
 {
     // Set default configuration values (fallback if no config file)
-    pigfx_memset(&PiGfxConfig, 0, sizeof(PiGfxConfig));
-    PiGfxConfig.hasChanged = 1;
-    PiGfxConfig.uartBaudrate = 115200;
-    PiGfxConfig.useUsbKeyboard = 1;
-    PiGfxConfig.sendCRLF = 0;
-    PiGfxConfig.replaceLFwithCR = 1;
-    PiGfxConfig.backspaceEcho = 0;
-    PiGfxConfig.skipBackspaceEcho = 0;
-    PiGfxConfig.swapDelWithBackspace = 1;
-    PiGfxConfig.keyboardAutorepeat = 1;  // Enable autorepeat by default
-    PiGfxConfig.keyboardRepeatDelay = 500;
-    PiGfxConfig.keyboardRepeatRate = 10;
-    PiGfxConfig.foregroundColor = 11;     // Yellow (default foreground)
-    PiGfxConfig.backgroundColor = 0;     // BLACK (default background)
-    PiGfxConfig.fontSelection = 2;       // First font in registry (8x16 System Font)
-    PiGfxConfig.displayWidth = 1024;     // Default display width
-    PiGfxConfig.displayHeight = 768;     // Default display height
-    PiGfxConfig.disableGfxDMA = 1;
+    pivt100_memset(&PiVT100Config, 0, sizeof(PiVT100Config));
+    PiVT100Config.hasChanged = 1;
+    PiVT100Config.uartBaudrate = 115200;
+    PiVT100Config.useUsbKeyboard = 1;
+    PiVT100Config.sendCRLF = 0;
+    PiVT100Config.replaceLFwithCR = 1;
+    PiVT100Config.backspaceEcho = 0;
+    PiVT100Config.skipBackspaceEcho = 0;
+    PiVT100Config.swapDelWithBackspace = 1;
+    PiVT100Config.keyboardAutorepeat = 1;  // Enable autorepeat by default
+    PiVT100Config.keyboardRepeatDelay = 500;
+    PiVT100Config.keyboardRepeatRate = 10;
+    PiVT100Config.foregroundColor = 11;     // Yellow (default foreground)
+    PiVT100Config.backgroundColor = 0;     // BLACK (default background)
+    PiVT100Config.fontSelection = 2;       // First font in registry (8x16 System Font)
+    PiVT100Config.displayWidth = 1024;     // Default display width
+    PiVT100Config.displayHeight = 768;     // Default display height
+    PiVT100Config.disableGfxDMA = 1;
     // disableCollision removed
-    PiGfxConfig.debugVerbosity = 2;     // Default: all debug levels enabled
-    PiGfxConfig.cursorBlink = 0;            // Default: blinking disabled
-    PiGfxConfig.switchRxTx = 0;          // Default: normal UART operation
-    PiGfxConfig.soundLevel = 50;         // Default sound level (duty %) for beep
-    PiGfxConfig.keyClick = 1;            // Default: keyclick enabled
-    pigfx_strcpy(PiGfxConfig.keyboardLayout, "de");
+    PiVT100Config.debugVerbosity = 2;     // Default: all debug levels enabled
+    PiVT100Config.cursorBlink = 0;            // Default: blinking disabled
+    PiVT100Config.switchRxTx = 0;          // Default: normal UART operation
+    PiVT100Config.soundLevel = 50;         // Default sound level (duty %) for beep
+    PiVT100Config.keyClick = 1;            // Default: keyclick enabled
+    pivt100_strcpy(PiVT100Config.keyboardLayout, "de");
 }
 
 /**
@@ -307,49 +307,49 @@ void setDefaultConfig()
  * - Debug and timing parameters
  * 
  * @note Uses ee_printf() for output to the debug console
- * @note Safe to call at any time after PiGfxConfig is initialized
+ * @note Safe to call at any time after PiVT100Config is initialized
  */
 void printConfig()
 {
     LogDebug("-------------- PiGFX Config Loaded --------------\n");
-    LogDebug("hasChanged.            = %u\n", PiGfxConfig.hasChanged);
-    LogDebug("uartBaudrate           = %u\n", PiGfxConfig.uartBaudrate);
-    LogDebug("switchRxTx             = %u\n", PiGfxConfig.switchRxTx);
-    LogDebug("useUsbKeyboard         = %u\n", PiGfxConfig.useUsbKeyboard);
-    LogDebug("sendCRLF               = %u\n", PiGfxConfig.sendCRLF);
-    LogDebug("replaceLFwithCR        = %u\n", PiGfxConfig.replaceLFwithCR);
-    LogDebug("backspaceEcho          = %u\n", PiGfxConfig.backspaceEcho);
-    LogDebug("skipBackspaceEcho      = %u\n", PiGfxConfig.skipBackspaceEcho);
-    LogDebug("swapDelWithBackspace   = %u\n", PiGfxConfig.swapDelWithBackspace);
-    LogDebug("keyboardAutorepeat     = %u\n", PiGfxConfig.keyboardAutorepeat);
-    LogDebug("keyboardRepeatDelay    = %u\n", PiGfxConfig.keyboardRepeatDelay);
-    LogDebug("keyboardRepeatRate     = %u\n", PiGfxConfig.keyboardRepeatRate);
-    LogDebug("foregroundColor        = %u\n", PiGfxConfig.foregroundColor);
-    LogDebug("backgroundColor        = %u\n", PiGfxConfig.backgroundColor);
-    LogDebug("fontSelection          = %u\n", PiGfxConfig.fontSelection);
-    LogDebug("displayWidth           = %u\n", PiGfxConfig.displayWidth);
-    LogDebug("displayHeight          = %u\n", PiGfxConfig.displayHeight);
-    LogDebug("disableGfxDMA          = %u\n", PiGfxConfig.disableGfxDMA);
+    LogDebug("hasChanged.            = %u\n", PiVT100Config.hasChanged);
+    LogDebug("uartBaudrate           = %u\n", PiVT100Config.uartBaudrate);
+    LogDebug("switchRxTx             = %u\n", PiVT100Config.switchRxTx);
+    LogDebug("useUsbKeyboard         = %u\n", PiVT100Config.useUsbKeyboard);
+    LogDebug("sendCRLF               = %u\n", PiVT100Config.sendCRLF);
+    LogDebug("replaceLFwithCR        = %u\n", PiVT100Config.replaceLFwithCR);
+    LogDebug("backspaceEcho          = %u\n", PiVT100Config.backspaceEcho);
+    LogDebug("skipBackspaceEcho      = %u\n", PiVT100Config.skipBackspaceEcho);
+    LogDebug("swapDelWithBackspace   = %u\n", PiVT100Config.swapDelWithBackspace);
+    LogDebug("keyboardAutorepeat     = %u\n", PiVT100Config.keyboardAutorepeat);
+    LogDebug("keyboardRepeatDelay    = %u\n", PiVT100Config.keyboardRepeatDelay);
+    LogDebug("keyboardRepeatRate     = %u\n", PiVT100Config.keyboardRepeatRate);
+    LogDebug("foregroundColor        = %u\n", PiVT100Config.foregroundColor);
+    LogDebug("backgroundColor        = %u\n", PiVT100Config.backgroundColor);
+    LogDebug("fontSelection          = %u\n", PiVT100Config.fontSelection);
+    LogDebug("displayWidth           = %u\n", PiVT100Config.displayWidth);
+    LogDebug("displayHeight          = %u\n", PiVT100Config.displayHeight);
+    LogDebug("disableGfxDMA          = %u\n", PiVT100Config.disableGfxDMA);
     // disableCollision removed
-    LogDebug("debugVerbosity         = %u\n", PiGfxConfig.debugVerbosity);
-    LogDebug("cursorBlink            = %u\n", PiGfxConfig.cursorBlink);
-    LogDebug("soundLevel             = %u\n", PiGfxConfig.soundLevel);
-    LogDebug("keyClick               = %u\n", PiGfxConfig.keyClick);
-    LogDebug("keyboardLayout         = %s\n", PiGfxConfig.keyboardLayout);
+    LogDebug("debugVerbosity         = %u\n", PiVT100Config.debugVerbosity);
+    LogDebug("cursorBlink            = %u\n", PiVT100Config.cursorBlink);
+    LogDebug("soundLevel             = %u\n", PiVT100Config.soundLevel);
+    LogDebug("keyClick               = %u\n", PiVT100Config.keyClick);
+    LogDebug("keyboardLayout         = %s\n", PiVT100Config.keyboardLayout);
     LogDebug("-------------------------------------------------\n");
 }
 
 /**
- * @brief Load configuration from pigfx.txt file on SD card
+ * @brief Load configuration from pivt100.txt file on SD card
  * 
- * Attempts to read and parse the configuration file "pigfx.txt" from the root
+ * Attempts to read and parse the configuration file "pivt100.txt" from the root
  * directory of the SD card. The file uses INI format with key=value pairs.
  * 
  * The function performs the following steps:
  * 1. Initialize SD card interface
  * 2. Read Master Boot Record (MBR)
  * 3. Mount filesystem (typically FAT32)
- * 4. Search for pigfx.txt in root directory
+ * 4. Search for pivt100.txt in root directory
  * 5. Parse the file using INI parser with inihandler callback
  * 6. Clean up allocated resources
  * 
@@ -495,7 +495,7 @@ unsigned int debugLevel(int level)
 /**
  * @brief Apply configuration changes to hardware and system settings
  * 
- * Takes the current configuration values in PiGfxConfig and applies them to
+ * Takes the current configuration values in PiVT100Config and applies them to
  * the actual hardware and software subsystems. This function should be called
  * after loading configuration or when settings have been modified.
  * 
@@ -507,11 +507,11 @@ unsigned int debugLevel(int level)
  * - UART baud rate and interrupt configuration
  * - Debug verbosity level
  * 
- * Optimization: If PiGfxConfig.hasChanged is 0, the function returns early
+ * Optimization: If PiVT100Config.hasChanged is 0, the function returns early
  * without making any changes, avoiding unnecessary reinitialization.
  * 
  * @note Clears the screen after applying new configuration
- * @note Resets PiGfxConfig.hasChanged to 0 after successful application
+ * @note Resets PiVT100Config.hasChanged to 0 after successful application
  * @note Safe to call multiple times - only applies changes when needed
  */
 
@@ -522,30 +522,30 @@ unsigned int debugLevel(int level)
  void applyConfig()
 {
     // Apply current configuration to display system
-    if(PiGfxConfig.hasChanged == 0) return;  // No change, nothing to do
-        PiGfxConfig.hasChanged = 0;
+    if(PiVT100Config.hasChanged == 0) return;  // No change, nothing to do
+        PiVT100Config.hasChanged = 0;
 
     // Reinitialize framebuffer if display size changed
-    initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);         
+    initialize_framebuffer(PiVT100Config.displayWidth, PiVT100Config.displayHeight, 8);         
 
     // Set drawing mode, cusor and colors
     gfx_set_drawing_mode(drawingNORMAL);
-    gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
+    gfx_term_set_cursor_blinking(PiVT100Config.cursorBlink);
 
-    gfx_set_fg(PiGfxConfig.foregroundColor);
-    gfx_set_bg(PiGfxConfig.backgroundColor);
+    gfx_set_fg(PiVT100Config.foregroundColor);
+    gfx_set_bg(PiVT100Config.backgroundColor);
     
     // Set font through font registry
-    gfx_term_set_font(PiGfxConfig.fontSelection);
+    gfx_term_set_font(PiVT100Config.fontSelection);
 
     // Set tabu stops      // has to be included in setup dialog
     gfx_term_set_tabulation(8);   
 
     // Reinitialize UART with new baudrate
-    uart_init(PiGfxConfig.uartBaudrate);
+    uart_init(PiVT100Config.uartBaudrate);
 
     // Apply debug verbosity setting from configuration immediately
     // 0 = errors + notices, 1 = +warnings, 2 = +debug
-    SetDebugSeverity(debugLevel(PiGfxConfig.debugVerbosity));
+    SetDebugSeverity(debugLevel(PiVT100Config.debugVerbosity));
 
 }

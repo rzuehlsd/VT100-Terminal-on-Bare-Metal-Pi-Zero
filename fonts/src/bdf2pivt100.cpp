@@ -79,7 +79,7 @@ bool parseBDFFile(const std::string& filename, std::vector<Character>& chars, in
     return true;
 }
 
-void writePiGFXFont(const std::vector<Character>& chars, const std::string& outputFile, int fontWidth, int fontHeight) {
+void writePiVT100Font(const std::vector<Character>& chars, const std::string& outputFile, int fontWidth, int fontHeight) {
     std::ofstream out(outputFile, std::ios::binary);
     if (!out.is_open()) {
         std::cerr << "Error: Cannot create output file: " << outputFile << std::endl;
@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
     
     std::cout << "Parsed " << chars.size() << " characters from " << inputFile << std::endl;
     
-    writePiGFXFont(chars, outputFile, fontWidth, fontHeight);
+    writePiVT100Font(chars, outputFile, fontWidth, fontHeight);
     
     return 0;
 }

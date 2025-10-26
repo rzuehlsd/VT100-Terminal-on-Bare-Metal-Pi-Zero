@@ -183,13 +183,13 @@ int read_mbr(struct block_device *parent, struct block_device ***partitions, int
 			// Valid partition
 			struct mbr_block_dev *d =
 				(struct mbr_block_dev *)nmalloc_malloc(sizeof(struct mbr_block_dev));
-			pigfx_memset(d, 0, sizeof(struct mbr_block_dev));
+			pivt100_memset(d, 0, sizeof(struct mbr_block_dev));
 			d->bd.driver_name = driver_name;
-			char *dev_name = (char *)nmalloc_malloc(pigfx_strlen(parent->device_name) + 3);
-			pigfx_strcpy(dev_name, parent->device_name);
-			dev_name[pigfx_strlen(parent->device_name)] = '_';
-			dev_name[pigfx_strlen(parent->device_name) + 1] = '0' + i;
-			dev_name[pigfx_strlen(parent->device_name) + 2] = 0;
+			char *dev_name = (char *)nmalloc_malloc(pivt100_strlen(parent->device_name) + 3);
+			pivt100_strcpy(dev_name, parent->device_name);
+			dev_name[pivt100_strlen(parent->device_name)] = '_';
+			dev_name[pivt100_strlen(parent->device_name) + 1] = '0' + i;
+			dev_name[pivt100_strlen(parent->device_name) + 2] = 0;
 			d->bd.device_name = dev_name;
 			d->bd.device_id = (uint8_t *)nmalloc_malloc(1);
 			d->bd.device_id[0] = i;

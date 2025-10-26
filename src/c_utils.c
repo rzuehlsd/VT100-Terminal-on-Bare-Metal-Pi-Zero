@@ -13,13 +13,13 @@
 #include "c_utils.h"
 #include "utils.h"
 
-void *pigfx_memset (void *pBuffer, int nValue, size_t nLength)
+void *pivt100_memset (void *pBuffer, int nValue, size_t nLength)
 {
-	char *p = (char *) pBuffer;
+	char *pDest = (char *) pBuffer;
 
 	while (nLength--)
 	{
-		*p++ = (char) nValue;
+		*pDest++ = nValue;
 	}
 
 	return pBuffer;
@@ -34,7 +34,7 @@ void *qmemcpy(void *dest, void *src, size_t n)
 		((n & 0xf) == 0))
 		return quick_memcpy(dest, src, n);
 	else
-		return pigfx_memcpy(dest, src, n);
+		return pivt100_memcpy(dest, src, n);
 }
 
 void veryfastmemcpy(void *dest, void* src, unsigned int n)
@@ -76,11 +76,11 @@ void veryfastmemcpy(void *dest, void* src, unsigned int n)
     }
     else
     {
-        pigfx_memcpy(dest, src, n);
+        pivt100_memcpy(dest, src, n);
     }
 }
 
-void *pigfx_memcpy (void *pDest, const void *pSrc, size_t nLength)
+void *pivt100_memcpy (void *pDest, const void *pSrc, size_t nLength)
 {
 	char *pd = (char *) pDest;
 	char *ps = (char *) pSrc;
@@ -93,7 +93,7 @@ void *pigfx_memcpy (void *pDest, const void *pSrc, size_t nLength)
 	return pDest;
 }
 
-char *pigfx_strcpy (char *pDest, const char *pSrc)
+char *pivt100_strcpy (char *pDest, const char *pSrc)
 {
 	char *p = pDest;
 
@@ -107,7 +107,7 @@ char *pigfx_strcpy (char *pDest, const char *pSrc)
 	return pDest;
 }
 
-size_t pigfx_strlen (const char *pString)
+size_t pivt100_strlen (const char *pString)
 {
 	size_t nResult = 0;
 
@@ -119,7 +119,7 @@ size_t pigfx_strlen (const char *pString)
 	return nResult;
 }
 
-int pigfx_strcmp (const char *pString1, const char *pString2)
+int pivt100_strcmp (const char *pString1, const char *pString2)
 {
 	while (   *pString1 != '\0'
 	       && *pString2 != '\0')
@@ -155,7 +155,7 @@ int isspace(int c)
 	    c == '\v' || c == '\f' || c == '\r' || c == ' ' ? 1 : 0);
 }
 
-char *pigfx_strncpy (char *pDest, const char *pSrc, size_t nMaxLen)
+char *pivt100_strncpy (char *pDest, const char *pSrc, size_t nMaxLen)
 {
 	char *pResult = pDest;
 

@@ -1,0 +1,29 @@
+#ifndef _PIGFX_CONFIG_H_
+#define _PIGFX_CONFIG_H_
+
+#include "globaldefs.h"
+
+#define PIGFX_VERSION           "g925ebbe"
+#define FRAMEBUFFER_DEBUG       OFF             /* Log framebuffer operations to UART */
+#define HEARTBEAT_FREQUENCY     1               /* Status led blink frequency in Hz */
+
+/* Feature toggles */
+// Sprite support removed
+
+#define PIGFX_MAJVERSION        2               /* Major version number */
+#define PIGFX_MINVERSION        0               /* Minor version number */
+#define PIGFX_BUILDVERSION      1               /* Build version. */
+
+/** Versions:
+	
+1.1.0  Initial version with mode change, 8x16 and 8x24 fonts etc.
+1.1.1  fix for 1-based coordinates in ESC H command instead of 0-based
+1.1.2  fix for reversed row/col parameter index in ESC H command
+
+Revision history for 2.x series:  Overhaul. enhancements and cleanup by R. Zühlsdorff
+2.0.0  Remove sprite support and related code, remove font upload feature, clean up code and comments
+2.0.1  Fix some comments and remove dead code
+
+*/
+
+#endif

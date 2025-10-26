@@ -7,7 +7,7 @@
 // the additional support of some primitive graphics functions.
 // Copyright (C) 2014-2020 Filippo Bergamasco, Christian Lehner
 
-#include "pigfx_config.h"
+#include "pivt100_config.h"
 #include "scn_state.h"
 #include "gfx.h"
 #include "framebuffer.h"
@@ -144,7 +144,7 @@ void gfx_compute_font()
         ctx.cursor_buffer_ready = 0;
     }
     ctx.cursor_buffer = (unsigned char*)nmalloc_malloc(ctx.cursor_buffer_size);
-    pigfx_memset(ctx.cursor_buffer, 0, ctx.cursor_buffer_size);
+    pivt100_memset(ctx.cursor_buffer, 0, ctx.cursor_buffer_size);
 
     // set logical terminal size
     ctx.term.WIDTH = ctx.W / ctx.term.FONTWIDTH;
@@ -169,7 +169,7 @@ void gfx_set_env( void* p_framebuffer, unsigned int width, unsigned int height, 
     dma_init();
 
     // Set ctx memory to 0
-    pigfx_memset(&ctx, 0, sizeof(ctx));
+    pivt100_memset(&ctx, 0, sizeof(ctx));
 
     // set default font
     if (ctx.term.FONT == 0) {
@@ -273,7 +273,7 @@ void gfx_clear()
 {
     // Sprites removed: nothing to clear besides framebuffer
 
-    if (PiGfxConfig.disableGfxDMA)
+    if (PiVT100Config.disableGfxDMA)
     {
         unsigned int* pf = (unsigned int*)ctx.pfb;
         for (unsigned int i=0; i< ctx.size/4; i++)
@@ -301,7 +301,7 @@ void gfx_clear()
 /** move screen up, new bg pixels on bottom */
 void gfx_scroll_down( unsigned int npixels )
 {
-    if (PiGfxConfig.disableGfxDMA)
+    if (PiVT100Config.disableGfxDMA)
     {
         for (unsigned int row = 0; row < (ctx.H - npixels); row++)
         {
@@ -331,7 +331,7 @@ void gfx_scroll_down( unsigned int npixels )
 
 void gfx_scroll_up( unsigned int npixels )
 {
-    if (PiGfxConfig.disableGfxDMA)
+    if (PiVT100Config.disableGfxDMA)
     {
         for (int row = ctx.H - 1; row >= (int)npixels; row--)
         {
@@ -618,7 +618,7 @@ void gfx_term_render_cursor()
 /** shifts content from cursor 1 character to the right */
 void gfx_term_shift_right()
 {
-    if (PiGfxConfig.disableGfxDMA)
+    if (PiVT100Config.disableGfxDMA)
     {
         for (unsigned int i=0; i<ctx.term.FONTHEIGHT; i++)
         {
@@ -645,7 +645,7 @@ void gfx_term_shift_right()
 /** shifts content right of cursor 1 character to the left */
 void gfx_term_shift_left()
 {
-    if (PiGfxConfig.disableGfxDMA)
+    if (PiVT100Config.disableGfxDMA)
     {
         for (unsigned int i=0; i<ctx.term.FONTHEIGHT; i++)
         {
@@ -699,7 +699,7 @@ void gfx_term_insert_line()
 
     for(int i=ctx.term.HEIGHT-2;i>=(int)ctx.term.cursor_row; i--)
     {
-        if (PiGfxConfig.disableGfxDMA)
+        if (PiVT100Config.disableGfxDMA)
         {
             veryfastmemcpy(PFB((0), (i+1) * ctx.term.FONTHEIGHT), PFB((0), i * ctx.term.FONTHEIGHT), size);
         }
@@ -726,7 +726,7 @@ void gfx_term_delete_line()
     if (ctx.term.cursor_row < ctx.term.HEIGHT-2)
     {
         size = ctx.term.WIDTH*ctx.term.FONTWIDTH*ctx.term.FONTHEIGHT*(ctx.term.HEIGHT-1-ctx.term.cursor_row);
-        if (PiGfxConfig.disableGfxDMA)
+        if (PiVT100Config.disableGfxDMA)
         {
             veryfastmemcpy(PFB((0), ctx.term.cursor_row * ctx.term.FONTHEIGHT), PFB((0), (ctx.term.cursor_row+1) * ctx.term.FONTHEIGHT), size);
         }
@@ -767,8 +767,8 @@ void gfx_term_beep()
 {
     if(!pwm800_is_active())
     {
-        LogDebug("Bell %d%% %dms ON", PiGfxConfig.soundLevel, 250);
-        pwm800_start((uint8_t)PiGfxConfig.soundLevel, 250);
+        LogDebug("Bell %d%% %dms ON", PiVT100Config.soundLevel, 250);
+        pwm800_start((uint8_t)PiVT100Config.soundLevel, 250);
     }
     else
     {
@@ -1513,7 +1513,7 @@ void gfx_save_screen_buffer(void* buffer)
 {
     if (buffer != 0)
     {
-        if (PiGfxConfig.disableGfxDMA)
+        if (PiVT100Config.disableGfxDMA)
         {
             // Simple memory copy
             unsigned char* src = ctx.pfb;
@@ -1536,7 +1536,7 @@ void gfx_restore_screen_buffer(void* buffer)
 {
     if (buffer != 0)
     {
-        if (PiGfxConfig.disableGfxDMA)
+        if (PiVT100Config.disableGfxDMA)
         {
             // Simple memory copy
             unsigned char* src = (unsigned char*)buffer;

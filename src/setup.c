@@ -244,7 +244,7 @@ static void __attribute__((unused)) draw_int_at_with_bg(unsigned int row, unsign
  */
 static unsigned int find_current_baudrate_index(void)
 {
-    unsigned int current_baudrate = PiGfxConfig.uartBaudrate;
+    unsigned int current_baudrate = PiVT100Config.uartBaudrate;
     for (unsigned int i = 0; i < num_baudrates; i++)
     {
         if (available_baudrates[i] == current_baudrate)
@@ -269,8 +269,8 @@ static unsigned int find_current_keyboard_index(void)
 {
     for (unsigned int i = 0; i < num_keyboards; i++)
     {
-        if (PiGfxConfig.keyboardLayout[0] == available_keyboards[i][0] && 
-            PiGfxConfig.keyboardLayout[1] == available_keyboards[i][1])
+        if (PiVT100Config.keyboardLayout[0] == available_keyboards[i][0] && 
+            PiVT100Config.keyboardLayout[1] == available_keyboards[i][1])
         {
             return i;
         }
@@ -338,8 +338,8 @@ static unsigned int find_current_resolution_index(void)
 {
     for (unsigned int i = 0; i < num_resolutions; i++)
     {
-        if ((resolution_widths[i] == PiGfxConfig.displayWidth) && 
-            (resolution_heights[i] == PiGfxConfig.displayHeight))
+        if ((resolution_widths[i] == PiVT100Config.displayWidth) && 
+            (resolution_heights[i] == PiVT100Config.displayHeight))
         {
             return i;
         }
@@ -395,19 +395,19 @@ void setup_mode_enter(void)
         selected_item = 0;  // Start with Baudrate selected
         selected_baudrate_index = find_current_baudrate_index();
     selected_keyboard_index = find_current_keyboard_index();
-    selected_switch_rxtx = PiGfxConfig.switchRxTx ? 1 : 0;
+    selected_switch_rxtx = PiVT100Config.switchRxTx ? 1 : 0;
         selected_fg_color = find_current_fg_color_index();
         selected_bg_color = find_current_bg_color_index();
         selected_font_size = original_font_index;  // Use the saved original index
         selected_resolution_index = find_current_resolution_index();
-        selected_cursor_blink = PiGfxConfig.cursorBlink ? 1 : 0;
-        selected_auto_repeat = PiGfxConfig.keyboardAutorepeat ? 1 : 0; // Use config value
-        selected_repeat_delay = PiGfxConfig.keyboardRepeatDelay;
-        selected_repeat_rate = PiGfxConfig.keyboardRepeatRate;
-    selected_send_crlf = PiGfxConfig.sendCRLF ? 1 : 0;
-    selected_replace_lf_cr = PiGfxConfig.replaceLFwithCR ? 1 : 0;
-    selected_sound_level = PiGfxConfig.soundLevel; // initialize sound level
-    selected_key_click = PiGfxConfig.keyClick ? 1 : 0; // initialize key click
+        selected_cursor_blink = PiVT100Config.cursorBlink ? 1 : 0;
+        selected_auto_repeat = PiVT100Config.keyboardAutorepeat ? 1 : 0; // Use config value
+        selected_repeat_delay = PiVT100Config.keyboardRepeatDelay;
+        selected_repeat_rate = PiVT100Config.keyboardRepeatRate;
+    selected_send_crlf = PiVT100Config.sendCRLF ? 1 : 0;
+    selected_replace_lf_cr = PiVT100Config.replaceLFwithCR ? 1 : 0;
+    selected_sound_level = PiVT100Config.soundLevel; // initialize sound level
+    selected_key_click = PiVT100Config.keyClick ? 1 : 0; // initialize key click
         
         // Reset the settings changed flag
         settings_changed = 0;
@@ -876,24 +876,24 @@ void setup_mode_handle_key(unsigned short key)
                 unsigned char resolution_was_changed = (selected_resolution_index != original_resolution_index);
                 
                 // Save the selected settings to config before exiting
-                PiGfxConfig.uartBaudrate = available_baudrates[selected_baudrate_index];
-                PiGfxConfig.keyboardLayout[0] = available_keyboards[selected_keyboard_index][0];
-                PiGfxConfig.keyboardLayout[1] = available_keyboards[selected_keyboard_index][1];
-                PiGfxConfig.keyboardLayout[2] = '\0'; // Null terminate
-                PiGfxConfig.foregroundColor = available_colors[selected_fg_color];
-                PiGfxConfig.backgroundColor = available_colors[selected_bg_color];
-                PiGfxConfig.fontSelection = selected_font_size;
-                PiGfxConfig.displayWidth = resolution_widths[selected_resolution_index];
-                PiGfxConfig.displayHeight = resolution_heights[selected_resolution_index];
-                PiGfxConfig.cursorBlink = selected_cursor_blink ? 1 : 0;
-                PiGfxConfig.keyboardAutorepeat = selected_auto_repeat ? 1 : 0;
-                PiGfxConfig.keyboardRepeatDelay = selected_repeat_delay;
-                PiGfxConfig.keyboardRepeatRate = selected_repeat_rate;
-                PiGfxConfig.sendCRLF = selected_send_crlf ? 1 : 0;
-                PiGfxConfig.replaceLFwithCR = selected_replace_lf_cr ? 1 : 0;
-                PiGfxConfig.switchRxTx = selected_switch_rxtx ? 1 : 0;
-                PiGfxConfig.soundLevel = selected_sound_level;
-                PiGfxConfig.keyClick = selected_key_click ? 1 : 0;
+                PiVT100Config.uartBaudrate = available_baudrates[selected_baudrate_index];
+                PiVT100Config.keyboardLayout[0] = available_keyboards[selected_keyboard_index][0];
+                PiVT100Config.keyboardLayout[1] = available_keyboards[selected_keyboard_index][1];
+                PiVT100Config.keyboardLayout[2] = '\0'; // Null terminate
+                PiVT100Config.foregroundColor = available_colors[selected_fg_color];
+                PiVT100Config.backgroundColor = available_colors[selected_bg_color];
+                PiVT100Config.fontSelection = selected_font_size;
+                PiVT100Config.displayWidth = resolution_widths[selected_resolution_index];
+                PiVT100Config.displayHeight = resolution_heights[selected_resolution_index];
+                PiVT100Config.cursorBlink = selected_cursor_blink ? 1 : 0;
+                PiVT100Config.keyboardAutorepeat = selected_auto_repeat ? 1 : 0;
+                PiVT100Config.keyboardRepeatDelay = selected_repeat_delay;
+                PiVT100Config.keyboardRepeatRate = selected_repeat_rate;
+                PiVT100Config.sendCRLF = selected_send_crlf ? 1 : 0;
+                PiVT100Config.replaceLFwithCR = selected_replace_lf_cr ? 1 : 0;
+                PiVT100Config.switchRxTx = selected_switch_rxtx ? 1 : 0;
+                PiVT100Config.soundLevel = selected_sound_level;
+                PiVT100Config.keyClick = selected_key_click ? 1 : 0;
                 
                 // Update the saved colors so they don't get overwritten on exit
                 saved_fg_color = available_colors[selected_fg_color];
@@ -906,19 +906,19 @@ void setup_mode_handle_key(unsigned short key)
                 setup_mode_exit();
 
                 // Apply cursor blinking setting immediately after setup
-                gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
+                gfx_term_set_cursor_blinking(PiVT100Config.cursorBlink);
 
                 // Apply keyboard repeat and autorepeat settings immediately
-                if (PiGfxConfig.keyboardAutorepeat)
+                if (PiVT100Config.keyboardAutorepeat)
                     keyboard_enable_autorepeat();
                 else
                     keyboard_disable_autorepeat();
-                keyboard_set_repeat_delay(PiGfxConfig.keyboardRepeatDelay);
-                keyboard_set_repeat_rate(PiGfxConfig.keyboardRepeatRate);
-                fInitKeyboard(PiGfxConfig.keyboardLayout);
+                keyboard_set_repeat_delay(PiVT100Config.keyboardRepeatDelay);
+                keyboard_set_repeat_rate(PiVT100Config.keyboardRepeatRate);
+                fInitKeyboard(PiVT100Config.keyboardLayout);
 
                 // Re-initialize UART with new baudrate
-                uart_init(PiGfxConfig.uartBaudrate);
+                uart_init(PiVT100Config.uartBaudrate);
                 // Apply UART pin switch state immediately
                 switch_uart_pins();
                 
@@ -928,21 +928,21 @@ void setup_mode_handle_key(unsigned short key)
                     gfx_term_putstring("Changing display resolution, please wait...\r\n");
 
                     // Re-initialize framebuffer with new resolution
-                    initialize_framebuffer(PiGfxConfig.displayWidth, PiGfxConfig.displayHeight, 8);
+                    initialize_framebuffer(PiVT100Config.displayWidth, PiVT100Config.displayHeight, 8);
                     gfx_term_clear_screen();
                     gfx_term_move_cursor(1, 1); // Move to row 1, column 1 (top-left)
                     
                     // Re-apply color and font settings after resolution change
-                    gfx_set_default_fg(PiGfxConfig.foregroundColor);
-                    gfx_set_default_bg(PiGfxConfig.backgroundColor);
-                    gfx_set_fg(PiGfxConfig.foregroundColor);
-                    gfx_set_bg(PiGfxConfig.backgroundColor);
+                    gfx_set_default_fg(PiVT100Config.foregroundColor);
+                    gfx_set_default_bg(PiVT100Config.backgroundColor);
+                    gfx_set_fg(PiVT100Config.foregroundColor);
+                    gfx_set_bg(PiVT100Config.backgroundColor);
                     
                     // Re-apply font selection
                     unsigned int font_count = font_registry_get_count();
-                    if (PiGfxConfig.fontSelection < font_count)
+                    if (PiVT100Config.fontSelection < font_count)
                     {
-                        gfx_term_set_font(PiGfxConfig.fontSelection);
+                        gfx_term_set_font(PiVT100Config.fontSelection);
                     }
                 }
                 // Only clear screen and reset cursor if font was changed (and resolution wasn't changed)
@@ -976,7 +976,7 @@ void setup_mode_handle_key(unsigned short key)
                 // No changes made - exit with original saved state intact
                 setup_mode_exit();
                 // Apply cursor blinking setting immediately after setup
-                gfx_term_set_cursor_blinking(PiGfxConfig.cursorBlink);
+                gfx_term_set_cursor_blinking(PiVT100Config.cursorBlink);
             }
             break;
             
