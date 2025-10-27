@@ -4,7 +4,7 @@ A VT100 terminal emulator for Raspberry Pi Zero, forked and refactored from PiGF
 
 ## Motivation
 
-Main motivation was that I wanted a terminal emulation for my VT100 replica. Emulation should start within seconds, so a bare metal implementation on a Pi Zero seems to be the way to go. I found the PiGFX implementation by Fillippo Bergamasco and used that as a starting point for my modifications. The project has since been fully renamed and refactored to PiVT100, with all code, configuration, and documentation updated accordingly.
+Main motivation was that I wanted a terminal emulation for my VT100 replica. Emulation should start within seconds, so a bare metal implementation on a Pi Zero seems to be the way to go. I found the PiGFX implementation by Fillippo Bergamasco and used that as a starting point for my modifications. 
 
 Below you see the original VT100 terminal (the color has turned to yellow over the years) and my 60% replica.
 
@@ -28,10 +28,10 @@ My list of requirements was rather short:
 
 ## What's Different from Original PiGFX
 
-The original PiGFX codebase by Filippo Bergamasco has been fully refactored and rebranded as PiVT100. All references to pigfx/PiGFX have been replaced with pivt100/PiVT100 throughout the code, configuration files, and documentation. Major changes include:
+The original PiGFX codebase by Filippo Bergamasco has been reduced to the pure VT100 terminal functionality, fully refactored and renamed as PiVT100. Major changes include:
 
 - Removal of graphics, sprites, palette, and font loading features not relevant to VT100 emulation
-- Addition of features for VT100 replica hardware integration
+- Addition of features for VT100 replica hardware integration (switching Rx/Tx, bell, RS232, custom DIN6 connector)
 - Improved configuration system and setup dialog
 - Consistent naming: main binary is now `pivt100.elf`, config file is `pivt100.txt`, font tools and scripts updated to PiVT100 naming
 
