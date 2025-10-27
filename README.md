@@ -10,7 +10,7 @@ Below you see the original VT100 terminal (the color has turned to yellow over t
 
  <img src="images/VT100-org.jpeg" alt="VT100 original" width="300"/> <img src="images/IMG_1095.jpeg" alt="60% replica" width="315"/> 
 
-If you want a 100% VT100 terminal emulation please go for the VT100 simulation from Lars Brinkhoff (https://www.github-zh.com/projects/368074973-terminal-simulator). He simulates the VT100 hardware with original ROMs on a Raspberry Pi. 
+If you want a 100% VT100 terminal emulation please go for the VT100 simulation from Lars Brinkhoff (https://github.com/larsbrinkhoff/terminal-simulator)). He simulates the VT100 hardware with original ROMs on a Raspberry Pi. 
 
 
 ## Requirements
