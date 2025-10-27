@@ -1088,9 +1088,10 @@ static void draw_menu_item_int(unsigned int row, unsigned int content_col, unsig
 }
 
 /**
- * @brief Helper function to draw color preview menu items
+ * @brief Helper function to draw color menu items with consistent formatting
  * 
- * Special handling for color selection items that show color previews.
+ * Special handling for color selection items with consistent text colors.
+ * Always uses normal foreground/background colors for text consistency.
  * 
  * @param row Terminal row position
  * @param content_col Column position for the label
@@ -1099,14 +1100,13 @@ static void draw_menu_item_int(unsigned int row, unsigned int content_col, unsig
  * @param value_width Width to clear for the value
  * @param label_text The label text to display
  * @param color_index Index of the selected color
- * @param is_foreground Whether this is foreground (true) or background (false) color
  * @param is_selected Whether this item is currently selected
  * @param normal_fg Normal foreground color
  * @param normal_bg Normal background color
  */
 static void draw_color_menu_item(unsigned int row, unsigned int content_col, unsigned int value_col,
                                 unsigned int label_width, unsigned int value_width,
-                                const char* label_text, unsigned int color_index, unsigned char is_foreground,
+                                const char* label_text, unsigned int color_index,
                                 unsigned char is_selected, GFX_COL normal_fg, GFX_COL normal_bg)
 {
     if (is_selected)
@@ -1119,23 +1119,10 @@ static void draw_color_menu_item(unsigned int row, unsigned int content_col, uns
     }
     else
     {
-        // Not selected - show color preview
+        // Not selected - use normal colors for text (no color preview)
         gfx_set_fg(normal_fg);
         gfx_set_bg(normal_bg);
         draw_text_at(row, content_col, label_text);
-        
-        if (is_foreground)
-        {
-            // Show color as foreground with normal background
-            gfx_set_fg(available_colors[color_index]);
-            gfx_set_bg(normal_bg);
-        }
-        else
-        {
-            // Show color as background with normal foreground
-            gfx_set_fg(normal_fg);
-            gfx_set_bg(available_colors[color_index]);
-        }
         draw_text_at(row, value_col, color_names[color_index]);
     }
 }
@@ -1259,14 +1246,14 @@ void setup_mode_draw(void)
                    "Keyboard Layout", available_keyboards[selected_keyboard_index], 
                    (selected_item == 2), normal_fg, normal_bg);
     
-    // 3: Foreground Color (with preview)
+    // 3: Foreground Color
     draw_color_menu_item(current_row++, content_col, value_col, label_width, value_width,
-                        "Foreground", selected_fg_color, 1, 
+                        "Foreground", selected_fg_color, 
                         (selected_item == 3), normal_fg, normal_bg);
     
-    // 4: Background Color (with preview)
+    // 4: Background Color
     draw_color_menu_item(current_row++, content_col, value_col, label_width, value_width,
-                        "Background", selected_bg_color, 0, 
+                        "Background", selected_bg_color, 
                         (selected_item == 4), normal_fg, normal_bg);
     
     // 5: Font Size
