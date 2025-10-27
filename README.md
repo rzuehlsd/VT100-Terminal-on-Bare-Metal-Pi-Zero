@@ -1,10 +1,10 @@
-# PiZero VT100 Terminal - Enhanced Edition
+# PiVT100 Terminal - Enhanced Edition
 
-A VT100 terminal emulator for Raspberry Pi Zero based on PiGFX by Filippo Bergamasco, enhanced for use with a custom 60% VT100 replica case and adapter board.
+A VT100 terminal emulator for Raspberry Pi Zero, forked and refactored from PiGFX by Filippo Bergamasco, now rebranded as PiVT100 and enhanced for use with a custom 60% VT100 replica case and adapter board.
 
 ## Motivation
 
-Main motivation was that I wanted a terminal emulation for my VT100 replica. Emulation should start within seconds, so a bare metal implementation on a Pi zero seems to be the way to go. I found the PIGFX implementation by Fillippo Bergamasco and used that as a starting point for my modifications. 
+Main motivation was that I wanted a terminal emulation for my VT100 replica. Emulation should start within seconds, so a bare metal implementation on a Pi Zero seems to be the way to go. I found the PiGFX implementation by Fillippo Bergamasco and used that as a starting point for my modifications. The project has since been fully renamed and refactored to PiVT100, with all code, configuration, and documentation updated accordingly.
 
 Below you see the original VT100 terminal (the color has turned to yellow over the years) and my 60% replica.
 
@@ -28,7 +28,12 @@ My list of requirements was rather short:
 
 ## What's Different from Original PiGFX
 
-I reduced the original version of PiGFX by Filippo Bergamasco to just support the VT100 features (without sprites, palette and font loading, graphics drawing features) and added support for my additional requirements.
+The original PiGFX codebase by Filippo Bergamasco has been fully refactored and rebranded as PiVT100. All references to pigfx/PiGFX have been replaced with pivt100/PiVT100 throughout the code, configuration files, and documentation. Major changes include:
+
+- Removal of graphics, sprites, palette, and font loading features not relevant to VT100 emulation
+- Addition of features for VT100 replica hardware integration
+- Improved configuration system and setup dialog
+- Consistent naming: main binary is now `pivt100.elf`, config file is `pivt100.txt`, font tools and scripts updated to PiVT100 naming
 
 
 
@@ -40,7 +45,7 @@ I reduced the original version of PiGFX by Filippo Bergamasco to just support th
 
 ### Software Enhancements
 
-- **Improved Configuration System**: Enhanced `pigfx.txt` file parsing with better error handling
+- **Improved Configuration System**: Enhanced `pivt100.txt` file parsing with better error handling
 - **Setup Dialog**: Interactive configuration menu accessible via Print Screen key
 - **Font Registry**: Multiple built-in fonts with dynamic switching capability
 - **Enhanced Keyboard Support**: Better PS/2 keyboard compatibility and layout options
@@ -152,7 +157,7 @@ SD Card Extension:  https://de.aliexpress.com/item/4001200431510.html?spm=a2g0o.
 ### Software Installation
 
 1. Format SD card as FAT32
-2. Copy `bootcode.bin`, `start.elf`, `kernel.img` and `pigfx.txt` to SD card root
+2. Copy `bootcode.bin`, `start.elf`, `kernel.img` and `pivt100.txt` to SD card root
 3. Insert SD card and power on
 4. Connect UART at 115200 baud for terminal access
 5. Adjust terminal settings via setup dialog to your needs
@@ -163,7 +168,7 @@ SD Card Extension:  https://de.aliexpress.com/item/4001200431510.html?spm=a2g0o.
 - **File Configuration**: Edit `pigfx.txt` on SD card for persistent settings
 - **Default Settings**: System works out-of-box with reasonable defaults
 
-## Basic Configuration (`pigfx.txt`)
+## Basic Configuration (`pivt100.txt`)
 
 ```ini
 # Display Settings
@@ -213,15 +218,18 @@ make clean
 
 ## Original Project
 
-This project is based on [PiGFX](https://github.com/fbergama/pigfx) by Filippo Bergamasco.
-The original project provides the core VT100 terminal emulation and graphics capabilities.
+
+## Project History
+
+This project is a fork and full refactor of [PiGFX](https://github.com/fbergama/pigfx) by Filippo Bergamasco. All code, configuration, and documentation have been updated to use the PiVT100 name and structure. The original project provided the core VT100 terminal emulation and graphics capabilities.
 
 VT100 replica in 60% size was designed by megardi (https://www.instructables.com/23-Scale-VT100-Terminal-Reproduction/).
 
 ## License
 
-Copyright (C) 2014-2020 Filippo Bergamasco (Original PiGFX)  
-Copyright (C) 2025 Ralf Zühlsdorff (Enhanced Edition)
+
+Copyright (C) 2014-2020 Filippo Bergamasco (Original PiGFX)
+Copyright (C) 2025 Ralf Zühlsdorff (PiVT100 Edition)
 
 Licensed under the MIT License - see LICENSE file for details.
 
