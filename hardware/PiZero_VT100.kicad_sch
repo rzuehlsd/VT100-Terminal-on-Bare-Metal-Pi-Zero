@@ -6404,6 +6404,16 @@
 		)
 		(uuid "69d7fce5-27ee-4897-9be9-14d489b6b3e0")
 	)
+	(text "BC546 kann durch BS170 NMOS ersetzt werden!"
+		(exclude_from_sim no)
+		(at 128.524 118.618 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "6ddfc081-3362-4890-99c8-dc03a9fcb2e4")
+	)
 	(text "Serielle Schnittstelle zu SBC\nmit Spannungsversorgung 5V"
 		(exclude_from_sim no)
 		(at 225.806 65.024 0)
